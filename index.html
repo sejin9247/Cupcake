@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JEON SE JIN · Minecraft Portfolio</title>
+<meta name="description" content="전세진 포트폴리오 — Minecraft Edition"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
+<style>
+/* ══════════════ RESET ══════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Press Start 2P',monospace;
+  background:#000;overflow:hidden;
+  width:100vw;height:100vh;user-select:none;
+}
+
+/* ── CANVASES ── */
+#bg-canvas,#part-canvas{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;display:block;
+}
+#bg-canvas{z-index:1;image-rendering:pixelated;}
+#part-canvas{z-index:15;pointer-events:none;}
+
+/* ── LOADING SCREEN ── */
+#loading{
+  position:fixed;inset:0;z-index:1000;
+  background:#1A1A2E;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:28px;
+  transition:opacity 0.8s ease;
+}
+#loading.fade{opacity:0;pointer-events:none;}
+.load-title{
+  font-size:clamp(14px,3vw,28px);
+  color:#55FF55;
+  text-shadow:2px 2px #003F00;
+  animation:blink 1s step-end infinite;
+}
+@keyframes blink{50%{opacity:0}}
+.load-bar-wrap{
+  width:min(360px,80vw);
+  height:20px;
+  background:#1A1A1A;
+  border:3px solid #555;
+  box-shadow:inset 1px 1px 0 #888,inset -1px -1px 0 #333;
+}
+.load-bar{
+  height:100%;width:0;
+  background:linear-gradient(90deg,#3DA228,#55FF55);
+  transition:width 0.1s linear;
+}
+.load-status{font-size:7px;color:#AAAAAA;text-shadow:1px 1px #333;}
+
+/* ── DAMAGE OVERLAY ── */
+#dmg-overlay{
+  position:fixed;inset:0;z-index:8;pointer-events:none;opacity:0;
+  background:radial-gradient(ellipse at center,transparent 35%,rgba(255,0,0,0.65) 100%);
+  transition:opacity 0.12s;
+}
+
+/* ── MAIN UI ── */
+#mc-ui{
+  position:fixed;inset:0;z-index:5;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:56px 16px 48px;
+  gap:10px;
+}
+
+/* ── TITLE ── */
+#mc-title{
+  font-size:clamp(13px,2.8vw,34px);
+  color:#FFFF55;
+  text-shadow:3px 3px #3F3F00,-1px -1px #7F7F00;
+  letter-spacing:3px;text-align:center;
+  animation:titleBob 2.4s ease-in-out infinite;
+}
+@keyframes titleBob{
+  0%,100%{transform:rotate(-1.5deg) translateY(0);}
+  50%{transform:rotate(1.5deg) translateY(-6px);}
+}
+#mc-sub{
+  font-size:clamp(6px,1.1vw,11px);color:#AAAAAA;
+  text-shadow:1px 1px #3F3F3F;text-align:center;
+}
+
+/* ── MAIN PANEL ── */
+#mc-panel{
+  width:min(940px,100%);
+  background:rgba(0,0,0,0.87);
+  border:3px solid #444;
+  box-shadow:inset 1px 1px 0 #777,inset -1px -1px 0 #222,4px 4px 0 #000;
+  display:grid;
+  grid-template-columns:168px 1fr;
+  max-height:calc(100vh - 120px);
+}
+
+/* ── LEFT SIDEBAR ── */
+#sidebar{
+  border-right:2px solid #444;
+  padding:14px 10px;
+  display:flex;flex-direction:column;
+  align-items:center;gap:10px;
+  overflow:hidden;flex-shrink:0;
+}
+
+/* Item frame */
+.item-frame{
+  width:136px;height:170px;
+  border:5px solid #4A2D0E;
+  box-shadow:inset 0 0 0 3px #7A5025,2px 2px 0 #000;
+  background:#8B6914;overflow:hidden;
+  position:relative;flex-shrink:0;
+}
+.item-frame img{
+  width:100%;height:100%;
+  object-fit:cover;object-position:center top;
+}
+.frame-dot{
+  position:absolute;width:6px;height:6px;
+  background:#7A5025;border:1px solid #3A1A00;
+}
+.fd-tl{top:0;left:0}.fd-tr{top:0;right:0}
+.fd-bl{bottom:0;left:0}.fd-br{bottom:0;right:0}
+
+.p-name{
+  background:rgba(0,0,0,0.72);border:1px solid #555;
+  color:#FFF;font-size:7px;padding:4px 6px;
+  text-shadow:1px 1px #3F3F3F;text-align:center;width:100%;
+}
+.p-class{color:#55FF55;font-size:6px;margin-top:3px;}
+
+/* Hearts */
+.hearts{font-size:10px;letter-spacing:1px;line-height:1.8;}
+.hp-bar{
+  width:100%;height:8px;
+  background:#1A0000;border:1px solid #3F3F3F;
+  position:relative;overflow:hidden;
+}
+.hp-fill{
+  height:100%;width:100%;background:#FF0000;
+  animation:hpFlash 3s ease-in-out infinite;
+}
+@keyframes hpFlash{0%,100%{opacity:1;}50%{opacity:.65;}}
+
+.coords{
+  color:#55FFFF;font-size:5.5px;
+  text-shadow:1px 1px #003F3F;
+  width:100%;line-height:2.2;
+  border-top:1px solid #333;padding-top:8px;
+}
+
+/* ── RIGHT CONTENT AREA ── */
+#right-col{
+  display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* Nav grid */
+#nav-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-bottom:2px solid #444;
+  flex-shrink:0;
+}
+.mc-btn{
+  font-family:'Press Start 2P',monospace;
+  font-size:6.5px;color:#E0E0E0;
+  text-shadow:1px 1px #3F3F3F;
+  background:linear-gradient(180deg,#8A8A8A 0%,#7A7A7A 47%,#5A5A5A 50%,#6A6A6A 100%);
+  border:none;border-right:1px solid #333;
+  cursor:pointer;padding:9px 4px;
+  text-align:center;line-height:2;
+  position:relative;overflow:hidden;
+  transition:none;
+}
+.mc-btn::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:rgba(255,255,255,0.22);
+}
+.mc-btn:last-child{border-right:none;}
+.mc-btn:hover{
+  background:linear-gradient(180deg,#7070EE 0%,#6060DD 47%,#4040BB 50%,#5050CC 100%);
+  color:#FFFF80;text-shadow:1px 1px #3F3F00;
+}
+.mc-btn:active,.mc-btn.active{
+  background:linear-gradient(180deg,#3A7A3A 0%,#2A6A2A 47%,#1A4A1A 50%,#2A5A2A 100%);
+  color:#80FF80;text-shadow:1px 1px #003F00;
+}
+
+/* Content panel */
+#content-panel{
+  flex:1;overflow-y:auto;padding:14px;
+}
+#content-panel::-webkit-scrollbar{width:7px;}
+#content-panel::-webkit-scrollbar-track{background:#111;border-left:1px solid #2A2A2A;}
+#content-panel::-webkit-scrollbar-thumb{background:#555;border:1px solid #333;}
+
+.ct-title{
+  color:#FFFF55;font-size:9px;
+  text-shadow:1px 1px #3F3F00;
+  margin-bottom:12px;padding-bottom:7px;
+  border-bottom:2px solid #444;
+  display:flex;align-items:center;gap:8px;
+}
+.ct-row{
+  display:flex;align-items:flex-start;gap:10px;
+  margin-bottom:8px;padding:8px;
+  background:rgba(255,255,255,0.025);
+  border-left:3px solid #3A3A3A;
+  transition:border-color 0.2s;
+}
+.ct-row:hover{border-left-color:#555;}
+.ct-ico{font-size:15px;flex-shrink:0;margin-top:2px;}
+.ct-body{font-size:7px;color:#FFF;line-height:2.1;text-shadow:1px 1px #333;}
+.ct-lbl{color:#888;font-size:5.5px;display:block;margin-bottom:3px;letter-spacing:1px;}
+.acc-g{color:#55FF55;}
+.acc-c{color:#55FFFF;}
+.acc-y{color:#FFFF55;}
+.acc-b{color:#88AAFF;}
+
+/* Timeline */
+.mc-tl{border-left:3px solid #444;margin-left:8px;padding-left:16px;}
+.mc-tl-item{
+  position:relative;margin-bottom:9px;padding:7px 8px;
+  background:rgba(255,255,255,0.025);
+}
+.mc-tl-item::before{
+  content:'';position:absolute;
+  left:-21px;top:50%;transform:translateY(-50%);
+  width:10px;height:10px;background:#444;border:2px solid #666;
+}
+.mc-tl-item.active-now::before{background:#55FF55;border-color:#80FF80;}
+.tl-name{font-size:7.5px;color:#FFF;margin-bottom:3px;}
+.mc-tl-item.active-now .tl-name{color:#55FF55;}
+.tl-sub{font-size:5.5px;color:#888;}
+
+/* Inventory */
+.mc-inv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.mc-slot{
+  background:#222;
+  border:2px solid #1A1A1A;
+  box-shadow:inset 1px 1px 0 #555,inset -1px -1px 0 #111;
+  padding:10px 6px;text-align:center;cursor:default;
+  transition:border-color 0.1s;
+}
+.mc-slot:hover{border-color:#FFFF55;}
+.slot-ico{font-size:1.8em;display:block;margin-bottom:6px;}
+.slot-name{font-size:5.5px;color:#AAAAAA;line-height:1.8;}
+
+/* ── ACHIEVEMENT TOAST ── */
+#ach-toast{
+  position:fixed;top:14px;right:-500px;
+  background:rgba(0,0,0,0.93);
+  border:2px solid #FFD700;
+  box-shadow:0 0 16px rgba(255,215,0,.3),2px 2px 0 #000;
+  padding:10px 16px;
+  display:flex;align-items:center;gap:12px;
+  z-index:200;min-width:260px;
+  transition:right 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+#ach-toast.show{right:14px;}
+.ach-ico{font-size:2em;}
+.ach-top{color:#FFD700;font-size:6.5px;margin-bottom:5px;}
+.ach-name{color:#FFF;font-size:7.5px;text-shadow:1px 1px #3F3F3F;}
+
+/* ── STATUS BAR ── */
+#status-bar{
+  position:fixed;bottom:0;left:0;right:0;height:44px;
+  background:rgba(0,0,0,0.88);border-top:2px solid #444;
+  z-index:10;display:flex;align-items:center;
+  justify-content:space-between;padding:0 14px;
+}
+.sb-txt{color:#AAAAAA;font-size:6.5px;text-shadow:1px 1px #3F3F3F;}
+.hotbar{display:flex;gap:2px;}
+.hb-s{
+  width:30px;height:30px;
+  background:#222;border:2px solid #555;
+  box-shadow:inset 1px 1px 0 #777,inset -1px -1px 0 #111;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;cursor:default;
+}
+.hb-s.sel{border-color:#FFF;box-shadow:inset 1px 1px 0 #FFF,inset -1px -1px 0 #888;}
+
+/* ── SHAKE ── */
+@keyframes shake{
+  0%,100%{transform:translate(0);}
+  20%{transform:translate(-5px,-3px);}
+  40%{transform:translate(5px,3px);}
+  60%{transform:translate(-3px,5px);}
+  80%{transform:translate(3px,-4px);}
+}
+.shaking{animation:shake 0.35s ease;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:680px){
+  #mc-panel{grid-template-columns:1fr;max-height:calc(100vh - 100px);overflow-y:auto;}
+  #sidebar{flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:2px solid #444;justify-content:center;}
+  .item-frame{width:80px;height:100px;}
+  #nav-grid{grid-template-columns:repeat(3,1fr);}
+  .mc-btn{font-size:5.5px;padding:7px 2px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="load-title">Loading World...</div>
+  <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+  <div class="load-status" id="load-status">Generating terrain...</div>
+</div>
+
+<!-- Canvases -->
+<canvas id="bg-canvas"></canvas>
+<canvas id="part-canvas"></canvas>
+<div id="dmg-overlay"></div>
+
+<!-- Main UI -->
+<div id="mc-ui">
+  <div id="mc-title">⚔&nbsp; JEON SE JIN &nbsp;⚔</div>
+  <div id="mc-sub">SURVIVAL MODE &nbsp;·&nbsp; LEVEL 24 &nbsp;·&nbsp; INCHEON SERVER</div>
+
+  <div id="mc-panel">
+    <!-- ── SIDEBAR ── -->
+    <div id="sidebar">
+      <div class="item-frame">
+        <img src="profile.png" alt="Player Skin"/>
+        <div class="frame-dot fd-tl"></div>
+        <div class="frame-dot fd-tr"></div>
+        <div class="frame-dot fd-bl"></div>
+        <div class="frame-dot fd-br"></div>
+      </div>
+      <div class="p-name">JEON SE JIN<div class="p-class">[ Student ]</div></div>
+      <div class="hearts" style="color:#FF5555">❤❤❤❤❤❤❤❤❤❤</div>
+      <div class="hp-bar"><div class="hp-fill"></div></div>
+      <div class="coords">
+        XYZ: 37.45 / 64 / 126.78<br>
+        인천광역시 동구<br>
+        Biome: <span class="acc-g">Plains</span><br>
+        Day: <span class="acc-y">9050</span>
+      </div>
+    </div>
+
+    <!-- ── CONTENT ── -->
+    <div id="right-col">
+      <div id="nav-grid">
+        <button class="mc-btn active" data-tab="about"      id="btn-about">🌿<br>ABOUT</button>
+        <button class="mc-btn"        data-tab="education"  id="btn-education">📚<br>EDUCATION</button>
+        <button class="mc-btn"        data-tab="military"   id="btn-military">✈️<br>MILITARY</button>
+        <button class="mc-btn"        data-tab="licenses"   id="btn-licenses">📜<br>LICENSES</button>
+        <button class="mc-btn"        data-tab="experience" id="btn-experience">💼<br>EXPERIENCE</button>
+        <button class="mc-btn"        data-tab="contact"    id="btn-contact">📮<br>CONTACT</button>
+      </div>
+      <div id="content-panel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Achievement -->
+<div id="ach-toast">
+  <span class="ach-ico" id="ach-ico">🏆</span>
+  <div>
+    <div class="ach-top">Achievement Unlocked!</div>
+    <div class="ach-name" id="ach-name">Portfolio Discovered</div>
+  </div>
+</div>
+
+<!-- Status Bar -->
+<div id="status-bar">
+  <div class="sb-txt">Jeon Se Jin · 2026 · Incheon</div>
+  <div class="hotbar">
+    <div class="hb-s sel">🌿</div><div class="hb-s">📚</div>
+    <div class="hb-s">✈️</div><div class="hb-s">📜</div>
+    <div class="hb-s">💼</div><div class="hb-s">📮</div>
+    <div class="hb-s">🎮</div><div class="hb-s">😴</div>
+    <div class="hb-s">🍽️</div>
+  </div>
+  <div class="sb-txt"><span id="sb-fps">FPS: 60</span> · <span id="sb-time"></span></div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   CANVAS SETUP
+════════════════════════════════════════════ */
+const bgC = document.getElementById('bg-canvas');
+const bgX = bgC.getContext('2d');
+const ptC = document.getElementById('part-canvas');
+const ptX = ptC.getContext('2d');
+
+function resize() {
+  bgC.width  = ptC.width  = window.innerWidth;
+  bgC.height = ptC.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); initWorld(); });
+
+/* ════════════════════════════════════════════
+   BACKGROUND — LANDSCAPE
+════════════════════════════════════════════ */
+let clouds = [];
+const GROUND_FRAC = 0.64; // ground top as fraction of height
+
+function drawLandscape() {
+  const W = bgC.width, H = bgC.height;
+  const gY = H * GROUND_FRAC;
+
+  // Sky gradient
+  const sky = bgX.createLinearGradient(0, 0, 0, gY);
+  sky.addColorStop(0, '#0D2050');
+  sky.addColorStop(0.55, '#2255AA');
+  sky.addColorStop(1, '#4A80C8');
+  bgX.fillStyle = sky;
+  bgX.fillRect(0, 0, W, gY);
+
+  // Stars
+  bgX.fillStyle = 'rgba(255,255,255,0.7)';
+  [[0.08,0.06],[0.18,0.14],[0.31,0.04],[0.47,0.09],[0.61,0.05],
+   [0.73,0.13],[0.84,0.07],[0.12,0.21],[0.56,0.18],[0.90,0.17]]
+  .forEach(([fx,fy]) => bgX.fillRect(W*fx, H*fy, 2, 2));
+
+  // Sun
+  const sx = W * 0.84, sy = H * 0.08;
+  bgX.fillStyle = '#FFEE55'; bgX.fillRect(sx, sy, 30, 30);
+  bgX.fillStyle = '#FFFFFF'; bgX.fillRect(sx+4, sy+4, 22, 22);
+  bgX.fillStyle = '#FFEE55'; bgX.fillRect(sx+6, sy+6, 18, 18);
+
+  // Far mountains
+  bgX.fillStyle = '#192B5A';
+  drawMountains(W, H * 0.48, gY);
+
+  // Mid-ground trees
+  drawTrees(W, gY, 35, 65, '#183018', '#204820');
+
+  // Ground (dirt)
+  const dirtGrad = bgX.createLinearGradient(0, gY, 0, H);
+  dirtGrad.addColorStop(0, '#5B3A20');
+  dirtGrad.addColorStop(1, '#3A2010');
+  bgX.fillStyle = dirtGrad;
+  bgX.fillRect(0, gY, W, H - gY);
+
+  // Grass strip
+  bgX.fillStyle = '#3DA228'; bgX.fillRect(0, gY, W, 14);
+  bgX.fillStyle = '#55CC33'; bgX.fillRect(0, gY, W, 6);
+
+  // Grass block row at very bottom
+  const BS = 22;
+  for (let bx = 0; bx < W; bx += BS) {
+    bgX.fillStyle = '#3DA228'; bgX.fillRect(bx, H - BS, BS, 7);
+    bgX.fillStyle = '#7B4B20'; bgX.fillRect(bx, H - BS + 7, BS, BS - 7);
+    bgX.strokeStyle = '#4A2D10'; bgX.lineWidth = 1;
+    bgX.strokeRect(bx + 0.5, H - BS + 0.5, BS - 1, BS - 1);
+  }
+}
+
+function drawMountains(W, yPeak, yBase) {
+  bgX.beginPath();
+  bgX.moveTo(0, yBase);
+  for (let i = 0; i <= 10; i++) {
+    const mx = (i / 10) * W;
+    const my = yPeak + Math.abs(Math.sin(i * 1.3 + 0.4)) * (yBase - yPeak) * 0.7;
+    bgX.lineTo(mx, my);
+  }
+  bgX.lineTo(W, yBase); bgX.closePath(); bgX.fill();
+}
+
+function drawTrees(W, groundY, minH, maxH, col1, col2) {
+  for (let tx = 0; tx < W + 60; tx += 55 + (tx * 17 % 28)) {
+    const h = minH + (tx * 3 % (maxH - minH));
+    bgX.fillStyle = '#5B3A1A';
+    bgX.fillRect(tx - 5, groundY - h, 10, h);
+    bgX.fillStyle = col1;
+    bgX.fillRect(tx - 18, groundY - h - h * 0.6, 36, h * 0.65);
+    bgX.fillStyle = col2;
+    bgX.fillRect(tx - 13, groundY - h - h * 0.85, 26, h * 0.45);
+    bgX.fillRect(tx - 8,  groundY - h - h * 1.05, 16, h * 0.3);
+  }
+}
+
+/* ════════════════════════════════════════════
+   CLOUDS
+════════════════════════════════════════════ */
+function initClouds() {
+  const W = bgC.width, H = bgC.height;
+  clouds = [];
+  for (let i = 0; i < 9; i++) {
+    clouds.push({
+      x: Math.random() * W,
+      y: H * 0.04 + Math.random() * H * 0.18,
+      w: 56 + Math.random() * 100,
+      spd: 0.15 + Math.random() * 0.25
+    });
+  }
+}
+function updateDrawClouds() {
+  const W = bgC.width;
+  bgX.fillStyle = 'rgba(255,255,255,0.82)';
+  clouds.forEach(c => {
+    c.x += c.spd;
+    if (c.x > W + c.w) c.x = -c.w;
+    bgX.fillRect(c.x,      c.y,      c.w,      14);
+    bgX.fillRect(c.x + 8,  c.y - 8,  c.w - 16, 10);
+    bgX.fillRect(c.x + c.w * 0.55, c.y - 14, c.w * 0.28, 8);
+  });
+}
+
+/* ════════════════════════════════════════════
+   MOB PIXEL ART  (scale = px per "MC pixel")
+════════════════════════════════════════════ */
+const S = 3; // base scale
+
+function fillPx(x, y, w, h, col) {
+  bgX.fillStyle = col;
+  bgX.fillRect(x, y, w * S, h * S);
+}
+
+function drawCreeper(x, y, frame) {
+  const G='#3DA228',D='#1D6110',Dk='#0D3008';
+  // head
+  fillPx(x+2,y+0, 6,6, G);
+  fillPx(x+3,y+1, 1,2, Dk); fillPx(x+6,y+1, 1,2, Dk); // eyes
+  fillPx(x+4,y+3, 2,1, D);                               // nose
+  fillPx(x+3,y+4, 1,1, Dk); fillPx(x+6,y+4, 1,1, Dk);  // mouth
+  fillPx(x+4,y+5, 2,1, Dk);
+  // body
+  fillPx(x+3,y+6, 4,4, G);
+  // legs
+  fillPx(x+3,y+10, 2,3, D); fillPx(x+5,y+10+(frame?1:0), 2,3-(frame?1:0), D);
+}
+
+function drawZombie(x, y, frame) {
+  const Fl='#B37D55',H='#3A2B1A',Sh='#2244CC',Pn='#1A2E7A',Sk='#6A9A40';
+  // head
+  fillPx(x+2,y+0, 6,5, Fl);
+  fillPx(x+2,y+0, 6,1, H); // hair
+  fillPx(x+3,y+1, 1,2, '#1A1A1A'); fillPx(x+6,y+1, 1,2, '#1A1A1A'); // eyes
+  // arms (extended zombie pose)
+  fillPx(x+0,y+5, 2,4, Fl); fillPx(x+8,y+5, 2,4, Fl);
+  // shirt
+  fillPx(x+2,y+5, 6,4, Sh);
+  // pants
+  fillPx(x+2,y+9, 3,3, Pn); fillPx(x+5,y+9, 3,3, Pn);
+  // shoes
+  fillPx(x+2,y+11,3,1,H); fillPx(x+5,y+11,3,1,H);
+}
+
+function drawSkeleton(x, y, frame) {
+  const W2='#DEDEDE',G2='#999999',Dk='#3A3A3A',Br='#8B5E3C';
+  // skull
+  fillPx(x+2,y+0, 5,4, W2);
+  fillPx(x+2,y+4, 1,1, W2); fillPx(x+4,y+4, 1,1, W2); fillPx(x+6,y+4, 1,1, W2);
+  fillPx(x+3,y+1, 1,1, Dk); fillPx(x+5,y+1, 1,1, Dk); // eyes
+  // ribs
+  fillPx(x+3,y+5, 3,3, W2);
+  fillPx(x+3,y+6, 3,1, Dk); // rib line
+  // arms
+  fillPx(x+1,y+5, 2,3, W2); fillPx(x+6,y+5, 2,3, W2);
+  // bow
+  fillPx(x+0,y+3, 1,6, Br);
+  // legs
+  fillPx(x+3,y+8, 1,4, W2); fillPx(x+5,y+8, 1,4, W2);
+  if (frame) {
+    fillPx(x+3,y+8, 1,3, G2); fillPx(x+5,y+8, 1,5, G2);
+  }
+}
+
+function drawSpider(x, y, frame) {
+  const Bl='#1A1A1A',Br2='#2A2A2A',R='#CC0000';
+  // body (wide)
+  fillPx(x+3,y+2, 7,4, Bl);
+  // head
+  fillPx(x+5,y+0, 4,4, Bl);
+  // red eyes
+  fillPx(x+5,y+1, 1,1, R); fillPx(x+8,y+1, 1,1, R);
+  // 4 legs each side
+  if (!frame) {
+    fillPx(x+0,y+0, 3,1, Br2); fillPx(x+0,y+3, 3,1, Br2);
+    fillPx(x+0,y+6, 3,1, Br2); fillPx(x+0,y+8, 2,1, Br2);
+    fillPx(x+10,y+0, 3,1, Br2); fillPx(x+10,y+3, 3,1, Br2);
+    fillPx(x+10,y+6, 3,1, Br2); fillPx(x+11,y+8, 2,1, Br2);
+  } else {
+    fillPx(x+0,y+1, 3,1, Br2); fillPx(x+0,y+4, 3,1, Br2);
+    fillPx(x+0,y+7, 3,1, Br2); fillPx(x+1,y+9, 2,1, Br2);
+    fillPx(x+10,y+1, 3,1, Br2); fillPx(x+10,y+4, 3,1, Br2);
+    fillPx(x+10,y+7, 3,1, Br2); fillPx(x+10,y+9, 2,1, Br2);
+  }
+}
+
+function drawEnderman(x, y, frame) {
+  const Bl='#111111',Pu='#9900EE',Db='#0A0A0A';
+  // head
+  fillPx(x+3,y+0, 4,3, Bl);
+  fillPx(x+3,y+1, 1,1, Pu); fillPx(x+6,y+1, 1,1, Pu); // purple eyes
+  // long neck+body
+  fillPx(x+4,y+3, 2,8, Bl);
+  // long thin arms
+  fillPx(x+2,y+3, 2,7, Db); fillPx(x+6,y+3, 2,7, Db);
+  // long legs
+  fillPx(x+3,y+11, 2, frame?6:5, Db);
+  fillPx(x+5,y+11, 2, frame?5:6, Db);
+}
+
+function drawSteve(x, y, frame) {
+  const Sk='#EFA87C',Br='#5C3A1A',Sh='#2244BB',Pn='#2A2A8A',Bt='#5B3A20';
+  // head
+  fillPx(x+2,y+0, 6,5, Sk);
+  fillPx(x+2,y+0, 6,2, Br); // hair
+  fillPx(x+3,y+2, 1,1, '#2244AA'); fillPx(x+6,y+2, 1,1, '#2244AA'); // eyes
+  // shirt
+  fillPx(x+2,y+5, 6,4, Sh);
+  // arms
+  fillPx(x+0,y+5, 2,4, Sk); fillPx(x+8,y+5, 2,4, Sh);
+  // pants + legs
+  fillPx(x+2,y+9, 3, frame?5:4, Pn);
+  fillPx(x+5,y+9, 3, frame?4:5, Pn);
+  // boots
+  fillPx(x+2,y+13, 3,1, Bt); fillPx(x+5,y+13, 3,1, Bt);
+}
+
+function drawPig(x, y, frame) {
+  const Pk='#F4A0A0',Dp='#D07070',N='#F08080';
+  // body (wide oval-ish)
+  fillPx(x+1,y+2, 8,5, Pk);
+  // head
+  fillPx(x+2,y+0, 6,4, Pk);
+  // snout
+  fillPx(x+3,y+2, 4,2, N);
+  fillPx(x+3,y+3, 1,1, Dp); fillPx(x+5,y+3, 1,1, Dp);
+  // ears
+  fillPx(x+2,y+0, 2,1, Dp); fillPx(x+6,y+0, 2,1, Dp);
+  // eyes
+  fillPx(x+3,y+1, 1,1, '#1A1A1A'); fillPx(x+6,y+1, 1,1, '#1A1A1A');
+  // 4 legs
+  fillPx(x+2,y+7, 2,3, Pk); fillPx(x+6,y+7, 2,3, Pk);
+  fillPx(x+3,y+7, 1,frame?2:3, Dp); fillPx(x+6,y+7, 1,frame?3:2, Dp);
+}
+
+/* ════════════════════════════════════════════
+   MOBS ENTITY SYSTEM
+════════════════════════════════════════════ */
+let mobs = [];
+
+const MOB_DEFS = [
+  {type:'creeper',  w:10, h:13, draw:drawCreeper},
+  {type:'zombie',   w:10, h:12, draw:drawZombie},
+  {type:'skeleton', w:9,  h:12, draw:drawSkeleton},
+  {type:'spider',   w:13, h:10, draw:drawSpider},
+  {type:'enderman', w:10, h:17, draw:drawEnderman},
+  {type:'steve',    w:10, h:14, draw:drawSteve},
+  {type:'pig',      w:10, h:10, draw:drawPig},
+  {type:'creeper',  w:10, h:13, draw:drawCreeper},
+  {type:'zombie',   w:10, h:12, draw:drawZombie},
+];
+
+function initMobs() {
+  const W = bgC.width, H = bgC.height;
+  const gY = H * GROUND_FRAC;
+  mobs = [];
+  MOB_DEFS.forEach((def, i) => {
+    const goRight = (i % 3 !== 2);
+    const sc = 1.8 + Math.random() * 0.8;
+    const spd = 0.55 + Math.random() * 0.7;
+    const mobH = def.h * S * sc;
+    mobs.push({
+      ...def,
+      sc,
+      x: goRight ? -150 - i * 220 : W + 150 + i * 180,
+      y: gY - mobH,
+      vx: goRight ? spd : -spd,
+      frame: 0, ft: 0,
+      fi: 28 + Math.random() * 22,
+    });
+  });
+}
+
+function updateMobs() {
+  const W = bgC.width, H = bgC.height;
+  const gY = H * GROUND_FRAC;
+  mobs.forEach(mob => {
+    mob.x += mob.vx;
+    mob.ft++;
+    if (mob.ft >= mob.fi) { mob.frame ^= 1; mob.ft = 0; }
+    const mobH = mob.h * S * mob.sc;
+    const mobW = mob.w * S * mob.sc;
+    if (mob.vx > 0 && mob.x > W + 160) { mob.x = -120; mob.y = gY - mobH; }
+    if (mob.vx < 0 && mob.x < -160)    { mob.x = W + 120; mob.y = gY - mobH; }
+  });
+}
+
+function drawMobs() {
+  mobs.forEach(mob => {
+    bgX.save();
+    const mobW = mob.w * S * mob.sc;
+    // Scale + optional flip
+    bgX.translate(mob.x, mob.y);
+    bgX.scale(mob.sc * (mob.vx < 0 ? -1 : 1), mob.sc);
+    if (mob.vx < 0) bgX.translate(-mob.w * S, 0);
+    mob.draw(0, 0, mob.frame);
+    bgX.restore();
+  });
+}
+
+function initWorld() {
+  initClouds();
+  initMobs();
+}
+
+/* ════════════════════════════════════════════
+   PARTICLE SYSTEM
+════════════════════════════════════════════ */
+const particles = [];
+
+class Particle {
+  constructor(x, y, type) {
+    this.x = x; this.y = y; this.life = 1;
+    this.decay = 0.014 + Math.random() * 0.022;
+    this.shape = 'sq';
+
+    switch(type) {
+      case 'potion':   // splash potion — purple/violet orbs
+        this.color = `hsl(${250+Math.random()*50},85%,${55+Math.random()*25}%)`;
+        this.sz = 5+Math.random()*6; this.vx=(Math.random()-.5)*11;
+        this.vy=(Math.random()-.5)*11-2; this.g=0.18; this.shape='circle'; break;
+      case 'creeper':  // explosion — green/black chunks
+        this.color=['#3DA228','#1D6110','#0D3008','#FFFFFF'][Math.floor(Math.random()*4)];
+        this.sz=9+Math.random()*18; this.vx=(Math.random()-.5)*17;
+        this.vy=-(5+Math.random()*11); this.g=0.38; this.decay=0.018+Math.random()*0.018; break;
+      case 'xp':       // XP orbs — green diamonds
+        this.color=`hsl(${100+Math.random()*20},92%,${50+Math.random()*28}%)`;
+        this.sz=6+Math.random()*5; this.vx=(Math.random()-.5)*5;
+        this.vy=-(2+Math.random()*6); this.g=-0.07; this.shape='diamond'; break;
+      case 'enchant':  // enchant — blue sparkles
+        this.color=`hsl(${200+Math.random()*40},100%,${60+Math.random()*30}%)`;
+        this.sz=3+Math.random()*5; this.vx=(Math.random()-.5)*8;
+        this.vy=-(1+Math.random()*9); this.g=-0.04; this.shape='star'; break;
+      case 'fire':     // fire — orange/yellow
+        this.color=`hsl(${12+Math.random()*38},92%,55%)`;
+        this.sz=7+Math.random()*11; this.vx=(Math.random()-.5)*4;
+        this.vy=-(3+Math.random()*7); this.g=-0.13; break;
+      case 'heart':    // hearts — pink
+        this.color=Math.random()>.5?'#FF4455':'#FF88AA';
+        this.sz=10+Math.random()*9; this.vx=(Math.random()-.5)*6;
+        this.vy=-(3+Math.random()*5); this.g=-0.06; this.shape='heart'; break;
+    }
+  }
+  update() {
+    this.x+=this.vx; this.y+=this.vy;
+    this.vy+=this.g; this.vx*=0.96;
+    this.life-=this.decay; this.sz*=0.99;
+    return this.life>0&&this.sz>0.4;
+  }
+  draw(ctx) {
+    ctx.globalAlpha = Math.max(0, this.life);
+    ctx.fillStyle = this.color;
+    const s = this.sz * this.life;
+    if (this.shape==='circle') {
+      ctx.beginPath(); ctx.arc(this.x,this.y,s,0,Math.PI*2); ctx.fill();
+    } else if (this.shape==='sq') {
+      ctx.fillRect(this.x-s/2,this.y-s/2,s,s);
+    } else if (this.shape==='diamond') {
+      ctx.beginPath();
+      ctx.moveTo(this.x,this.y-s); ctx.lineTo(this.x+s,this.y);
+      ctx.lineTo(this.x,this.y+s); ctx.lineTo(this.x-s,this.y);
+      ctx.closePath(); ctx.fill();
+    } else if (this.shape==='star') {
+      ctx.beginPath();
+      for(let p=0;p<10;p++){
+        const a=(p*Math.PI/5)-Math.PI/2;
+        const r=p%2===0?s:s*0.45;
+        p===0?ctx.moveTo(this.x+r*Math.cos(a),this.y+r*Math.sin(a))
+             :ctx.lineTo(this.x+r*Math.cos(a),this.y+r*Math.sin(a));
+      }
+      ctx.closePath(); ctx.fill();
+    } else if (this.shape==='heart') {
+      const hs=Math.max(1,Math.floor(s/3));
+      ctx.fillRect(this.x-2*hs,this.y-hs,hs,hs);
+      ctx.fillRect(this.x+hs,  this.y-hs,hs,hs);
+      ctx.fillRect(this.x-3*hs,this.y,   6*hs,hs);
+      ctx.fillRect(this.x-2*hs,this.y+hs,4*hs,hs);
+      ctx.fillRect(this.x-hs,  this.y+2*hs,2*hs,hs);
+    }
+    ctx.globalAlpha=1;
+  }
+}
+
+function spawnParticles(x, y, type, n=26) {
+  for(let i=0;i<n;i++) particles.push(new Particle(x,y,type));
+  if (type==='creeper') {
+    document.body.classList.add('shaking');
+    document.body.addEventListener('animationend',()=>document.body.classList.remove('shaking'),{once:true});
+    const ov=document.getElementById('dmg-overlay');
+    ov.style.opacity='1'; setTimeout(()=>ov.style.opacity='0',140);
+  }
+}
+
+/* ════════════════════════════════════════════
+   GAME LOOP
+════════════════════════════════════════════ */
+let lastT=0,fc=0,fps=60,lastFT=0;
+
+function loop(t) {
+  fc++;
+  if(t-lastFT>1000){fps=fc;fc=0;lastFT=t;
+    document.getElementById('sb-fps').textContent=`FPS: ${fps}`;}
+
+  const W=bgC.width,H=bgC.height;
+  bgX.clearRect(0,0,W,H);
+  drawLandscape();
+  updateDrawClouds();
+  updateMobs();
+  drawMobs();
+
+  ptX.clearRect(0,0,W,H);
+  for(let i=particles.length-1;i>=0;i--)
+    particles[i].update()?particles[i].draw(ptX):particles.splice(i,1);
+
+  requestAnimationFrame(loop);
+}
+
+/* ════════════════════════════════════════════
+   CONTENT DATA
+════════════════════════════════════════════ */
+const CONTENT = {
+  about: `
+    <div class="ct-title">⚡ PLAYER STATS</div>
+    <div class="ct-row">
+      <span class="ct-ico">🪪</span>
+      <div class="ct-body">
+        <span class="ct-lbl">PLAYER NAME</span>
+        JEON SE JIN <span class="acc-c">(전세진)</span>
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">🎭</span>
+      <div class="ct-body">
+        <span class="ct-lbl">GAME MODE</span>
+        <span class="acc-g">Student</span> · Survival
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">📍</span>
+      <div class="ct-body">
+        <span class="ct-lbl">SPAWN POINT</span>
+        인천광역시 동구
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">🎮</span>
+      <div class="ct-body">
+        <span class="ct-lbl">HOBBIES (Equipped Items)</span>
+        <span class="acc-y">[😴 Sleep]</span>
+        <span class="acc-g">[🎮 Game]</span>
+        <span class="acc-c">[🍽️ Eat]</span>
+      </div>
+    </div>`,
+
+  education: `
+    <div class="ct-title">📚 QUEST LOG · 학력</div>
+    <div class="mc-tl">
+      <div class="mc-tl-item">
+        <div class="tl-name">🏫 인천송현초등학교</div>
+        <div class="tl-sub">초등학교 졸업 &nbsp;✓ COMPLETED</div>
+      </div>
+      <div class="mc-tl-item">
+        <div class="tl-name">🏫 동산중학교</div>
+        <div class="tl-sub">중학교 졸업 &nbsp;✓ COMPLETED</div>
+      </div>
+      <div class="mc-tl-item">
+        <div class="tl-name">🏫 동산고등학교</div>
+        <div class="tl-sub">고등학교 졸업 &nbsp;✓ COMPLETED</div>
+      </div>
+      <div class="mc-tl-item active-now">
+        <div class="tl-name">🏛️ 상명대학교</div>
+        <div class="tl-sub" style="color:#FFFF55">재학 중 &nbsp;▶ IN PROGRESS...</div>
+      </div>
+    </div>`,
+
+  military: `
+    <div class="ct-title">✈️ FACTION INFO · 병역</div>
+    <div class="ct-row" style="border-left-color:#5588FF;background:rgba(50,80,200,.09)">
+      <span class="ct-ico">✈️</span>
+      <div class="ct-body">
+        <span class="ct-lbl">FACTION JOINED</span>
+        <span class="acc-b">대한민국 공군</span><br>
+        <span style="color:#666">Republic of Korea Air Force</span>
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">📅</span>
+      <div class="ct-body">
+        <span class="ct-lbl">SERVICE PERIOD</span>
+        <span class="acc-y">2022.08</span> ~ <span class="acc-y">2025.05</span><br>
+        <span style="color:#666">약 2년 9개월 &nbsp;(~33 months)</span>
+      </div>
+    </div>
+    <div class="ct-row" style="border-left-color:#FFAA00;background:rgba(255,170,0,.07)">
+      <span class="ct-ico">🏆</span>
+      <div class="ct-body">
+        <span class="ct-lbl">STATUS</span>
+        <span style="color:#FFAA00">전역 완료 · HONORABLY DISCHARGED</span>
+      </div>
+    </div>`,
+
+  licenses: `
+    <div class="ct-title">📜 INVENTORY · 자격증</div>
+    <div class="mc-inv">
+      <div class="mc-slot">
+        <span class="slot-ico">💻</span>
+        <div class="slot-name">컴퓨터활용능력<br>2급</div>
+      </div>
+      <div class="mc-slot">
+        <span class="slot-ico">📐</span>
+        <div class="slot-name">ATC<br>캐드마스터</div>
+      </div>
+      <div class="mc-slot">
+        <span class="slot-ico">🚗</span>
+        <div class="slot-name">운전면허<br>1종 보통</div>
+      </div>
+    </div>`,
+
+  experience: `
+    <div class="ct-title">💼 JOB BOARD · 경력</div>
+    <div class="ct-row" style="border-left-color:#55AA55;background:rgba(50,150,50,.08)">
+      <span class="ct-ico">🌿</span>
+      <div class="ct-body">
+        <span class="ct-lbl">GUILD / COMPANY</span>
+        (주)장원조경<br>
+        <span style="color:#666">Jangwon Landscape Co.</span>
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">🏷️</span>
+      <div class="ct-body">
+        <span class="ct-lbl">ROLE / CLASS</span>
+        <span class="acc-g">인턴 · Intern</span>
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">⏳</span>
+      <div class="ct-body">
+        <span class="ct-lbl">DURATION</span>
+        <span class="acc-y">1개월</span> · One Month
+      </div>
+    </div>`,
+
+  contact: `
+    <div class="ct-title">📮 MAILBOX · 연락처</div>
+    <div class="ct-row">
+      <span class="ct-ico">📱</span>
+      <div class="ct-body">
+        <span class="ct-lbl">COMMS CHANNEL — PHONE</span>
+        <a href="tel:010-1234-5678" class="acc-c" style="text-decoration:none">010-1234-5678</a>
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">📧</span>
+      <div class="ct-body">
+        <span class="ct-lbl">COMMS CHANNEL — EMAIL</span>
+        <a href="mailto:garbage@naver.com" class="acc-c" style="text-decoration:none">garbage@naver.com</a>
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">📍</span>
+      <div class="ct-body">
+        <span class="ct-lbl">HOME BASE</span>
+        인천광역시 동구
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">💬</span>
+      <div class="ct-body">
+        <span class="ct-lbl">CLAN CHAT</span>
+        <span style="color:#444">— None —</span>
+      </div>
+    </div>`,
+};
+
+const PARTICLE_MAP = {
+  about:'heart', education:'xp', military:'creeper',
+  licenses:'enchant', experience:'fire', contact:'potion'
+};
+const ACH_MAP = {
+  about:{ico:'🌿',txt:'Player Info Obtained!'},
+  education:{ico:'📚',txt:'Scholar Quest Unlocked!'},
+  military:{ico:'✈️',txt:'Air Force Discovered!'},
+  licenses:{ico:'📜',txt:'Inventory Checked!'},
+  experience:{ico:'💼',txt:'Job Board Cleared!'},
+  contact:{ico:'📮',txt:'Message Sent!'},
+};
+
+function showContent(tab) {
+  document.getElementById('content-panel').innerHTML = CONTENT[tab]||'';
+  document.querySelectorAll('.mc-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`btn-${tab}`)?.classList.add('active');
+  const ach=ACH_MAP[tab];
+  if(ach) showAchievement(ach.ico, ach.txt);
+  // Hotbar selector
+  const idx = ['about','education','military','licenses','experience','contact'].indexOf(tab);
+  document.querySelectorAll('.hb-s').forEach((s,i)=>{
+    s.classList.toggle('sel', i===idx);
+  });
+}
+
+function showAchievement(ico, txt) {
+  const t=document.getElementById('ach-toast');
+  document.getElementById('ach-ico').textContent=ico;
+  document.getElementById('ach-name').textContent=txt;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ════════════════════════════════════════════
+   EVENT LISTENERS
+════════════════════════════════════════════ */
+document.querySelectorAll('.mc-btn').forEach(btn=>{
+  btn.addEventListener('click',function(e){
+    const tab=this.dataset.tab;
+    const rect=this.getBoundingClientRect();
+    const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+    spawnParticles(cx, cy, PARTICLE_MAP[tab]||'xp', tab==='military'?45:28);
+    showContent(tab);
+  });
+});
+
+// Ambient click particles
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.mc-btn'))
+    for(let i=0;i<8;i++) particles.push(new Particle(e.clientX,e.clientY,'xp'));
+});
+
+// Clock
+setInterval(()=>{
+  document.getElementById('sb-time').textContent=
+    new Date().toLocaleTimeString('ko-KR');
+},1000);
+
+/* ════════════════════════════════════════════
+   LOADING SCREEN
+════════════════════════════════════════════ */
+const LOAD_MSGS = [
+  'Generating terrain...','Placing trees...','Spawning mobs...',
+  'Loading chunks...','Building portfolio...',
+  'Preparing achievements...','Joining world...'
+];
+let loadPct=0;
+const barEl=document.getElementById('load-bar');
+const statEl=document.getElementById('load-status');
+
+function advanceLoad(){
+  if(loadPct>=100){
+    document.getElementById('loading').classList.add('fade');
+    initWorld();
+    requestAnimationFrame(loop);
+    showContent('about');
+    setTimeout(()=>showAchievement('🗺️','World Loaded!'),800);
+    return;
+  }
+  const step=8+Math.random()*14;
+  loadPct=Math.min(100,loadPct+step);
+  barEl.style.width=loadPct+'%';
+  const mi=Math.min(LOAD_MSGS.length-1,Math.floor(loadPct/100*LOAD_MSGS.length));
+  statEl.textContent=LOAD_MSGS[mi];
+  setTimeout(advanceLoad, 120+Math.random()*180);
+}
+setTimeout(advanceLoad, 300);
+</script>
+</body>
+</html>
