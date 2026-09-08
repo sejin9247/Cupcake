@@ -506,199 +506,312 @@ function updateDrawClouds() {
 }
 
 /* ════════════════════════════════════════════
-   MOB PIXEL ART  (scale = px per "MC pixel")
+   MOB PIXEL ART  —  string sprite maps
+   '.' = transparent, every other char indexes the palette
 ════════════════════════════════════════════ */
-const S = 3; // base scale
+const S = 3; // px per "MC pixel"
 
-function fillPx(x, y, w, h, col) {
-  bgX.fillStyle = col;
-  bgX.fillRect(x, y, w * S, h * S);
-}
+const SPRITES = {
 
-function drawCreeper(x, y, frame) {
-  const G='#3DA228',D='#1D6110',Dk='#0D3008';
-  // head
-  fillPx(x+2,y+0, 6,6, G);
-  fillPx(x+3,y+1, 1,2, Dk); fillPx(x+6,y+1, 1,2, Dk); // eyes
-  fillPx(x+4,y+3, 2,1, D);                               // nose
-  fillPx(x+3,y+4, 1,1, Dk); fillPx(x+6,y+4, 1,1, Dk);  // mouth
-  fillPx(x+4,y+5, 2,1, Dk);
-  // body
-  fillPx(x+3,y+6, 4,4, G);
-  // legs
-  fillPx(x+3,y+10, 2,3, D); fillPx(x+5,y+10+(frame?1:0), 2,3-(frame?1:0), D);
-}
+  cow: { legTop:10, pal:{d:'#4A3527',w:'#F2F2F2',p:'#F0A0A0',k:'#181818',h:'#D6D2C4',s:'#2A1D14'}, px:[
+    "................",
+    "................",
+    ".........h....h.",
+    ".........dddddd.",
+    ".dddddddddwwwwd.",
+    "ddddddddddwkkwd.",
+    "dwwwwdddddwwwwd.",
+    "dwwwwddddddpppp.",
+    "ddddddddddddppp.",
+    ".dddddddddd.....",
+    ".dd....ddd......",
+    ".dd....ddd......",
+    ".ss....sss......",
+  ]},
 
-function drawZombie(x, y, frame) {
-  const Fl='#B37D55',H='#3A2B1A',Sh='#2244CC',Pn='#1A2E7A',Sk='#6A9A40';
-  // head
-  fillPx(x+2,y+0, 6,5, Fl);
-  fillPx(x+2,y+0, 6,1, H); // hair
-  fillPx(x+3,y+1, 1,2, '#1A1A1A'); fillPx(x+6,y+1, 1,2, '#1A1A1A'); // eyes
-  // arms (extended zombie pose)
-  fillPx(x+0,y+5, 2,4, Fl); fillPx(x+8,y+5, 2,4, Fl);
-  // shirt
-  fillPx(x+2,y+5, 6,4, Sh);
-  // pants
-  fillPx(x+2,y+9, 3,3, Pn); fillPx(x+5,y+9, 3,3, Pn);
-  // shoes
-  fillPx(x+2,y+11,3,1,H); fillPx(x+5,y+11,3,1,H);
-}
+  pig: { legTop:8, pal:{p:'#F0A5A5',d:'#C86A6A',n:'#E08D8D',k:'#181818'}, px:[
+    "..............",
+    ".......dd.....",
+    ".......ppppppp",
+    ".pppppppppkppp",
+    "pppppppppppppp",
+    "ppppppppppnnnn",
+    "ppppppppppknkn",
+    "pppppppppp....",
+    ".ppp...ppp....",
+    ".ppp...ppp....",
+    ".ddd...ddd....",
+  ]},
 
-function drawSkeleton(x, y, frame) {
-  const W2='#DEDEDE',G2='#999999',Dk='#3A3A3A',Br='#8B5E3C';
-  // skull
-  fillPx(x+2,y+0, 5,4, W2);
-  fillPx(x+2,y+4, 1,1, W2); fillPx(x+4,y+4, 1,1, W2); fillPx(x+6,y+4, 1,1, W2);
-  fillPx(x+3,y+1, 1,1, Dk); fillPx(x+5,y+1, 1,1, Dk); // eyes
-  // ribs
-  fillPx(x+3,y+5, 3,3, W2);
-  fillPx(x+3,y+6, 3,1, Dk); // rib line
-  // arms
-  fillPx(x+1,y+5, 2,3, W2); fillPx(x+6,y+5, 2,3, W2);
-  // bow
-  fillPx(x+0,y+3, 1,6, Br);
-  // legs
-  fillPx(x+3,y+8, 1,4, W2); fillPx(x+5,y+8, 1,4, W2);
-  if (frame) {
-    fillPx(x+3,y+8, 1,3, G2); fillPx(x+5,y+8, 1,5, G2);
+  sheep: { legTop:8, pal:{w:'#F0F0F0',g:'#D6D6D6',f:'#E0C4B4',k:'#181818',h:'#3A2A22'}, px:[
+    "...............",
+    "...wwwwwwww....",
+    "..wwwwwwwwwwff.",
+    ".wwwwwwwwwwwfkf",
+    "wwwwwwwwwwwwfff",
+    "wwwwwwwwwwwwff.",
+    ".wwwwwwwwggg...",
+    ".gggggggggg....",
+    "..hh...hhh.....",
+    "..hh...hhh.....",
+    "..hh...hhh.....",
+  ]},
+
+  chicken: { legTop:10, pal:{w:'#F2F2F2',g:'#D8D8D8',y:'#FFB733',r:'#DD3333',k:'#181818'}, px:[
+    "............",
+    ".......rr...",
+    "......wwww..",
+    "......wkww..",
+    ".....wwwwyy.",
+    "....wwwwr...",
+    ".wwwwwww....",
+    "wwwwwwwww...",
+    "wwwwgggg....",
+    ".wwwwww.....",
+    "..y...y.....",
+    ".yy...yy....",
+  ]},
+
+  cat: { legTop:8, pal:{k:'#3A3A44',w:'#EAEAEA',g:'#7ACC4A',p:'#FF9AA6'}, px:[
+    "..............",
+    "k........k...k",
+    "k........kkkkk",
+    "..kkkkkkkkwgwk",
+    ".kkkkkkkkkwwpw",
+    "kkkkkkkkkwwwww",
+    "kkkkkkkkkww...",
+    ".kkkkkkkkw....",
+    "..kk...kww....",
+    "..ww...www....",
+  ]},
+
+  rabbit: { legTop:7, pal:{w:'#EFEAE4',g:'#D6CEC6',p:'#F0B0B0',k:'#B03636'}, px:[
+    "............",
+    "........w..w",
+    "........w..w",
+    "........wwww",
+    "..wwwwwwwkww",
+    ".wwwwwwwwwpp",
+    "wwwwwwwwwww.",
+    "wwwwgggggg..",
+    ".ww...www...",
+    ".ww...www...",
+  ]},
+
+  villager: { legTop:13, pal:{h:'#5A4028',s:'#C09A78',n:'#A87E5C',k:'#181818',b:'#8B6B4A',g:'#3E8E3E'}, px:[
+    "...........",
+    "...hhhhh...",
+    "..hhhhhhh..",
+    "..sskskss..",
+    "..ssnnnss..",
+    "..ssnnnss..",
+    "...sssss...",
+    "..bbbbbbb..",
+    ".sbbbbbbbs.",
+    ".sbbgggbbs.",
+    ".sbbgggbbs.",
+    "..bbgggbb..",
+    "..bbbbbbb..",
+    "..bb...bb..",
+    "..bb...bb..",
+    "..kk...kk..",
+  ]},
+
+  turtle: { legTop:7, pal:{g:'#6BAA3F',d:'#48782A',l:'#DDE8C0',k:'#181818'}, px:[
+    "................",
+    ".....gggg.......",
+    "...gggggggg.....",
+    "..gggddddggg....",
+    "..gggddddgggllll",
+    "..ggggggggggglkl",
+    "..llggggggggllll",
+    "..ll....ll......",
+  ]},
+
+  axolotl: { legTop:7, pal:{p:'#F5A0C0',w:'#FFD6E6',m:'#FF7FB2',k:'#181818'}, px:[
+    "..............",
+    ".........m.m..",
+    "p......mmmmmm.",
+    "p.pppppppppppp",
+    ".pppppppppkpp.",
+    "ppppppppppppp.",
+    ".pppppppppwww.",
+    "p.pp..pp......",
+  ]},
+
+  /* ── flyers: two hand-drawn frames ── */
+
+  allay: { fly:true, pal:{c:'#32D6E8',w:'#FFFFFF',d:'#1494B8'}, px:[
+    "..........",
+    "...cccc...",
+    "..cccccc..",
+    "..cwwcwwc.",
+    "..cwwcwwc.",
+    "..cccccc..",
+    "d..cccc..d",
+    "dd.cccc.dd",
+    ".d.cccc.d.",
+    "...cccc...",
+    "....cc....",
+  ], alt:[
+    "..........",
+    "...cccc...",
+    "..cccccc..",
+    "..cwwcwwc.",
+    "..cwwcwwc.",
+    "..cccccc..",
+    "...cccc...",
+    ".d.cccc.d.",
+    "dd.cccc.dd",
+    "d..cccc..d",
+    "....cc....",
+  ]},
+
+  bat: { fly:true, pal:{b:'#6B4E33',d:'#3A2A1C',k:'#181818'}, px:[
+    ".....b..b.....",
+    ".dd..bbbb..dd.",
+    ".ddddbkkbdddd.",
+    "..ddddbbdddd..",
+    "...dddbbddd...",
+    "......bb......",
+    "......bb......",
+  ], alt:[
+    ".....b..b.....",
+    ".....bbbb.....",
+    "..d..bkkb..d..",
+    ".ddd.dbbd.ddd.",
+    ".dddddbbddddd.",
+    "..dddbbbbddd..",
+    "......bb......",
+  ]},
+
+  parrot: { fly:true, pal:{r:'#DD2A2A',b:'#2A5ACC',y:'#FFC233',k:'#181818'}, px:[
+    "............",
+    "......rrr...",
+    ".....rrrrr..",
+    ".....rkrrry.",
+    ".....rrrryy.",
+    "b..rrrrrrr..",
+    "bb.rbbbrrr..",
+    "bb.rbbbrr...",
+    "b..rrrrr....",
+    "....y.y.....",
+  ], alt:[
+    "............",
+    "......rrr...",
+    ".....rrrrr..",
+    ".....rkrrry.",
+    ".....rrrryy.",
+    "b..bbbrrrr..",
+    "bb.bbbrrrr..",
+    "bb.rrrrrr...",
+    "b..rrrrr....",
+    "....y.y.....",
+  ]},
+};
+
+/* ── bake a string sprite into an offscreen canvas ── */
+const BLANK_ROW = /^[. ]*$/;
+
+function bakeFrame(px, pal, legTop, legMid, frame) {
+  const rows = px.slice();
+  while (rows.length && BLANK_ROW.test(rows[rows.length - 1])) rows.pop();
+  const w = Math.max(...rows.map(r => r.length)), h = rows.length;
+  const cv = document.createElement('canvas');
+  cv.width  = w * S;
+  cv.height = (h + 1) * S; // one spare row so a stepping leg is not clipped
+  const cx = cv.getContext('2d');
+  for (let r = 0; r < h; r++) {
+    for (let c = 0; c < rows[r].length; c++) {
+      const col = pal[rows[r][c]];
+      if (!col) continue;
+      const dy = (legTop != null && r >= legTop && (c < legMid) === !!frame) ? 1 : 0;
+      cx.fillStyle = col;
+      cx.fillRect(c * S, (r + dy) * S, S, S);
+      if (dy && r === legTop) cx.fillRect(c * S, r * S, S, S); // close the hip gap
+    }
   }
+  return cv;
 }
 
-function drawSpider(x, y, frame) {
-  const Bl='#1A1A1A',Br2='#2A2A2A',R='#CC0000';
-  // body (wide)
-  fillPx(x+3,y+2, 7,4, Bl);
-  // head
-  fillPx(x+5,y+0, 4,4, Bl);
-  // red eyes
-  fillPx(x+5,y+1, 1,1, R); fillPx(x+8,y+1, 1,1, R);
-  // 4 legs each side
-  if (!frame) {
-    fillPx(x+0,y+0, 3,1, Br2); fillPx(x+0,y+3, 3,1, Br2);
-    fillPx(x+0,y+6, 3,1, Br2); fillPx(x+0,y+8, 2,1, Br2);
-    fillPx(x+10,y+0, 3,1, Br2); fillPx(x+10,y+3, 3,1, Br2);
-    fillPx(x+10,y+6, 3,1, Br2); fillPx(x+11,y+8, 2,1, Br2);
-  } else {
-    fillPx(x+0,y+1, 3,1, Br2); fillPx(x+0,y+4, 3,1, Br2);
-    fillPx(x+0,y+7, 3,1, Br2); fillPx(x+1,y+9, 2,1, Br2);
-    fillPx(x+10,y+1, 3,1, Br2); fillPx(x+10,y+4, 3,1, Br2);
-    fillPx(x+10,y+7, 3,1, Br2); fillPx(x+10,y+9, 2,1, Br2);
+function bakeSprite(sp) {
+  let legMid = 0;
+  if (sp.legTop != null) {
+    let lo = 999, hi = -1;
+    for (let r = sp.legTop; r < sp.px.length; r++)
+      for (let c = 0; c < sp.px[r].length; c++)
+        if (sp.pal[sp.px[r][c]]) { if (c < lo) lo = c; if (c > hi) hi = c; }
+    legMid = (lo + hi + 1) / 2;
   }
-}
-
-function drawEnderman(x, y, frame) {
-  const Bl='#111111',Pu='#9900EE',Db='#0A0A0A';
-  // head
-  fillPx(x+3,y+0, 4,3, Bl);
-  fillPx(x+3,y+1, 1,1, Pu); fillPx(x+6,y+1, 1,1, Pu); // purple eyes
-  // long neck+body
-  fillPx(x+4,y+3, 2,8, Bl);
-  // long thin arms
-  fillPx(x+2,y+3, 2,7, Db); fillPx(x+6,y+3, 2,7, Db);
-  // long legs
-  fillPx(x+3,y+11, 2, frame?6:5, Db);
-  fillPx(x+5,y+11, 2, frame?5:6, Db);
-}
-
-function drawSteve(x, y, frame) {
-  const Sk='#EFA87C',Br='#5C3A1A',Sh='#2244BB',Pn='#2A2A8A',Bt='#5B3A20';
-  // head
-  fillPx(x+2,y+0, 6,5, Sk);
-  fillPx(x+2,y+0, 6,2, Br); // hair
-  fillPx(x+3,y+2, 1,1, '#2244AA'); fillPx(x+6,y+2, 1,1, '#2244AA'); // eyes
-  // shirt
-  fillPx(x+2,y+5, 6,4, Sh);
-  // arms
-  fillPx(x+0,y+5, 2,4, Sk); fillPx(x+8,y+5, 2,4, Sh);
-  // pants + legs
-  fillPx(x+2,y+9, 3, frame?5:4, Pn);
-  fillPx(x+5,y+9, 3, frame?4:5, Pn);
-  // boots
-  fillPx(x+2,y+13, 3,1, Bt); fillPx(x+5,y+13, 3,1, Bt);
-}
-
-function drawPig(x, y, frame) {
-  const Pk='#F4A0A0',Dp='#D07070',N='#F08080';
-  // body (wide oval-ish)
-  fillPx(x+1,y+2, 8,5, Pk);
-  // head
-  fillPx(x+2,y+0, 6,4, Pk);
-  // snout
-  fillPx(x+3,y+2, 4,2, N);
-  fillPx(x+3,y+3, 1,1, Dp); fillPx(x+5,y+3, 1,1, Dp);
-  // ears
-  fillPx(x+2,y+0, 2,1, Dp); fillPx(x+6,y+0, 2,1, Dp);
-  // eyes
-  fillPx(x+3,y+1, 1,1, '#1A1A1A'); fillPx(x+6,y+1, 1,1, '#1A1A1A');
-  // 4 legs
-  fillPx(x+2,y+7, 2,3, Pk); fillPx(x+6,y+7, 2,3, Pk);
-  fillPx(x+3,y+7, 1,frame?2:3, Dp); fillPx(x+6,y+7, 1,frame?3:2, Dp);
+  return [
+    bakeFrame(sp.px, sp.pal, sp.legTop, legMid, 0),
+    bakeFrame(sp.alt || sp.px, sp.pal, sp.legTop, legMid, 1),
+  ];
 }
 
 /* ════════════════════════════════════════════
-   MOBS ENTITY SYSTEM
+   MOB ENTITY SYSTEM
 ════════════════════════════════════════════ */
 let mobs = [];
+const BAKED = {};
 
-const MOB_DEFS = [
-  {type:'creeper',  w:10, h:13, draw:drawCreeper},
-  {type:'zombie',   w:10, h:12, draw:drawZombie},
-  {type:'skeleton', w:9,  h:12, draw:drawSkeleton},
-  {type:'spider',   w:13, h:10, draw:drawSpider},
-  {type:'enderman', w:10, h:17, draw:drawEnderman},
-  {type:'steve',    w:10, h:14, draw:drawSteve},
-  {type:'pig',      w:10, h:10, draw:drawPig},
-  {type:'creeper',  w:10, h:13, draw:drawCreeper},
-  {type:'zombie',   w:10, h:12, draw:drawZombie},
+const MOB_ROSTER = [
+  'cow', 'pig', 'sheep', 'chicken', 'cat', 'rabbit',
+  'villager', 'turtle', 'axolotl', 'allay', 'bat', 'parrot',
 ];
 
 function initMobs() {
   const W = bgC.width, H = bgC.height;
   const gY = H * GROUND_FRAC;
   mobs = [];
-  MOB_DEFS.forEach((def, i) => {
+  MOB_ROSTER.forEach((name, i) => {
+    const sp = SPRITES[name];
+    if (!BAKED[name]) BAKED[name] = bakeSprite(sp);
+    const img = BAKED[name][0];
     const goRight = (i % 3 !== 2);
-    const sc = 1.8 + Math.random() * 0.8;
-    const spd = 0.55 + Math.random() * 0.7;
-    const mobH = def.h * S * sc;
+    const sc  = sp.fly ? 1.5 + Math.random() * 0.5 : 1.6 + Math.random() * 0.7;
+    const spd = (sp.fly ? 0.75 : 0.45) + Math.random() * 0.6;
     mobs.push({
-      ...def,
-      sc,
-      x: goRight ? -150 - i * 220 : W + 150 + i * 180,
-      y: gY - mobH,
+      name, fly: !!sp.fly, sc,
+      x:  goRight ? -180 - i * 210 : W + 180 + i * 190,
       vx: goRight ? spd : -spd,
+      baseY: sp.fly ? H * 0.10 + Math.random() * H * 0.28
+                    : gY - (img.height - S) * sc + 4,
+      bobA: sp.fly ? 10 + Math.random() * 18 : 0,
+      bobP: Math.random() * Math.PI * 2,
+      bobS: 0.015 + Math.random() * 0.02,
+      y: 0,
       frame: 0, ft: 0,
-      fi: 28 + Math.random() * 22,
+      fi: sp.fly ? 7 + Math.random() * 6 : 20 + Math.random() * 16,
     });
   });
 }
 
 function updateMobs() {
-  const W = bgC.width, H = bgC.height;
-  const gY = H * GROUND_FRAC;
+  const W = bgC.width;
   mobs.forEach(mob => {
     mob.x += mob.vx;
-    mob.ft++;
-    if (mob.ft >= mob.fi) { mob.frame ^= 1; mob.ft = 0; }
-    const mobH = mob.h * S * mob.sc;
-    const mobW = mob.w * S * mob.sc;
-    if (mob.vx > 0 && mob.x > W + 160) { mob.x = -120; mob.y = gY - mobH; }
-    if (mob.vx < 0 && mob.x < -160)    { mob.x = W + 120; mob.y = gY - mobH; }
+    mob.bobP += mob.bobS;
+    mob.y = mob.baseY + (mob.fly ? Math.sin(mob.bobP) * mob.bobA : 0);
+    if (++mob.ft >= mob.fi) { mob.frame ^= 1; mob.ft = 0; }
+    const mobW = BAKED[mob.name][0].width * mob.sc;
+    if (mob.vx > 0 && mob.x > W + 60)        mob.x = -mobW - 60;
+    if (mob.vx < 0 && mob.x < -mobW - 60)    mob.x = W + 60;
   });
 }
 
 function drawMobs() {
+  bgX.imageSmoothingEnabled = false;
   mobs.forEach(mob => {
+    const img = BAKED[mob.name][mob.frame];
+    const w = img.width * mob.sc, h = img.height * mob.sc;
     bgX.save();
-    const mobW = mob.w * S * mob.sc;
-    // Scale + optional flip
     bgX.translate(mob.x, mob.y);
-    bgX.scale(mob.sc * (mob.vx < 0 ? -1 : 1), mob.sc);
-    if (mob.vx < 0) bgX.translate(-mob.w * S, 0);
-    mob.draw(0, 0, mob.frame);
+    if (mob.vx < 0) { bgX.scale(-1, 1); bgX.translate(-w, 0); }
+    bgX.drawImage(img, 0, 0, w, h);
     bgX.restore();
   });
+  bgX.imageSmoothingEnabled = true;
 }
 
 function initWorld() {
