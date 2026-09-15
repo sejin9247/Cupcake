@@ -198,6 +198,34 @@ tr.is-cbd td:first-child::before{content:"";display:inline-block;width:8px;heigh
 .rules{font-size:12px;color:var(--ink2);display:grid;gap:4px;margin-top:6px}
 .rules b{color:var(--ink);font-weight:600}
 
+/* control help popovers */
+.help-t{display:inline-flex;align-items:center;gap:5px;cursor:help;white-space:nowrap}
+.qi{width:16px;height:16px;border-radius:50%;border:1px solid var(--axis);display:inline-grid;place-items:center;font-size:10.5px;font-weight:700;color:var(--muted);line-height:1;flex:none;cursor:help;transition:border-color .15s,color .15s,background .15s}
+.help-t:hover .qi,.help-t.open .qi,.qi:focus-visible{border-color:var(--accent);color:var(--accent-ink);background:var(--accent);outline:none}
+.help-pop{position:fixed;z-index:2100;width:330px;max-width:calc(100vw - 16px);background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.24);padding:12px 14px 13px;pointer-events:none;opacity:0;transform:translateX(10px) scale(.97);transform-origin:right center;transition:opacity .16s ease,transform .22s cubic-bezier(.2,.9,.25,1)}
+.help-pop[data-side="right"]{transform:translateX(-10px) scale(.97);transform-origin:left center}
+.help-pop[data-side="bottom"]{transform:translateY(-8px) scale(.97);transform-origin:top left}
+.help-pop[data-side="top"]{transform:translateY(8px) scale(.97);transform-origin:bottom left}
+.help-pop.show{opacity:1;transform:none}
+.help-pop::before{content:"";position:absolute;width:10px;height:10px;background:var(--surface);border:1px solid var(--border);transform:rotate(45deg)}
+.help-pop[data-side="left"]::before{right:-6px;top:calc(var(--ay,50%) - 5px);border-left-color:transparent;border-bottom-color:transparent}
+.help-pop[data-side="right"]::before{left:-6px;top:calc(var(--ay,50%) - 5px);border-right-color:transparent;border-top-color:transparent}
+.help-pop[data-side="bottom"]::before{top:-6px;left:calc(var(--ax,20px) - 5px);border-right-color:transparent;border-bottom-color:transparent}
+.help-pop[data-side="top"]::before{bottom:-6px;left:calc(var(--ax,20px) - 5px);border-left-color:transparent;border-top-color:transparent}
+@media (prefers-reduced-motion: reduce){.help-pop,.help-pop[data-side]{transition:opacity .12s;transform:none}}
+.hp-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.hp-title{font-weight:600;font-size:14.5px}
+.hp-cur{font-size:11.5px;color:var(--ink2);background:var(--surface-2);border-radius:99px;padding:1px 9px;white-space:nowrap}
+.hp-fig{background:var(--page);border:1px solid var(--grid);border-radius:9px;padding:6px 4px 2px;margin-bottom:9px}
+.hp-fig svg{display:block;width:100%;height:auto}
+.hp-fig text{font-size:9.5px;fill:var(--ink2);font-family:inherit}
+.hp-fig text.t-b{fill:var(--ink);font-weight:600;font-size:10px}
+.hp-what{font-size:12.5px;line-height:1.55;margin:0 0 9px}
+.hp-rows{display:grid;gap:6px}
+.hp-row{display:grid;grid-template-columns:62px 1fr;gap:8px;font-size:12px;line-height:1.5;color:var(--ink2);align-items:start}
+.hp-tag{font-size:11px;font-weight:600;border-radius:5px;padding:1px 0;text-align:center;background:var(--surface-2);color:var(--ink)}
+.hp-note{font-size:11.5px;color:var(--muted);margin-top:8px;padding-top:7px;border-top:1px solid var(--grid)}
+
 /* tooltip */
 .tip{position:fixed;z-index:2000;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;box-shadow:0 4px 18px rgba(0,0,0,.16);max-width:260px}
 .tip .m{color:var(--ink2)}
@@ -260,7 +288,7 @@ dialog input,dialog select{height:36px;border:1px solid var(--axis);border-radiu
     </div>
   </div>
   <div class="top-actions">
-    <button id="themeBtn" class="btn ghost" type="button" title="테마 전환">◐ <span class="txt" id="themeTxt">시스템</span></button>
+    <button id="themeBtn" class="btn ghost" type="button" title="테마 전환"><span id="themeIcon" aria-hidden="true">☾</span> <span class="txt" id="themeTxt">다크</span></button>
     <button id="settingsBtn" class="btn" type="button">⚙ <span class="txt">SGIS 설정</span> <span id="sgisBadge" class="badge">키 없음</span></button>
   </div>
 </header>
@@ -326,13 +354,13 @@ dialog input,dialog select{height:36px;border:1px solid var(--axis);border-radiu
 
     <div class="card">
       <h3>분석 조건</h3>
-      <p class="sub">바꾸면 데이터를 다시 받지 않고 즉시 재계산합니다</p>
+      <p class="sub">바꾸면 데이터를 다시 받지 않고 즉시 재계산합니다 · 항목 이름에 마우스를 올리면 설명이 나옵니다</p>
       <div class="ctl">
-        <label for="thr">CBD 임계값</label>
+        <label for="thr" class="help-t" data-help="thr">CBD 임계값<span class="qi" tabindex="0" role="button" aria-label="CBD 임계값 설명">?</span></label>
         <input id="thr" type="range" min="1.2" max="6" step="0.1" value="2">
         <output id="thrOut">×2.0</output>
 
-        <label for="cell">격자 크기</label>
+        <label for="cell" class="help-t" data-help="cell">격자 크기<span class="qi" tabindex="0" role="button" aria-label="격자 크기 설명">?</span></label>
         <select id="cell">
           <option value="0" selected>자동 (지역 면적 기준)</option>
           <option value="0.15">150 m</option>
@@ -342,7 +370,7 @@ dialog input,dialog select{height:36px;border:1px solid var(--axis);border-radiu
           <option value="2">2 km</option>
         </select>
 
-        <label for="smooth">평활화</label>
+        <label for="smooth" class="help-t" data-help="smooth">평활화<span class="qi" tabindex="0" role="button" aria-label="평활화 설명">?</span></label>
         <select id="smooth">
           <option value="0">없음 (격자 내 집계)</option>
           <option value="0.75">약하게</option>
@@ -350,7 +378,7 @@ dialog input,dialog select{height:36px;border:1px solid var(--axis);border-radiu
           <option value="2">강하게</option>
         </select>
 
-        <label>가중치</label>
+        <label class="help-t" data-help="mode">가중치<span class="qi" tabindex="0" role="button" aria-label="가중치 설명">?</span></label>
         <div class="seg" role="radiogroup" aria-label="가중치">
           <label><input type="radio" name="mode" value="count" checked>건물 동수</label>
           <label><input type="radio" name="mode" value="floor">연면적 추정</label>
@@ -382,7 +410,7 @@ dialog input,dialog select{height:36px;border:1px solid var(--axis);border-radiu
         <summary>산정 방법</summary>
         <ul>
           <li><b>지역 지정</b> — 검색·지도 클릭은 Nominatim(OSM) 행정 경계 폴리곤을, 직접 그리기는 그린 다각형을 분석 영역으로 씁니다.</li>
-          <li><b>아파트</b> — Overpass로 영역 범위의 <code>building=apartments</code> 건물을 받아 영역 폴리곤 안의 것만 남깁니다. 연면적 추정은 바닥면적 × <code>building:levels</code>(없으면 설정의 기본 층수)입니다.</li>
+          <li><b>아파트</b> — Overpass로 영역 범위의 <code>building=apartments</code> 건물을 받아 영역 폴리곤 안의 것만 남깁니다. 연면적 추정은 바닥면적(건물 외곽 사각형의 75%로 추정) × <code>building:levels</code>(없으면 설정의 기본 층수)입니다.</li>
           <li><b>지역대비 밀도(LQ)</b> — 영역을 육각 격자로 나누고, 격자 밀도(가우시안 커널 평활화 선택)를 지역 평균 밀도(전체 아파트 ÷ 영역 면적)로 나눕니다. LQ 2는 평균의 두 배입니다.</li>
           <li><b>CBD 선정</b> — LQ가 임계값 이상인 격자 중 맞닿은 것끼리 군집으로 묶고, 아파트 규모(밀도×면적 합)가 가장 큰 군집을 CBD, 그다음 군집을 부도심으로 표시합니다. 임계값을 넘는 격자가 없으면 상위 3% 격자로 대신합니다.</li>
           <li><b>SGIS(선택)</b> — 행정동 경계(UTM-K → WGS84 변환)와 주택총조사 아파트 수(<code>stats/house.json</code>)로 행정동별 LQ를 계산해 OSM 결과와 평균합니다.</li>
@@ -406,8 +434,8 @@ dialog input,dialog select{height:36px;border:1px solid var(--axis);border-radiu
     <div class="row2">
       <label>연면적 추정 기본 층수<input name="floors" type="number" min="1" max="80"></label>
       <label>Overpass 서버<select name="overpass">
+        <option value="https://maps.mail.ru/osm/tools/overpass/api/interpreter">maps.mail.ru (권장)</option>
         <option value="https://overpass-api.de/api/interpreter">overpass-api.de</option>
-        <option value="https://overpass.kumi.systems/api/interpreter">kumi.systems</option>
       </select></label>
     </div>
     <p id="sgisTestMsg"></p>
@@ -421,6 +449,7 @@ dialog input,dialog select{height:36px;border:1px solid var(--axis);border-radiu
 </dialog>
 
 <div id="tip" class="tip" hidden></div>
+<div id="helpPop" class="help-pop" role="tooltip" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
@@ -432,7 +461,10 @@ dialog input,dialog select{height:36px;border:1px solid var(--axis);border-radiu
    constants & helpers
    ============================================================ */
 const SGIS_BASE = 'https://sgisapi.mods.go.kr/OpenAPI3';
-const OVERPASS_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+/* 2026-09 측정: overpass-api.de는 슬롯이 비어도 요청의 절반가량을 7~12초 뒤 504로 거절하고,
+   kumi.systems·private.coffee는 응답이 없었다. maps.mail.ru는 같은 데이터 시각에 3~4초로 안정적이라 기본으로 쓴다. */
+const OVERPASS_ENDPOINTS = ['https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass-api.de/api/interpreter'];
+const BBOX_FILL = 0.75;   // 건물 외곽 사각형 면적 중 실제 바닥면적 비율(추정)
 const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · 통계: SGIS';
 const EXAMPLES = ['성남시 분당구', '서울특별시 송파구', '고양시 일산서구', '대전광역시 서구', '세종특별자치시'];
@@ -529,7 +561,11 @@ function reprojectGeom(g) {
    ============================================================ */
 const DEFAULTS = { sgisKey: '', sgisSecret: '', year: '2023', aptType: '02', floors: 15, overpass: OVERPASS_ENDPOINTS[0] };
 let settings = { ...DEFAULTS, ...readJSON(SETTINGS_KEY, {}) };
-if (!OVERPASS_ENDPOINTS.includes(settings.overpass)) settings.overpass = OVERPASS_ENDPOINTS[0];
+// 예전 기본값(overpass-api.de·kumi)을 저장해 둔 브라우저도 한 번은 새 기본 서버로 옮긴다
+if (!settings.overpassV2 || !OVERPASS_ENDPOINTS.includes(settings.overpass)) {
+  settings.overpass = OVERPASS_ENDPOINTS[0];
+  settings.overpassV2 = true;
+}
 const hasSgisKey = () => !!(settings.sgisKey && settings.sgisSecret);
 
 function updateBadge() {
@@ -538,20 +574,22 @@ function updateBadge() {
   b.classList.toggle('on', hasSgisKey());
 }
 
-const THEMES = ['system', 'light', 'dark'];
-const THEME_TXT = { system: '시스템', light: '라이트', dark: '다크' };
+/* 테마는 라이트 ↔ 다크 두 가지만 오간다. 저장된 선택이 없을 때만 처음 한 번 OS 설정을 따른다. */
+const THEME_TXT = { light: '라이트', dark: '다크' };
+const THEME_ICON = { light: '☀', dark: '☾' };
 function applyTheme(t) {
-  if (t === 'system') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = t;
+  document.documentElement.dataset.theme = t;
+  $('#themeIcon').textContent = THEME_ICON[t];
   $('#themeTxt').textContent = THEME_TXT[t];
+  $('#themeBtn').title = `${THEME_TXT[t === 'dark' ? 'light' : 'dark']} 모드로 전환`;
 }
-let theme = readJSON(THEME_KEY, 'system');
+let theme = readJSON(THEME_KEY, null);
+if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 applyTheme(theme);
 $('#themeBtn').addEventListener('click', () => {
-  theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+  theme = theme === 'dark' ? 'light' : 'dark';
   writeJSON(THEME_KEY, theme); applyTheme(theme); onThemeChange();
 });
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => onThemeChange());
 
 /* ============================================================
    map (OpenStreetMap tiles)
@@ -716,8 +754,9 @@ async function nominatimReverseName(lat, lon) {
 async function fetchApartments(region, signal, onRetry) {
   const [w, s, e, n] = region.bbox.map(v => +v.toFixed(6));
   const bb = `(${s},${w},${n},${e})`;
-  const q = `[out:json][timeout:120];` +
-    `way["building"="apartments"]${bb};out tags geom qt;` +
+  // 윤곽 전체(geom) 대신 외곽 사각형(bb)만 받아 응답 크기를 절반 이하로 줄인다
+  const q = `[out:json][timeout:60];` +
+    `way["building"="apartments"]${bb};out tags bb qt;` +
     `relation["building"="apartments"]${bb};out tags center qt;`;
   return overpassQuery(q, signal, onRetry);
 }
@@ -743,16 +782,26 @@ async function overpassSlotWait(ep, signal, onRetry) {
   }
 }
 
+/* 같은 지역을 다시 분석할 때(후보 재선택, SGIS 설정 변경 등) 공용 서버에 다시 요청하지 않도록 최근 결과를 보관 */
+const overpassCache = new Map();
+const OVERPASS_CACHE_MAX = 6;
+
 async function overpassQuery(q, signal, onRetry) {
+  if (overpassCache.has(q)) {
+    const hit = overpassCache.get(q);
+    overpassCache.delete(q); overpassCache.set(q, hit);
+    return hit;
+  }
   const servers = [settings.overpass, ...OVERPASS_ENDPOINTS.filter(x => x !== settings.overpass)];
-  // 한 바퀴 모두 실패하면 첫 서버의 슬롯이 풀리길 기다렸다가 한 바퀴 더 돈다
+  // 한 바퀴 모두 실패하면 overpass-api.de 슬롯이 풀리길 기다렸다가 한 바퀴 더 돈다
   const endpoints = [...servers, ...servers];
+  const slotServer = servers.find(s => /overpass-api\.de/.test(s)) ?? servers[0];
   let lastErr;
   for (const [i, ep] of endpoints.entries()) {
-    if (i === servers.length) await overpassSlotWait(servers[0], signal, onRetry);
+    if (i === servers.length) await overpassSlotWait(slotServer, signal, onRetry);
     const host = new URL(ep).host;
     const timeout = new AbortController();
-    const timer = setTimeout(() => timeout.abort(), 130000);
+    const timer = setTimeout(() => timeout.abort(), 65000);   // 정상 응답은 수 초 — 멈춘 서버에 오래 묶이지 않게
     const onAbort = () => timeout.abort();
     signal.addEventListener('abort', onAbort, { once: true });
     try {
@@ -764,7 +813,10 @@ async function overpassQuery(q, signal, onRetry) {
       if (!r.ok) throw new Error(`${host} HTTP ${r.status}${r.status === 429 ? ' (요청 과다)' : r.status === 504 ? ' (서버 혼잡)' : ''}`);
       const js = await r.json();
       if (js.remark && /error|timed out/i.test(js.remark)) throw new Error(`${host}: ${js.remark}`);
-      return js.elements || [];
+      const els = js.elements || [];
+      overpassCache.set(q, els);
+      if (overpassCache.size > OVERPASS_CACHE_MAX) overpassCache.delete(overpassCache.keys().next().value);
+      return els;
     } catch (err) {
       if (signal.aborted) throw err;
       lastErr = err.name === 'AbortError' ? new Error(`${host} 응답 시간 초과`) : err;
@@ -783,7 +835,12 @@ function parseApartments(elements, region) {
   const inside = (lon, lat) => lon >= bw && lon <= be && lat >= bs && lat <= bn && turf.booleanPointInPolygon([lon, lat], region.feature);
   for (const el of elements) {
     let lon, lat, fp = null;
-    if (el.type === 'way' && el.geometry?.length >= 3) {
+    if (el.bounds) {
+      const b = el.bounds;
+      lon = (b.minlon + b.maxlon) / 2; lat = (b.minlat + b.maxlat) / 2;
+      fp = (b.maxlon - b.minlon) * 111320 * Math.cos(lat * Math.PI / 180) * (b.maxlat - b.minlat) * 110574 * BBOX_FILL;
+      if (!(fp > 20 && fp < 60000)) fp = null;
+    } else if (el.type === 'way' && el.geometry?.length >= 3) {
       const ring = el.geometry.filter(Boolean).map(p => [p.lon, p.lat]);
       const n = ring.length - (ring[0][0] === ring.at(-1)[0] && ring[0][1] === ring.at(-1)[1] ? 1 : 0);
       let sx = 0, sy = 0;
@@ -1850,6 +1907,232 @@ function onThemeChange() {
 /* ============================================================
    controls & settings
    ============================================================ */
+/* ----- 분석 조건 설명 팝오버: 그림 + 설명 ----- */
+const figSvg = (w, h, body) => `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${body}</svg>`;
+const figArrow = (x, y) => `<path d="M${x - 7},${y}h12m-4,-4l4,4-4,4" stroke="var(--muted)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+function hexPath(cx, cy, s) {
+  let d = '';
+  for (let i = 0; i < 6; i++) {
+    const a = Math.PI / 180 * (60 * i - 30);
+    d += `${i ? 'L' : 'M'}${(cx + s * Math.cos(a)).toFixed(1)},${(cy + s * Math.sin(a)).toFixed(1)}`;
+  }
+  return d + 'Z';
+}
+const figRamp = () => isDark() ? RAMP_DARK : RAMP_LIGHT;
+
+/* 같은 격자 값에 임계값만 달리 적용 */
+function figThreshold() {
+  const vals = [[0.4, 1.2, 1.8, 1.1, 0.5], [0.9, 2.2, 3.6, 2.0, 0.8], [0.6, 1.6, 2.4, 1.3, 0.4]];
+  const panel = (ox, thr, title, caption) => {
+    const s = 10.5, w = Math.sqrt(3) * s;
+    let g = '', n = 0;
+    vals.forEach((row, r) => row.forEach((v, c) => {
+      const on = v >= thr; if (on) n++;
+      g += `<path d="${hexPath(ox + 12 + c * w + (r % 2 ? w / 2 : 0), 30 + r * 1.5 * s, s - 0.9)}" fill="${on ? 'var(--cbd)' : figRamp()[lqClass(v)]}"/>`;
+    }));
+    return `<text class="t-b" x="${ox + 58}" y="11" text-anchor="middle">${title}</text>${g}
+      <text x="${ox + 58}" y="86" text-anchor="middle">${caption.replace('{n}', n)}</text>`;
+  };
+  return figSvg(262, 92, panel(4, 1.5, '임계값 ×1.5', '후보 {n}칸 → CBD 넓게') + figArrow(131, 42) + panel(142, 3.0, '임계값 ×3.0', '후보 {n}칸 → 핵심만'));
+}
+
+/* 같은 건물 분포를 작은 칸 / 큰 칸으로 집계 */
+const HELP_PTS = (() => {
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const pts = [];
+  for (const [cx, cy, sd, k] of [[38, 44, 9, 26], [80, 56, 6, 14], [22, 66, 5, 8], [92, 30, 12, 6]]) {
+    for (let i = 0; i < k; i++) {
+      const r = Math.sqrt(-2 * Math.log(rnd() || 1e-9)) * sd, t = 2 * Math.PI * rnd();
+      pts.push([clamp(cx + r * Math.cos(t), 3, 113), clamp(cy + r * Math.sin(t), 19, 75)]);
+    }
+  }
+  return pts;
+})();
+function figCell() {
+  const panel = (ox, s, id, title, caption) => {
+    const w = Math.sqrt(3) * s, cells = [];
+    for (let r = 0, y = 17; y <= 80 + s; r++, y += 1.5 * s) {
+      for (let x = (r % 2 ? w / 2 : 0); x <= 118 + w; x += w) cells.push({ x, y, n: 0 });
+    }
+    for (const [px, py] of HELP_PTS) {
+      let best = null, bd = Infinity;
+      for (const c of cells) { const d = (c.x - px) ** 2 + (c.y - py) ** 2; if (d < bd) { bd = d; best = c; } }
+      best.n++;
+    }
+    const avg = HELP_PTS.length * (2.598 * s * s) / (116 * 58);
+    const g = cells.map(c => `<path d="${hexPath(ox + c.x, c.y, s - 0.5)}" fill="${c.n ? figRamp()[lqClass(c.n / avg)] : 'none'}" stroke="var(--grid)" stroke-width="${c.n ? 0 : 0.6}"/>`).join('');
+    const dots = HELP_PTS.map(([px, py]) => `<circle cx="${(ox + px).toFixed(1)}" cy="${py.toFixed(1)}" r="1.1" fill="var(--ink)" opacity=".55"/>`).join('');
+    return `<text class="t-b" x="${ox + 58}" y="11" text-anchor="middle">${title}</text>
+      <clipPath id="${id}"><rect x="${ox}" y="17" width="116" height="60" rx="4"/></clipPath>
+      <g clip-path="url(#${id})">${g}${dots}</g>
+      <text x="${ox + 58}" y="89" text-anchor="middle">${caption}</text>`;
+  };
+  return figSvg(262, 94, panel(4, 5, 'hpc1', '작은 칸', '세밀하지만 들쭉날쭉') + figArrow(131, 47) + panel(142, 13, 'hpc2', '큰 칸', '매끈하지만 뭉개짐'));
+}
+
+/* 칸별 개수(막대) vs 커널로 부드럽게 만든 밀도(곡선) */
+function figSmooth() {
+  const counts = [0, 1, 0, 2, 6, 3, 1, 0, 0, 3, 5, 2, 0, 1, 0, 0];
+  const W = 116, H = 56, top = 20, bw = W / counts.length, maxC = 6;
+  const bars = ox => counts.map((c, i) => c ? `<rect x="${(ox + i * bw + 0.6).toFixed(1)}" y="${top + H - c / maxC * H}" width="${(bw - 1.2).toFixed(1)}" height="${c / maxC * H}" rx="1.5" fill="var(--bar)"/>` : '').join('');
+  const curve = (ox, sigma) => {
+    const f = x => counts.reduce((s, c, j) => s + c * Math.exp(-((x - j - 0.5) ** 2) / (2 * sigma * sigma)), 0);
+    const xs = Array.from({ length: 65 }, (_, k) => k / 64 * counts.length), ys = xs.map(f), m = Math.max(...ys);
+    return xs.map((x, k) => `${k ? 'L' : 'M'}${(ox + x * bw).toFixed(1)},${(top + H - ys[k] / m * H * 0.92).toFixed(1)}`).join('');
+  };
+  const base = ox => `<line x1="${ox}" x2="${ox + W}" y1="${top + H}" y2="${top + H}" stroke="var(--axis)"/>`;
+  const faint = ox => counts.map((c, i) => c ? `<rect x="${(ox + i * bw + 0.6).toFixed(1)}" y="${top + H - c / maxC * H}" width="${(bw - 1.2).toFixed(1)}" height="${c / maxC * H}" rx="1.5" fill="var(--grid)"/>` : '').join('');
+  const ox2 = 142;
+  return figSvg(262, 98,
+    `<text class="t-b" x="62" y="11" text-anchor="middle">없음</text>${bars(4)}${base(4)}
+     <text x="62" y="92" text-anchor="middle">칸 경계에서 뚝뚝 끊김</text>
+     ${figArrow(131, 48)}
+     <text class="t-b" x="${ox2 + 58}" y="11" text-anchor="middle">평활화 적용</text>${faint(ox2)}${base(ox2)}
+     <path d="${curve(ox2, 1.3)}" fill="none" stroke="var(--bar)" stroke-width="2" stroke-linejoin="round"/>
+     <path d="${curve(ox2, 3.2)}" fill="none" stroke="var(--cbd)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>
+     <line x1="${ox2 + 2}" x2="${ox2 + 14}" y1="89" y2="89" stroke="var(--bar)" stroke-width="2"/><text x="${ox2 + 17}" y="92">보통</text>
+     <line x1="${ox2 + 48}" x2="${ox2 + 60}" y1="89" y2="89" stroke="var(--cbd)" stroke-width="2" stroke-dasharray="4 3"/><text x="${ox2 + 63}" y="92">강하게(뭉침)</text>`);
+}
+
+/* 저층 3동 + 고층 1동을 동수 / 연면적으로 셀 때 */
+function figMode() {
+  const blds = [{ w: 18, f: 5 }, { w: 18, f: 5 }, { w: 18, f: 6 }, { w: 22, f: 25 }];
+  const ground = 74, unit = 2.1, gap = 7;
+  const panel = (ox, title, weight, caption) => {
+    let x = ox + 8, g = '';
+    const base = blds[0].w * blds[0].f;
+    for (const b of blds) {
+      const h = b.f * unit;
+      g += `<rect x="${x}" y="${ground - h}" width="${b.w}" height="${h}" rx="1.5" fill="var(--bar-soft)"/>`;
+      for (let fl = 1; fl < b.f; fl += 2) g += `<line x1="${x + 3}" x2="${x + b.w - 3}" y1="${ground - fl * unit}" y2="${ground - fl * unit}" stroke="var(--surface)" stroke-width=".8" opacity=".7"/>`;
+      g += `<text class="t-b" x="${x + b.w / 2}" y="${ground - h - 3}" text-anchor="middle">${weight(b, base)}</text>`;
+      x += b.w + gap;
+    }
+    return `<text class="t-b" x="${ox + 58}" y="11" text-anchor="middle">${title}</text>${g}
+      <line x1="${ox + 2}" x2="${ox + 114}" y1="${ground}" y2="${ground}" stroke="var(--axis)"/>
+      <text x="${ox + 58}" y="89" text-anchor="middle">${caption}</text>`;
+  };
+  return figSvg(262, 94,
+    panel(4, '건물 동수', () => '1', '고층도 저층도 똑같이 1') + figArrow(131, 50) +
+    panel(142, '연면적 추정', (b, base) => fmt(b.w * b.f / base, 1), '고층 1동 ≈ 저층 6동'));
+}
+
+const HELP = {
+  thr: {
+    title: 'CBD 임계값', fig: figThreshold,
+    current: () => `현재 ×${(+$('#thr').value).toFixed(1)}`,
+    what: '격자의 아파트 밀도가 <b>지역 평균의 몇 배 이상</b>이어야 CBD 후보가 되는지 정하는 기준입니다. ×2.0은 “평균의 2배 이상”이라는 뜻입니다.',
+    rows: [
+      ['▲ 올리면', '기준이 엄격해져 가장 빽빽한 핵심만 남습니다. CBD가 작아지고, 부도심은 사라질 수 있어요.'],
+      ['▼ 내리면', '덜 밀집한 곳까지 후보가 되어 CBD가 넓어집니다. 떨어져 있던 군집이 하나로 합쳐질 수 있어요.'],
+    ],
+    note: '넘는 격자가 하나도 없으면 상위 3% 격자로 대신 선정합니다.',
+  },
+  cell: {
+    title: '격자 크기', fig: figCell,
+    current: () => {
+      const auto = +$('#cell').value === 0, side = state.result?.sideKm;
+      return auto ? `현재 자동${side ? ` · 한 변 ${fmt(side * 1000, 0)} m` : ''}` : `현재 ${$('#cell').selectedOptions[0].text}`;
+    },
+    what: '지역을 나누는 <b>육각형 한 칸의 크기</b>(한 변 길이)입니다. 칸마다 아파트를 세어 밀도를 계산합니다.',
+    rows: [
+      ['▲ 크게', '넓게 묶어 결과가 안정적이지만, 좁은 밀집지는 주변과 섞여 흐려집니다.'],
+      ['▼ 작게', '단지 단위까지 세밀하게 보이지만, 건물 몇 동 차이로 값이 크게 흔들립니다.'],
+    ],
+    note: '자동은 지역 면적에 맞춰 격자가 약 650칸이 되도록 정합니다.',
+  },
+  smooth: {
+    title: '평활화', fig: figSmooth,
+    current: () => `현재 ${$('#smooth').selectedOptions[0].text}`,
+    what: '칸 밖의 가까운 건물도 <b>거리에 따라 조금씩 나눠 반영</b>해(가우시안 커널) 밀도를 부드럽게 만듭니다.',
+    rows: [
+      ['▲ 강하게', '계단처럼 끊기던 값이 매끄러워져 큰 흐름이 드러납니다. 너무 강하면 가까운 두 중심이 하나로 뭉칩니다.'],
+      ['▼ 약하게', '칸 안의 실제 개수에 가까워집니다. “없음”은 칸 안 건물만 세서, 경계에서 값이 뚝 끊깁니다.'],
+    ],
+  },
+  mode: {
+    title: '가중치', fig: figMode,
+    current: () => `현재 ${$('input[name="mode"]:checked').parentElement.textContent.trim()}`,
+    what: '아파트 <b>한 동을 얼마만큼으로 셀지</b> 정합니다.',
+    rows: [
+      ['건물 동수', '모든 건물을 1로 셉니다. 저층 단지가 넓게 퍼진 곳이 크게 잡힙니다.'],
+      ['연면적 추정', '바닥면적 × 층수로 셉니다. 고층 아파트가 몰린 곳이 크게 잡힙니다.'],
+    ],
+    note: 'OSM에 층수 정보가 없는 건물은 SGIS 설정의 기본 층수(15층)를 씁니다.',
+  },
+};
+
+const helpPop = $('#helpPop');
+let helpAnchor = null, helpTimer = null, helpHideTimer = null;
+
+function positionHelp(anchor) {
+  const a = anchor.getBoundingClientRect(), card = anchor.closest('.card').getBoundingClientRect();
+  const pw = helpPop.offsetWidth, ph = helpPop.offsetHeight, m = 8;
+  const midY = a.top + a.height / 2;
+  let side, x, y;
+  if (card.left - pw - 16 >= m) {                   // 넓은 화면: 패널 왼쪽(지도 위)에 띄운다
+    side = 'left'; x = card.left - pw - 16;
+  } else if (a.right + 14 + pw <= innerWidth - m) { // 중간 폭: 항목 이름 오른쪽 옆에 띄워 이름을 가리지 않는다
+    side = 'right'; x = a.right + 14;
+  }
+  if (side) {
+    y = clamp(midY - ph / 2, m, innerHeight - ph - m);
+    helpPop.style.setProperty('--ay', `${clamp(midY - y, 14, ph - 14)}px`);
+  } else {                                           // 휴대폰 폭: 아래·위 중 공간이 넓은 쪽
+    const below = innerHeight - a.bottom, above = a.top;
+    side = below >= ph + 20 || below >= above ? 'bottom' : 'top';
+    y = side === 'bottom' ? Math.min(a.bottom + 12, innerHeight - ph - m) : Math.max(m, a.top - ph - 12);
+    x = clamp(a.left - 8, m, innerWidth - pw - m);
+    helpPop.style.setProperty('--ax', `${a.left + 30 - x}px`);
+  }
+  helpPop.dataset.side = side;
+  helpPop.style.left = `${x}px`; helpPop.style.top = `${y}px`;
+}
+
+function openHelp(anchor) {
+  const h = HELP[anchor.dataset.help]; if (!h) return;
+  clearTimeout(helpHideTimer);
+  document.querySelectorAll('.help-t.open').forEach(el => el.classList.remove('open'));
+  anchor.classList.add('open');
+  helpAnchor = anchor;
+  helpPop.innerHTML = `
+    <div class="hp-head"><span class="hp-title">${h.title}</span><span class="hp-cur">${esc(h.current())}</span></div>
+    <div class="hp-fig">${h.fig()}</div>
+    <p class="hp-what">${h.what}</p>
+    <div class="hp-rows">${h.rows.map(([tag, txt]) => `<div class="hp-row"><span class="hp-tag">${tag}</span><span>${txt}</span></div>`).join('')}</div>
+    ${h.note ? `<div class="hp-note">${h.note}</div>` : ''}`;
+  const wasShown = !helpPop.hidden && helpPop.classList.contains('show');
+  helpPop.hidden = false;
+  positionHelp(anchor);
+  if (!wasShown) {
+    helpPop.classList.remove('show');
+    void helpPop.offsetWidth;                        // 시작 상태를 확정해야 전환 애니메이션이 재생된다
+    helpPop.classList.add('show');
+  }
+}
+function closeHelp() {
+  if (!helpAnchor) return;
+  helpAnchor.classList.remove('open');
+  helpAnchor = null;
+  helpPop.classList.remove('show');
+  helpHideTimer = setTimeout(() => { if (!helpAnchor) helpPop.hidden = true; }, 220);
+}
+
+document.querySelectorAll('.help-t').forEach(el => {
+  el.addEventListener('mouseenter', () => { clearTimeout(helpTimer); helpTimer = setTimeout(() => openHelp(el), helpAnchor ? 0 : 120); });
+  el.addEventListener('mouseleave', () => { clearTimeout(helpTimer); helpTimer = setTimeout(closeHelp, 90); });
+  const qi = el.querySelector('.qi');
+  // 라벨 안의 ? 를 눌러도 입력칸으로 포커스가 넘어가지 않게 하고, 터치 기기에서는 탭으로 열고 닫는다
+  qi.addEventListener('click', e => { e.preventDefault(); helpAnchor === el ? closeHelp() : openHelp(el); });
+  qi.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); helpAnchor === el ? closeHelp() : openHelp(el); } });
+  qi.addEventListener('focus', () => { if (qi.matches(':focus-visible')) openHelp(el); });
+  qi.addEventListener('blur', closeHelp);
+});
+addEventListener('keydown', e => { if (e.key === 'Escape') closeHelp(); });
+addEventListener('scroll', () => { if (helpAnchor) positionHelp(helpAnchor); }, true);
+addEventListener('resize', () => { if (helpAnchor) positionHelp(helpAnchor); });
+
 $('#thr').addEventListener('input', e => { $('#thrOut').textContent = '×' + (+e.target.value).toFixed(1); scheduleRecompute(); });
 ['#cell', '#smooth'].forEach(s => $(s).addEventListener('change', scheduleRecompute));
 document.querySelectorAll('input[name="mode"]').forEach(i => i.addEventListener('change', scheduleRecompute));
@@ -1882,7 +2165,7 @@ dlg.addEventListener('close', () => {
   settings = {
     sgisKey: form.elements.sgisKey.value.trim(), sgisSecret: form.elements.sgisSecret.value.trim(),
     year: form.elements.year.value, aptType: form.elements.aptType.value.trim() || '02',
-    floors: clamp(+form.elements.floors.value || 15, 1, 80), overpass: form.elements.overpass.value,
+    floors: clamp(+form.elements.floors.value || 15, 1, 80), overpass: form.elements.overpass.value, overpassV2: true,
   };
   if (JSON.stringify(settings) === prev) return;
   sgisToken = null;
