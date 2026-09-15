@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>전세진 이력서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  @page{size:A4;margin:0}
+  :root{
+    --ink:#11141a; --soft:#3b424b; --muted:#767d85;
+    --line:#dcd8d2; --accent:#c2542a;
+    --serif:'Instrument Serif','Noto Serif KR',serif;
+    --sans:'Pretendard Variable',Pretendard,sans-serif;
+    --mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;width:210mm;min-height:297mm;padding:11mm 15mm 8mm;
+    background:#fff;color:var(--ink);
+    font-family:var(--sans);font-size:9.3pt;line-height:1.5;
+    word-break:keep-all;-webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono);font-size:7.2pt;letter-spacing:.14em;text-transform:uppercase}
+
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:12mm;
+    padding-bottom:3.4mm;border-bottom:1.6pt solid var(--ink)}
+  h1{margin:0;font-family:var(--serif);font-weight:400;font-size:24pt;line-height:1}
+  h1 small{display:block;font-family:var(--mono);font-size:8pt;letter-spacing:.3em;
+    color:var(--muted);margin-top:2.5mm;text-transform:uppercase}
+  .tag{font-family:var(--serif);font-size:12.5pt;color:var(--soft);margin:3mm 0 0}
+  .meta{text-align:right;font-size:8.6pt;color:var(--soft);line-height:1.85;white-space:nowrap}
+  .meta b{color:var(--ink);font-weight:600}
+
+  section{margin-top:4.6mm;break-inside:avoid}
+  h2{margin:0 0 3mm;font-family:var(--mono);font-size:7.6pt;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent);
+    border-bottom:.6pt solid var(--line);padding-bottom:1.6mm}
+
+  .row{display:grid;grid-template-columns:32mm 1fr;gap:6mm;padding:1.4mm 0;
+    border-bottom:.5pt solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row .when{font-family:var(--mono);font-size:7.4pt;letter-spacing:.06em;color:var(--muted);padding-top:.9mm}
+  .row .what b{display:block;font-weight:600;font-size:10pt}
+  .row .what span{color:var(--muted);font-size:8.8pt}
+
+  .proj{padding:2.2mm 0;border-bottom:.5pt solid var(--line)}
+  .proj:last-child{border-bottom:0}
+  .proj .top{display:flex;justify-content:space-between;align-items:baseline;gap:6mm}
+  .proj .nm{font-family:var(--serif);font-size:13.5pt}
+  .proj .st{font-family:var(--mono);font-size:7.2pt;color:var(--muted);letter-spacing:.08em;text-align:right}
+  .proj p{margin:1.4mm 0 2mm;color:var(--soft)}
+  .proj ul{margin:0;padding:0;list-style:none}
+  .proj li{position:relative;padding-left:3.6mm;color:var(--soft);font-size:9.2pt}
+  .proj li::before{content:'';position:absolute;left:0;top:2.2mm;width:1.8mm;height:.5pt;background:var(--accent)}
+  .proj li b{color:var(--ink);font-weight:600}
+
+  .chips{display:flex;flex-wrap:wrap;gap:1.6mm}
+  .chip{border:.5pt solid var(--line);padding:1.2mm 2.6mm;font-family:var(--mono);
+    font-size:7.2pt;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:9mm}
+
+  footer{margin-top:5mm;padding-top:2.4mm;border-top:.5pt solid var(--line);
+    display:flex;justify-content:space-between;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>전세진<small>Jeon Se Jin</small></h1>
+    <p class="tag">공간을 설계한다 — 장소를 선물한다</p>
+  </div>
+  <div class="meta">
+    <b>jsjsundo@naver.com</b><br>
+    github.com/sejin9247<br>
+    인천광역시 동구<br>
+    상명대학교 그린스마트시티학과
+  </div>
+</header>
+
+<section>
+  <h2>Profile</h2>
+  <p style="margin:0;color:var(--soft)">
+    도시 공간을 데이터로 해석하는 일에 관심이 있습니다. 공공데이터와 OpenStreetMap을 직접 다뤄
+    분석 도구를 만들고, 결과를 지도와 차트로 전달하는 과정을 기획부터 개발까지 혼자 수행해 왔습니다.
+  </p>
+</section>
+
+<section>
+  <h2>Education</h2>
+  <div class="row">
+    <span class="when">2028.03 졸업예정</span>
+    <span class="what"><b>상명대학교 그린스마트시티학과</b><span>3학년 재학 중</span></span>
+  </div>
+  <div class="row">
+    <span class="when">졸업</span>
+    <span class="what"><b>동산고등학교</b><span>인천</span></span>
+  </div>
+</section>
+
+<section>
+  <h2>Projects</h2>
+
+  <div class="proj">
+    <div class="top">
+      <span class="nm">아파트 밀도 CBD 탐색기</span>
+      <span class="st">2026 · 기획·설계·개발 단독<br>JavaScript · Leaflet · Turf.js · proj4js</span>
+    </div>
+    <p>지역을 지정하면 아파트가 지역 평균보다 두드러지게 밀집한 권역을 찾아 CBD(중심 권역)와 부도심으로
+       선정하고 지도·차트로 보여 주는 웹 공간분석 대시보드. 프레임워크 없이 약 3,400줄.</p>
+    <ul>
+      <li>육각 격자 밀도 · 가우시안 커널 평활화 · <b>지역대비 밀도(LQ)</b> 산출 · Union-Find 공간 군집화를 직접 구현</li>
+      <li>공용 Overpass 서버의 504 거절 패턴을 실측해 <b>엔드포인트 폴백 → 슬롯 대기 → 재시도</b> 구조로 수집 안정화</li>
+      <li>공간 해시로 건물–격자 매칭의 전수 비교를 제거하고, 격자 수·영역 크기에 상한을 두어 과부하 차단</li>
+      <li>송파구 검증: CBD로 선정된 <b>잠실본동 일대</b>가 독립 데이터인 SGIS 주택총조사에서도 밀도 1위(×4.6)</li>
+      <li>SGIS 연동(UTM-K→WGS84 변환), 자체 SVG 차트, 한/영 i18n, 라이트·다크 테마</li>
+    </ul>
+  </div>
+
+  <div class="proj">
+    <div class="top">
+      <span class="nm">Pixel World Résumé</span>
+      <span class="st">2026 · 기획·디자인·개발 단독<br>HTML5 Canvas · Vanilla JS</span>
+    </div>
+    <p>“걸어 다니며 보는 이력서”를 목표로 만든 인터랙티브 페이지. 외부 라이브러리 없이 캔버스로 직접 렌더링했습니다.</p>
+    <ul>
+      <li>하늘·구름·산·나무·지형을 절차적으로 생성하고, 문자열 맵으로 정의한 픽셀 스프라이트를 애니메이션</li>
+      <li>탭마다 달라지는 파티클 시스템과 업적 토스트 등 게임 UI 문법을 웹 인터랙션으로 이식</li>
+    </ul>
+  </div>
+
+  <div class="proj">
+    <div class="top">
+      <span class="nm">포트폴리오 사이트</span>
+      <span class="st">2026 · 기획·디자인·개발 단독<br>Canvas 2D · Vanilla JS · Vercel</span>
+    </div>
+    <p>스크롤에 따라 바다를 항해하며 작업물을 둘러보는 개인 사이트. 영상 파일 없이 캔버스로
+       외부 시점 → 갑판 시점 → 항공 시점을 연속 전환합니다.</p>
+  </div>
+</section>
+
+<div class="two">
+  <section>
+    <h2>Military</h2>
+    <div class="row">
+      <span class="when">2022.08 – 2025.05</span>
+      <span class="what"><b>대한민국 공군</b><span>약 2년 9개월 · 만기 전역</span></span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Experience</h2>
+    <div class="row">
+      <span class="when">1개월</span>
+      <span class="what"><b>(주)장원조경 · 인턴</b><span>조경 실무</span></span>
+    </div>
+  </section>
+</div>
+
+<div class="two">
+  <section>
+    <h2>Certificates</h2>
+    <div class="chips">
+      <span class="chip">컴퓨터활용능력 2급</span>
+      <span class="chip">ATC 캐드마스터</span>
+      <span class="chip">운전면허 1종 보통</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Interests</h2>
+    <div class="chips">
+      <span class="chip">도시공간 분석</span>
+      <span class="chip">GIS</span>
+      <span class="chip">공공데이터</span>
+      <span class="chip">데이터 시각화</span>
+      <span class="chip">프런트엔드</span>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <span class="mono">Jeon Se Jin · Resume</span>
+  <span class="mono">Portfolio · github.com/sejin9247</span>
+</footer>
+
+</body>
+</html>

@@ -6,3 +6,6 @@ JSJ face.png
 desktop.ini
 Thumbs.db
 .DS_Store
+
+# Claude Code 로컬 설정
+.claude/

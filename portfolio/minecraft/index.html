@@ -305,6 +305,19 @@ body{
 </head>
 <body>
 
+<!-- 포트폴리오 허브로 돌아가기 -->
+<a href="../index.html" id="back-hub">◀ PORTFOLIO</a>
+<style>
+#back-hub{
+  position:fixed;top:14px;left:14px;z-index:9999;
+  font-family:'Press Start 2P',monospace;font-size:9px;line-height:1;
+  color:#fff;text-decoration:none;padding:10px 12px;
+  background:#3A2010;border:3px solid #1a0f08;
+  box-shadow:inset 2px 2px 0 rgba(255,255,255,.18),inset -2px -2px 0 rgba(0,0,0,.4);
+}
+#back-hub:hover{background:#5B3A20}
+</style>
+
 <!-- Loading -->
 <div id="loading">
   <div class="load-title">Loading World...</div>
@@ -326,7 +339,7 @@ body{
     <!-- ── SIDEBAR ── -->
     <div id="sidebar">
       <div class="item-frame">
-        <img src="profile.png" alt="Player Skin"/>
+        <img src="../assets/img/profile.png" alt="Player Skin"/>
         <div class="frame-dot fd-tl"></div>
         <div class="frame-dot fd-tr"></div>
         <div class="frame-dot fd-bl"></div>
@@ -1060,17 +1073,17 @@ const CONTENT = {
   contact: `
     <div class="ct-title">📮 MAILBOX · 연락처</div>
     <div class="ct-row">
-      <span class="ct-ico">📱</span>
-      <div class="ct-body">
-        <span class="ct-lbl">COMMS CHANNEL — PHONE</span>
-        <a href="tel:010-1234-5678" class="acc-c" style="text-decoration:none">010-1234-5678</a>
-      </div>
-    </div>
-    <div class="ct-row">
       <span class="ct-ico">📧</span>
       <div class="ct-body">
         <span class="ct-lbl">COMMS CHANNEL — EMAIL</span>
-        <a href="mailto:garbage@naver.com" class="acc-c" style="text-decoration:none">garbage@naver.com</a>
+        <a href="mailto:jsjsundo@naver.com" class="acc-c" style="text-decoration:none">jsjsundo@naver.com</a>
+      </div>
+    </div>
+    <div class="ct-row">
+      <span class="ct-ico">🧭</span>
+      <div class="ct-body">
+        <span class="ct-lbl">GITHUB</span>
+        <a href="https://github.com/sejin9247" target="_blank" rel="noopener" class="acc-c" style="text-decoration:none">github.com/sejin9247</a>
       </div>
     </div>
     <div class="ct-row">
