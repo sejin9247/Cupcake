@@ -652,7 +652,8 @@ function startSearch(q) {
   if (q === lastStart.q && Date.now() - lastStart.t < 800) return;   // IME 확정 + submit 중복 방지
   lastStart = { q, t: Date.now() };
   showView('app');
-  try { history.replaceState(null, '', '#' + new URLSearchParams({ q })); } catch { /* file:// */ }
+  // 검색어는 주소에 남기지 않는다 — 새로고침하면 분석 화면이 처음 상태로 시작해야 한다
+  try { if (location.hash !== '#app') history.replaceState(null, '', '#app'); } catch { /* file:// */ }
   runSearch(q);
 }
 async function runSearch(q) {
@@ -807,7 +808,6 @@ async function pickAt(latlng) {
     if (!hit) region.note = tk('geo.note', { level: pickLabel(level), name: () => regionName(region) });
     if (lang === 'en') ensureEnglishNames([region]);
     $('#q').value = region.parts.slice(0, 2).reverse().join(' ');
-    try { history.replaceState(null, '', '#' + new URLSearchParams({ q: $('#q').value })); } catch { /* file:// */ }
     await analyzeRegion(region, run, signal);
   } catch (e) { failRun(e, run); }
   finally { if (run === state.runId) setBusy(false); }
@@ -1855,30 +1855,57 @@ function fitHeadline() {
 $('#heroArt').querySelector('.art-in').innerHTML = heroArtSvg();
 
 /* ----- 화면 전환 (표지 ↔ 분석) ----- */
-let mapReady = false;
+const INITIAL_VIEW = { center: [36.35, 127.8], zoom: 7 };
+
+/* 분석 화면을 처음 상태로 되돌린다: 진행 중인 요청 · 결과 · 지도 · 검색어 · 분석 조건.
+   언어 · 테마 · SGIS 설정은 사용자가 고른 값이라 그대로 둔다. */
+function resetApp() {
+  state.runId++;
+  state.abort?.abort(); state.abort = null;
+  clearTimeout(recomputeTimer);
+  setMode(null);
+  clearResults();
+  resetSteps();
+  state.candidates = []; state.activeCand = -1; state.lastRegion = null;
+  renderResults();
+  setBusy(false, tk('busy.default'));
+  heroMessage(tk('hero.placeholder'));
+  $('#q').value = '';
+  lastStart = { q: '', t: 0 };
+  $('#mapEmpty').hidden = false;
+  $('#thr').value = '2'; $('#thrOut').textContent = '×2.0';
+  $('#cell').value = '0';
+  $('#smooth').value = '1.25';
+  $('input[name="mode"][value="count"]').checked = true;
+  $('#bldRadius').value = '3';
+  map.setView(INITIAL_VIEW.center, INITIAL_VIEW.zoom, { animate: false });
+}
+
 function showView(v) {
   if (document.body.dataset.view === v) return;
+  const leavingApp = document.body.dataset.view === 'app';
   const swap = () => {
     document.body.dataset.view = v;
     closeAbout(); closeHelp();
     if (v === 'app') {
       map.invalidateSize();
-      if (!state.region && !mapReady) { map.setView([36.35, 127.8], 7); mapReady = true; }
-    } else fitHeadline();
+      if (!state.region) map.setView(INITIAL_VIEW.center, INITIAL_VIEW.zoom, { animate: false });
+    } else {
+      if (leavingApp) resetApp();
+      fitHeadline();
+    }
   };
   if (document.startViewTransition && document.visibilityState === 'visible' && !reducedMotion()) document.startViewTransition(swap);
   else swap();
 }
+/* 예전 공유 주소(#q=지역)도 분석을 자동으로 다시 돌리지 않고 빈 분석 화면만 연다 */
 function route() {
   const h = location.hash.slice(1);
-  const q = new URLSearchParams(h).get('q');
-  showView(q || h === 'app' ? 'app' : 'landing');
-  return q;
+  const isApp = h === 'app' || new URLSearchParams(h).has('q');
+  if (isApp && h !== 'app') { try { history.replaceState(null, '', '#app'); } catch { /* file:// */ } }
+  showView(isApp ? 'app' : 'landing');
 }
-addEventListener('hashchange', () => {
-  const q = route();
-  if (q && q !== lastStart.q) { $('#q').value = q; startSearch(q); }
-});
+addEventListener('hashchange', route);
 $('#startBtn').addEventListener('click', () => { location.hash = 'app'; });
 $$('[data-home]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); location.hash = ''; }));
 addEventListener('resize', fitHeadline);
@@ -1980,7 +2007,4 @@ new ResizeObserver(() => map.invalidateSize()).observe($('.map-wrap'));
    ============================================================ */
 $$('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
 applyLang();
-(() => {
-  const q = route();
-  if (q) { $('#q').value = q; startSearch(q); }
-})();
+route();
