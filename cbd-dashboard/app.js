@@ -1844,7 +1844,10 @@ function fitHeadline() {
     return w ? 100 * boxW / w : 100;
   });
   const lh = 0.9;   // 표지 제목은 항상 영문 대문자
-  const maxH = innerHeight * 0.46;
+  // 가운데 영역 높이에 맞춰 키운다 (창이 낮아도 위아래 문구를 밀어내지 않게)
+  const mainH = $('.land-main')?.clientHeight || innerHeight;
+  const below = $('.land-below')?.offsetHeight ?? 150;
+  const maxH = Math.min(innerHeight * 0.46, mainH - below * 2 - 60);
   const total = sizes.reduce((s, v) => s + v * lh, 0);
   const k = Math.min(1, maxH / total);
   lines.forEach((l, i) => { l.style.fontSize = `${(sizes[i] * k).toFixed(1)}px`; });

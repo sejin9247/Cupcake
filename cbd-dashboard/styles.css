@@ -63,8 +63,13 @@ body[data-view="landing"] #app,body[data-view="app"] #landing{display:none}
 .lang button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 /* ---------- landing ---------- */
-#landing{position:relative;min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;gap:12px;padding-block:clamp(16px,2.6vw,30px);padding-inline:clamp(16px,2.2vw,28px);background:var(--land-bg);color:var(--land-ink);overflow:hidden;--lang-on-bg:var(--land-ink);--lang-on-ink:var(--land-bg)}
-.land-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;position:relative;z-index:3}
+/* 위·아래 여백을 같게 두고 로고줄·꼬리말을 띄워, 제목이 화면 정중앙에 오도록 한다.
+   dvh를 함께 써서 모바일 브라우저 주소창 높이에도 흔들리지 않게 한다. */
+#landing{position:relative;min-height:100vh;min-height:100dvh;display:grid;grid-template-rows:minmax(0,1fr);
+  padding-block:clamp(76px,10vh,116px);padding-inline:clamp(16px,2.2vw,28px);
+  background:var(--land-bg);color:var(--land-ink);overflow:hidden;--lang-on-bg:var(--land-ink);--lang-on-ink:var(--land-bg)}
+.land-top{position:absolute;top:clamp(16px,2.6vw,30px);left:clamp(16px,2.2vw,28px);right:clamp(16px,2.2vw,28px);
+  display:flex;justify-content:space-between;align-items:flex-start;gap:16px;z-index:3}
 .mark{display:inline-flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
 .mark svg{width:34px;height:34px;display:block}
 .mark span{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
@@ -73,12 +78,14 @@ body[data-view="landing"] #app,body[data-view="app"] #landing{display:none}
 .icon-btn{width:30px;height:30px;border-radius:50%;border:1px solid currentColor;background:transparent;color:inherit;display:grid;place-items:center;cursor:pointer;opacity:.75;font-size:13px;padding:0}
 .icon-btn:hover{opacity:1}
 
-/* 제목이 화면 중앙에 고정되도록 위·아래 영역을 같은 높이(1fr)로 잡는다.
-   언어를 바꿔 위아래 문구 길이가 달라져도 제목은 제자리에 머문다. */
-.land-main{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);justify-items:center;min-height:0}
-.land-eyebrow{align-self:end;font-size:clamp(11px,1vw,13px);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--land-ink2);margin:0 0 clamp(10px,2.2vh,26px)}
-.land-below{align-self:start;display:grid;justify-items:center;gap:clamp(12px,2.2vh,26px);margin-top:clamp(12px,2.4vh,28px)}
-.hl{position:relative;width:min(92vw,1160px);margin:0;text-align:center;font-weight:900;color:var(--land-ink)}
+/* 제목만 가운데 영역에 두고, 위·아래 문구는 제목에 붙여 띄운다.
+   덕분에 언어를 바꿔 문구 길이가 달라져도 제목은 화면 정중앙에 그대로 있다. */
+.land-main{display:grid;place-items:center;min-height:0}
+.hl-wrap{position:relative;width:min(92vw,1160px)}
+.land-eyebrow{position:absolute;left:0;right:0;bottom:100%;margin:0 0 clamp(10px,2.2vh,26px);text-align:center;
+  font-size:clamp(11px,1vw,13px);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--land-ink2)}
+.land-below{position:absolute;left:0;right:0;top:100%;margin-top:clamp(12px,2.4vh,28px);display:grid;justify-items:center;gap:clamp(12px,2.2vh,26px)}
+.hl{position:relative;width:100%;margin:0;text-align:center;font-weight:900;color:var(--land-ink)}
 .hl-line{display:block;width:max-content;max-width:none;margin:0 auto;white-space:nowrap;letter-spacing:-.058em;line-height:.9;font-size:clamp(44px,11vw,170px);text-transform:uppercase;position:relative;z-index:1}
 .hero-art{position:absolute;left:50%;top:52%;width:clamp(140px,min(25vw,32vh),330px);transform:translate(-50%,-50%);pointer-events:none;z-index:2}
 .hero-art .art-in{display:block;filter:drop-shadow(0 26px 34px rgba(0,0,0,.28))}
@@ -92,7 +99,8 @@ body[data-view="landing"] #app,body[data-view="app"] #landing{display:none}
 .cta:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(0,0,0,.22)}
 .cta:hover .arr{transform:translateX(4px)}
 .cta:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-.land-foot{display:flex;justify-content:space-between;gap:16px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--land-ink2)}
+.land-foot{position:absolute;bottom:clamp(16px,2.6vw,30px);left:clamp(16px,2.2vw,28px);right:clamp(16px,2.2vw,28px);
+  display:flex;justify-content:space-between;gap:16px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--land-ink2)}
 
 /* entry motion */
 .hl-line,.land-eyebrow,.land-sub,.cta{opacity:0;transform:translateY(26px);animation:rise .85s cubic-bezier(.2,.8,.2,1) forwards}
