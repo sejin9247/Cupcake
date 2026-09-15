@@ -4,2184 +4,243 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>아파트 밀도 CBD 탐색기</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<style>
-:root{
-  color-scheme: light;
-  --page:#f9f9f7; --surface:#fcfcfb; --surface-2:#f0efec;
-  --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
-  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
-  --accent:#2a78d6; --accent-ink:#ffffff; --bar:#2a78d6; --bar-soft:#9ec5f4;
-  --cbd:#eb6834; --sub:#4a3aa7; --good:#006300; --crit:#d03b3b;
-  --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme: dark;
-    --page:#0d0d0d; --surface:#1a1a19; --surface-2:#262624;
-    --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
-    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
-    --accent:#3987e5; --bar:#3987e5; --bar-soft:#1c5cab;
-    --cbd:#d95926; --sub:#9085e9; --good:#0ca30c; --crit:#e66767;
-    --shadow:0 1px 2px rgba(0,0,0,.4);
-  }
-}
-:root[data-theme="dark"]{
-  color-scheme: dark;
-  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#262624;
-  --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
-  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
-  --accent:#3987e5; --bar:#3987e5; --bar-soft:#1c5cab;
-  --cbd:#d95926; --sub:#9085e9; --good:#0ca30c; --crit:#e66767;
-  --shadow:0 1px 2px rgba(0,0,0,.4);
-}
-*{box-sizing:border-box}
-[hidden]{display:none!important}
-html,body{height:100%}
-body{margin:0;background:var(--page);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif}
-button,input,select{font:inherit;color:inherit}
-h1,h2,h3{margin:0;font-weight:600}
-
-/* ---------- header ---------- */
-.top{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px;min-width:0}
-.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--cbd);color:#fff;font-weight:700;flex:none}
-.brand h1{font-size:16px;line-height:1.2}
-.brand p{margin:0;font-size:12px;color:var(--muted)}
-.top-actions{display:flex;gap:8px;margin-left:auto}
-.btn{height:38px;padding:0 14px;border-radius:8px;border:1px solid var(--axis);background:var(--surface);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{background:var(--surface-2)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
-.btn.primary:hover{filter:brightness(1.07)}
-.btn:disabled{opacity:.55;cursor:progress}
-.btn.ghost{background:transparent}
-.badge{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--surface-2);color:var(--ink2)}
-.badge.on{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
-
-/* ---------- layout ---------- */
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:16px;padding:16px;height:calc(100vh - 59px)}
-.map-wrap{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);min-height:0}
-#map{position:absolute;inset:0;background:var(--surface-2)}
-.panel{overflow-y:auto;display:flex;flex-direction:column;gap:12px;min-height:0;padding-right:2px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
-.card h3{font-size:13px;color:var(--ink);margin-bottom:2px}
-.card .sub{font-size:12px;color:var(--muted);margin:0 0 10px}
-
-/* ---------- map search bar ---------- */
-.mapbar{position:absolute;top:12px;left:12px;z-index:1000;width:min(460px,calc(100% - 84px));display:grid;gap:6px}
-.search{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:5px;box-shadow:0 2px 12px rgba(0,0,0,.14)}
-.search input{flex:1;min-width:0;height:36px;padding:0 10px;border:0;border-radius:7px;background:transparent}
-.search input:focus{outline:2px solid var(--accent);outline-offset:0}
-.search .btn{height:36px}
-.modes{display:flex;gap:6px;flex-wrap:wrap}
-.mode,.modes select{height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);box-shadow:0 1px 6px rgba(0,0,0,.12);padding:0 10px;font-size:12.5px;cursor:pointer}
-.mode:hover{background:var(--surface-2)}
-.mode[aria-pressed="true"]{background:var(--cbd);border-color:var(--cbd);color:#fff;font-weight:600}
-.hint{background:var(--surface);border:1px solid var(--cbd);border-radius:8px;padding:7px 10px;font-size:12.5px;box-shadow:0 1px 6px rgba(0,0,0,.12)}
-.link{border:0;background:none;padding:0;color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline}
-.results{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.14);padding:6px;max-height:280px;overflow-y:auto;display:grid;gap:2px}
-.results-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:2px 6px 4px}
-.x{border:0;background:none;font-size:18px;line-height:1;cursor:pointer;color:var(--ink2);padding:0 4px}
-.cand{text-align:left;border:1px solid transparent;background:transparent;border-radius:7px;padding:5px 8px;cursor:pointer;font-size:13px;color:var(--ink);display:grid}
-.cand small{color:var(--muted);font-size:11.5px}
-.cand:hover{background:var(--surface-2)}
-.cand[aria-current="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
-.leaflet-container.picking{cursor:crosshair}
-
-/* empty state */
-.map-empty{position:absolute;inset:0;display:grid;place-items:center;z-index:800;background:color-mix(in srgb,var(--page) 55%,transparent);padding:16px;pointer-events:none}
-.map-empty .box{max-width:460px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow);pointer-events:auto}
-.map-empty h2{font-size:18px;margin-bottom:6px}
-.map-empty p{color:var(--ink2);margin:0 0 14px}
-.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.chip{border:1px solid var(--axis);background:var(--page);border-radius:99px;padding:5px 11px;cursor:pointer;font-size:13px}
-.chip:hover{border-color:var(--accent)}
-.busy-pill{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:900;background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:6px 14px;font-size:13px;box-shadow:var(--shadow);display:flex;gap:8px;align-items:center;white-space:nowrap}
-.spin{width:12px;height:12px;border-radius:50%;border:2px solid var(--grid);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* steps */
-.steps ol{list-style:none;margin:0;padding:0;display:grid;gap:7px}
-.steps li{display:grid;grid-template-columns:18px 1fr;gap:8px;font-size:13px;align-items:start;position:relative}
-.steps .ic{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;border:1.5px solid var(--axis);color:var(--muted);margin-top:1px}
-.steps li[data-status="run"] .ic{border-color:var(--grid);border-top-color:var(--accent);animation:spin .8s linear infinite;color:transparent}
-.steps li[data-status="ok"] .ic{background:var(--good);border-color:var(--good);color:#fff}
-.steps li[data-status="err"] .ic{background:var(--crit);border-color:var(--crit);color:#fff}
-.steps li[data-status="skip"] .ic{border-style:dashed}
-.steps li[data-status="wait"] .lb{color:var(--muted)}
-.steps .src{color:var(--muted)}
-.steps .detail{display:block;font-size:12px;color:var(--ink2);overflow-wrap:anywhere}
-.steps li[data-status="err"] .detail{color:var(--crit)}
-.sr{position:absolute;left:-9999px}
-
-/* hero */
-.hero .eyebrow{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.hero .dot{width:10px;height:10px;border-radius:50%;background:var(--cbd);box-shadow:0 0 0 2px var(--surface)}
-.hero .name{font-size:20px;font-weight:600;margin:2px 0 4px;word-break:keep-all}
-.hero .num{font-size:52px;font-weight:600;line-height:1;letter-spacing:-.02em}
-.hero .num small{font-size:16px;font-weight:500;color:var(--ink2);margin-left:6px;letter-spacing:0}
-.hero .desc{font-size:12px;color:var(--ink2);margin-top:8px}
-.hero .note{font-size:12px;margin-top:8px;padding:6px 8px;border-radius:6px;background:var(--surface-2);color:var(--ink2)}
-.hero.placeholder .name{color:var(--muted);font-weight:500;font-size:15px}
-
-.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
-.tile .l{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tile .v{font-size:18px;font-weight:600;margin-top:2px;white-space:nowrap}
-.tile .v small{font-size:11px;color:var(--ink2);font-weight:500;margin-left:2px}
-
-/* controls */
-.ctl{display:grid;grid-template-columns:92px 1fr auto;align-items:center;gap:8px 10px;font-size:13px}
-.ctl > label{color:var(--ink2)}
-.ctl input[type=range]{width:100%;accent-color:var(--cbd)}
-.ctl select{height:32px;border:1px solid var(--axis);border-radius:7px;background:var(--page);padding:0 8px;grid-column:2 / 4}
-.ctl output{font-variant-numeric:tabular-nums;min-width:34px;text-align:right;font-weight:600}
-.seg{grid-column:2 / 4;display:flex;border:1px solid var(--axis);border-radius:7px;overflow:hidden}
-.seg label{flex:1;text-align:center;padding:5px 4px;cursor:pointer;color:var(--ink2)}
-.seg input{position:absolute;opacity:0;pointer-events:none}
-.seg label:has(input:checked){background:var(--surface-2);color:var(--ink);font-weight:600}
-.seg label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:-2px}
-
-/* charts */
-.legend-row{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--ink2);margin-bottom:6px}
-.legend-row span{display:inline-flex;align-items:center;gap:6px}
-.sw{width:10px;height:10px;border-radius:3px;display:inline-block}
-svg.chart{width:100%;height:auto;display:block;overflow:visible}
-svg.chart text{fill:var(--muted);font-size:10.5px;font-variant-numeric:tabular-nums}
-svg.chart .gridline{stroke:var(--grid);stroke-width:1}
-svg.chart .baseline{stroke:var(--axis);stroke-width:1}
-svg.chart .thr{stroke:var(--ink);stroke-width:1.5}
-svg.chart text.thr-l{fill:var(--ink);font-weight:600}
-svg.chart .hit{fill:transparent}
-svg.chart .hit:hover{fill:var(--ink);fill-opacity:.05}
-.bars{display:grid;gap:4px;position:relative}
-.bar-row{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:8px;padding:3px 4px;border-radius:6px;cursor:pointer;font-size:12.5px}
-.bar-row:hover{background:var(--surface-2)}
-.bar-row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);line-height:1.25}
-.bar-row .nm small{color:var(--muted)}
-.track{position:relative;height:18px;display:flex;align-items:center;gap:6px}
-.fill{height:14px;border-radius:0 4px 4px 0;flex:none;min-width:2px}
-.val{font-size:12px;color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums}
-.refline{position:absolute;top:-2px;bottom:-2px;width:0;border-left:1px solid var(--axis);pointer-events:none}
-.ref-note{font-size:11px;color:var(--muted);margin-top:4px}
-.empty-msg{font-size:12.5px;color:var(--muted);padding:6px 0}
-details summary{cursor:pointer;font-size:12.5px;color:var(--ink2);margin-top:8px}
-.tbl-wrap{overflow-x:auto;margin-top:8px;max-height:320px;overflow-y:auto}
-table{border-collapse:collapse;width:100%;font-size:12px}
-th,td{padding:5px 6px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-th{position:sticky;top:0;background:var(--surface);color:var(--ink2);font-weight:600}
-th:first-child,td:first-child{text-align:left}
-tr.is-cbd td:first-child::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cbd);margin-right:5px}
-.method{font-size:12.5px;color:var(--ink2)}
-.method p,.method ul{margin:6px 0}
-.method ul{padding-left:18px}
-.method code{font-size:11.5px;background:var(--surface-2);padding:1px 4px;border-radius:4px}
-
-/* building mix donut */
-.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.card-head select{height:30px;border:1px solid var(--axis);border-radius:7px;background:var(--page);padding:0 6px;font-size:12.5px;flex:none}
-.donut-title{font-size:15px;font-weight:600;margin:2px 0 8px}
-.donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.donut{width:180px;height:180px;flex:none;display:block}
-.donut path{stroke:var(--surface);stroke-width:2;stroke-linejoin:round}
-.donut path:hover{filter:brightness(1.1)}
-.donut .c-num{fill:var(--ink);font-size:22px;font-weight:600}
-.donut .c-sub{fill:var(--muted);font-size:11px}
-.donut .seg-l{font-size:10.5px;font-weight:600;pointer-events:none;font-variant-numeric:tabular-nums}
-.bld-legend{flex:1;min-width:170px;display:grid;gap:2px}
-.lg-row{display:grid;grid-template-columns:10px 1fr auto 48px;gap:8px;align-items:center;font-size:12.5px;padding:3px 4px;border-radius:5px}
-.lg-row:hover{background:var(--surface-2)}
-.lg-row .lg-c,.lg-row .lg-p{font-variant-numeric:tabular-nums;text-align:right;color:var(--ink2)}
-.lg-row .lg-p{color:var(--ink);font-weight:600}
-.lg-row.zero,.lg-row.zero .lg-c,.lg-row.zero .lg-p{color:var(--muted);font-weight:400}
-.loading-msg{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink2);padding:8px 0}
-.rules{font-size:12px;color:var(--ink2);display:grid;gap:4px;margin-top:6px}
-.rules b{color:var(--ink);font-weight:600}
-
-/* control help popovers */
-.help-t{display:inline-flex;align-items:center;gap:5px;cursor:help;white-space:nowrap}
-.qi{width:16px;height:16px;border-radius:50%;border:1px solid var(--axis);display:inline-grid;place-items:center;font-size:10.5px;font-weight:700;color:var(--muted);line-height:1;flex:none;cursor:help;transition:border-color .15s,color .15s,background .15s}
-.help-t:hover .qi,.help-t.open .qi,.qi:focus-visible{border-color:var(--accent);color:var(--accent-ink);background:var(--accent);outline:none}
-.help-pop{position:fixed;z-index:2100;width:330px;max-width:calc(100vw - 16px);background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.24);padding:12px 14px 13px;pointer-events:none;opacity:0;transform:translateX(10px) scale(.97);transform-origin:right center;transition:opacity .16s ease,transform .22s cubic-bezier(.2,.9,.25,1)}
-.help-pop[data-side="right"]{transform:translateX(-10px) scale(.97);transform-origin:left center}
-.help-pop[data-side="bottom"]{transform:translateY(-8px) scale(.97);transform-origin:top left}
-.help-pop[data-side="top"]{transform:translateY(8px) scale(.97);transform-origin:bottom left}
-.help-pop.show{opacity:1;transform:none}
-.help-pop::before{content:"";position:absolute;width:10px;height:10px;background:var(--surface);border:1px solid var(--border);transform:rotate(45deg)}
-.help-pop[data-side="left"]::before{right:-6px;top:calc(var(--ay,50%) - 5px);border-left-color:transparent;border-bottom-color:transparent}
-.help-pop[data-side="right"]::before{left:-6px;top:calc(var(--ay,50%) - 5px);border-right-color:transparent;border-top-color:transparent}
-.help-pop[data-side="bottom"]::before{top:-6px;left:calc(var(--ax,20px) - 5px);border-right-color:transparent;border-bottom-color:transparent}
-.help-pop[data-side="top"]::before{bottom:-6px;left:calc(var(--ax,20px) - 5px);border-left-color:transparent;border-top-color:transparent}
-@media (prefers-reduced-motion: reduce){.help-pop,.help-pop[data-side]{transition:opacity .12s;transform:none}}
-.hp-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
-.hp-title{font-weight:600;font-size:14.5px}
-.hp-cur{font-size:11.5px;color:var(--ink2);background:var(--surface-2);border-radius:99px;padding:1px 9px;white-space:nowrap}
-.hp-fig{background:var(--page);border:1px solid var(--grid);border-radius:9px;padding:6px 4px 2px;margin-bottom:9px}
-.hp-fig svg{display:block;width:100%;height:auto}
-.hp-fig text{font-size:9.5px;fill:var(--ink2);font-family:inherit}
-.hp-fig text.t-b{fill:var(--ink);font-weight:600;font-size:10px}
-.hp-what{font-size:12.5px;line-height:1.55;margin:0 0 9px}
-.hp-rows{display:grid;gap:6px}
-.hp-row{display:grid;grid-template-columns:62px 1fr;gap:8px;font-size:12px;line-height:1.5;color:var(--ink2);align-items:start}
-.hp-tag{font-size:11px;font-weight:600;border-radius:5px;padding:1px 0;text-align:center;background:var(--surface-2);color:var(--ink)}
-.hp-note{font-size:11.5px;color:var(--muted);margin-top:8px;padding-top:7px;border-top:1px solid var(--grid)}
-
-/* tooltip */
-.tip{position:fixed;z-index:2000;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;box-shadow:0 4px 18px rgba(0,0,0,.16);max-width:260px}
-.tip .m{color:var(--ink2)}
-
-/* leaflet theme */
-.leaflet-container{font:inherit}
-.basemap-gray{filter:grayscale(1) contrast(.9) brightness(1.04)}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .basemap-gray{filter:grayscale(1) invert(1) brightness(.8) contrast(.9)} }
-:root[data-theme="dark"] .basemap-gray{filter:grayscale(1) invert(1) brightness(.8) contrast(.9)}
-.leaflet-tooltip{background:var(--surface);color:var(--ink);border:1px solid var(--border);box-shadow:0 3px 12px rgba(0,0,0,.18);font-size:12px}
-.leaflet-tooltip-top:before{border-top-color:var(--surface)}
-.leaflet-tooltip.lbl{font-weight:600;padding:2px 7px}
-.leaflet-control-layers,.map-legend{background:var(--surface)!important;color:var(--ink);border:1px solid var(--border)!important;border-radius:10px!important;box-shadow:var(--shadow)!important}
-.leaflet-control-layers label{font-size:12.5px}
-.leaflet-control-layers-separator{border-top-color:var(--grid)!important}
-.leaflet-bar a{background:var(--surface);color:var(--ink);border-color:var(--border)}
-.leaflet-control-attribution{background:color-mix(in srgb,var(--surface) 85%,transparent)!important;color:var(--muted)!important}
-.leaflet-control-attribution a{color:var(--ink2)!important}
-.map-legend{padding:8px 10px;font-size:11.5px;min-width:150px}
-.map-legend .t{font-weight:600;margin-bottom:4px;color:var(--ink)}
-.map-legend .ramp{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-.map-legend .ramp i{height:10px;border-radius:2px;display:block}
-.map-legend .ramp-l{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;color:var(--muted);font-size:10px;text-align:center;margin-top:2px}
-.map-legend .k{display:flex;align-items:center;gap:6px;margin-top:5px;color:var(--ink2)}
-.map-legend .ln{width:22px;height:0;border-top:3px solid var(--cbd)}
-.map-legend .ln.sub{border-top:2px dashed var(--sub)}
-
-/* dialog */
-dialog{border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--ink);padding:0;width:min(520px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.3)}
-dialog::backdrop{background:rgba(0,0,0,.35)}
-dialog form{padding:20px;display:grid;gap:12px}
-dialog h2{font-size:17px}
-dialog .hint-txt{margin:0;font-size:12.5px;color:var(--ink2)}
-dialog label{display:grid;gap:4px;font-size:12.5px;color:var(--ink2)}
-dialog input,dialog select{height:36px;border:1px solid var(--axis);border-radius:8px;background:var(--page);padding:0 10px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.dlg-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-#sgisTestMsg{margin:0;font-size:12.5px;min-height:1em}
-
-@media (max-width: 960px){
-  .layout{grid-template-columns:1fr;height:auto}
-  .map-wrap{height:70vh;min-height:420px}
-  .panel{overflow:visible}
-  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media (max-width: 520px){
-  .top-actions .txt{display:none}
-  .hero .num{font-size:44px}
-  .mapbar{width:calc(100% - 70px)}
-}
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
-<body>
-<header class="top">
-  <div class="brand">
-    <div class="logo" aria-hidden="true">C</div>
-    <div>
-      <h1>아파트 밀도 CBD 탐색기</h1>
-      <p>OpenStreetMap · Overpass · SGIS 기반 지역대비 밀도 분석</p>
-    </div>
-  </div>
-  <div class="top-actions">
-    <button id="themeBtn" class="btn ghost" type="button" title="테마 전환"><span id="themeIcon" aria-hidden="true">☾</span> <span class="txt" id="themeTxt">다크</span></button>
-    <button id="settingsBtn" class="btn" type="button">⚙ <span class="txt">SGIS 설정</span> <span id="sgisBadge" class="badge">키 없음</span></button>
-  </div>
-</header>
+<body data-view="landing">
 
-<main class="layout">
-  <section class="map-wrap">
-    <div id="map" aria-label="분석 지도"></div>
-
-    <div class="mapbar">
-      <form id="searchForm" class="search" role="search">
-        <input id="q" type="search" placeholder="지역 검색 (예: 성남시 분당구, 송파구)" autocomplete="off" aria-label="지역 검색">
-        <button id="goBtn" type="submit" class="btn primary">검색</button>
-      </form>
-      <div class="modes" role="group" aria-label="지역 지정 방법">
-        <button type="button" class="mode" id="pickBtn" aria-pressed="false">📍 지도 클릭으로 선택</button>
-        <select id="pickLevel" aria-label="클릭 선택 단위">
-          <option value="sgg" selected>시·군·구 단위</option>
-          <option value="dong">읍·면·동 단위</option>
-          <option value="sido">시·도 단위</option>
-        </select>
-        <button type="button" class="mode" id="drawBtn" aria-pressed="false">✏️ 영역 직접 그리기</button>
+<!-- ===================== 표지 ===================== -->
+<section id="landing">
+  <header class="land-top">
+    <a class="mark" href="#" data-home aria-label="CBD Finder">
+      <svg viewBox="0 0 40 40" aria-hidden="true" fill="none">
+        <path d="M20 3.5 33.3 11v18L20 36.5 6.7 29V11z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M20 13.2 26.8 17v8L20 28.8 13.2 25v-8z" fill="currentColor"/>
+      </svg>
+      <span>CBD Finder</span>
+    </a>
+    <nav class="land-nav">
+      <div class="nav-links">
+        <button type="button" class="txt-link" data-about aria-expanded="false" data-i18n="nav.about">About</button>
+        <a class="txt-link" href="https://greensmartcity.smu.ac.kr/greensmartcity/index.do" target="_blank" rel="noopener noreferrer" data-i18n="nav.contact">Contact</a>
       </div>
-      <div class="hint" id="mapHint" hidden></div>
-      <div class="results" id="results" hidden></div>
-    </div>
-
-    <div id="busyPill" class="busy-pill" hidden><span class="spin"></span><span id="busyTxt">분석 중…</span></div>
-    <div id="mapEmpty" class="map-empty">
-      <div class="box">
-        <h2>어느 지역의 중심지를 찾아볼까요?</h2>
-        <p>왼쪽 위 검색창에 지역을 입력하거나, <b>지도 클릭으로 선택</b> · <b>영역 직접 그리기</b>로 분석할 지역을 지정하세요. 아파트가 지역 평균보다 두드러지게 모인 군집을 CBD로 선정합니다.</p>
-        <div class="chips" id="examples"></div>
-      </div>
-    </div>
-  </section>
-
-  <aside class="panel">
-    <div class="card steps"><ol id="steps"></ol></div>
-
-    <div class="card hero placeholder" id="hero">
-      <div class="eyebrow"><span class="dot"></span>선정된 CBD</div>
-      <div class="name">지역을 지정하면 결과가 표시됩니다</div>
-    </div>
-
-    <div class="tiles" id="tiles"></div>
-
-    <div class="card" id="bldCard">
-      <div class="card-head">
-        <div>
-          <h3>건물 유형 구성</h3>
-          <p class="sub" id="bldSub">CBD 중심 반경 안의 OSM 건물을 용도별로 분류합니다</p>
+      <div class="land-ctrls">
+        <div class="lang" role="group" data-i18n-attr="aria-label:lang.group">
+          <button type="button" data-lang="ko">한국어</button>
+          <button type="button" data-lang="en">English</button>
         </div>
-        <select id="bldRadius" aria-label="분석 반경">
-          <option value="1">반경 1 km</option>
-          <option value="2">반경 2 km</option>
-          <option value="3" selected>반경 3 km</option>
-          <option value="5">반경 5 km</option>
-        </select>
+        <button type="button" class="icon-btn theme-btn" data-theme-toggle><span class="theme-icon" aria-hidden="true">☾</span></button>
       </div>
-      <div id="bldChart"><div class="empty-msg">분석 후 표시됩니다</div></div>
-      <details><summary>분류 기준</summary><div class="rules" id="bldRules"></div></details>
+    </nav>
+  </header>
+
+  <main class="land-main">
+    <p class="land-eyebrow" data-i18n="land.eyebrow"></p>
+    <h1 class="hl" id="hlBox">
+      <span class="hl-line"></span><span class="hl-line"></span><span class="hl-line"></span>
+      <span class="hero-art" id="heroArt" aria-hidden="true"><span class="art-in"></span></span>
+    </h1>
+    <div class="land-below">
+      <p class="land-sub" data-i18n="land.sub"></p>
+      <button type="button" class="cta" id="startBtn">
+        <span data-i18n="land.cta"></span>
+        <span class="arr" aria-hidden="true">
+          <svg viewBox="0 0 20 20" width="14" height="14" fill="none"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </button>
     </div>
+  </main>
 
-    <div class="card">
-      <h3>분석 조건</h3>
-      <p class="sub">바꾸면 데이터를 다시 받지 않고 즉시 재계산합니다 · 항목 이름에 마우스를 올리면 설명이 나옵니다</p>
-      <div class="ctl">
-        <label for="thr" class="help-t" data-help="thr">CBD 임계값<span class="qi" tabindex="0" role="button" aria-label="CBD 임계값 설명">?</span></label>
-        <input id="thr" type="range" min="1.2" max="6" step="0.1" value="2">
-        <output id="thrOut">×2.0</output>
+  <footer class="land-foot">
+    <span data-i18n="land.footL"></span>
+    <span data-i18n="land.footR"></span>
+  </footer>
+</section>
 
-        <label for="cell" class="help-t" data-help="cell">격자 크기<span class="qi" tabindex="0" role="button" aria-label="격자 크기 설명">?</span></label>
-        <select id="cell">
-          <option value="0" selected>자동 (지역 면적 기준)</option>
-          <option value="0.15">150 m</option>
-          <option value="0.25">250 m</option>
-          <option value="0.5">500 m</option>
-          <option value="1">1 km</option>
-          <option value="2">2 km</option>
-        </select>
+<!-- ===================== 분석 화면 ===================== -->
+<div id="app">
+  <header class="top">
+    <button class="brand" type="button" data-home data-i18n-attr="title:nav.home">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 40 40" fill="none">
+          <path d="M20 3.5 33.3 11v18L20 36.5 6.7 29V11z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M20 13.2 26.8 17v8L20 28.8 13.2 25v-8z" fill="currentColor"/>
+        </svg>
+      </span>
+      <span>
+        <h1 data-i18n="app.title"></h1>
+        <p data-i18n="app.subtitle"></p>
+      </span>
+    </button>
+    <div class="top-right">
+      <div class="nav-links">
+        <button type="button" class="txt-link" data-about aria-expanded="false" data-i18n="nav.about">About</button>
+        <a class="txt-link" href="https://greensmartcity.smu.ac.kr/greensmartcity/index.do" target="_blank" rel="noopener noreferrer" data-i18n="nav.contact">Contact</a>
+      </div>
+      <div class="top-actions">
+        <div class="lang" role="group" data-i18n-attr="aria-label:lang.group">
+          <button type="button" data-lang="ko">한국어</button>
+          <button type="button" data-lang="en">English</button>
+        </div>
+        <button id="themeBtn" class="btn ghost theme-btn" type="button" data-theme-toggle>
+          <span class="theme-icon" aria-hidden="true">☾</span> <span class="txt theme-txt"></span>
+        </button>
+        <button id="settingsBtn" class="btn" type="button">⚙ <span class="txt" data-i18n="sgis.btn"></span> <span id="sgisBadge" class="badge"></span></button>
+      </div>
+    </div>
+  </header>
 
-        <label for="smooth" class="help-t" data-help="smooth">평활화<span class="qi" tabindex="0" role="button" aria-label="평활화 설명">?</span></label>
-        <select id="smooth">
-          <option value="0">없음 (격자 내 집계)</option>
-          <option value="0.75">약하게</option>
-          <option value="1.25" selected>보통 (커널 밀도)</option>
-          <option value="2">강하게</option>
-        </select>
+  <main class="layout">
+    <section class="map-wrap">
+      <div id="map" data-i18n-attr="aria-label:map.aria"></div>
 
-        <label class="help-t" data-help="mode">가중치<span class="qi" tabindex="0" role="button" aria-label="가중치 설명">?</span></label>
-        <div class="seg" role="radiogroup" aria-label="가중치">
-          <label><input type="radio" name="mode" value="count" checked>건물 동수</label>
-          <label><input type="radio" name="mode" value="floor">연면적 추정</label>
+      <div class="mapbar">
+        <form id="searchForm" class="search" role="search">
+          <input id="q" type="search" autocomplete="off" data-i18n-attr="placeholder:search.placeholder;aria-label:search.aria">
+          <button id="goBtn" type="submit" class="btn primary" data-i18n="search.btn"></button>
+        </form>
+        <div class="modes" role="group" data-i18n-attr="aria-label:modes.aria">
+          <button type="button" class="mode" id="pickBtn" aria-pressed="false" data-i18n="pick.btn"></button>
+          <select id="pickLevel" data-i18n-attr="aria-label:pick.levelAria">
+            <option value="sgg" selected data-i18n="level.sgg"></option>
+            <option value="dong" data-i18n="level.dong"></option>
+            <option value="sido" data-i18n="level.sido"></option>
+          </select>
+          <button type="button" class="mode" id="drawBtn" aria-pressed="false" data-i18n="draw.btn"></button>
+        </div>
+        <div class="hint" id="mapHint" hidden></div>
+        <div class="results" id="results" hidden></div>
+      </div>
+
+      <div id="busyPill" class="busy-pill" hidden><span class="spin"></span><span id="busyTxt"></span></div>
+      <div id="mapEmpty" class="map-empty">
+        <div class="box">
+          <h2 data-i18n="empty.title"></h2>
+          <p data-i18n-html="empty.body"></p>
+          <div class="chips" id="examples"></div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="card">
-      <h3>지역대비 밀도 분포</h3>
-      <p class="sub">아파트가 있는 격자의 LQ(격자 밀도 ÷ 지역 평균 밀도) 분포</p>
-      <div id="histChart"><div class="empty-msg">분석 후 표시됩니다</div></div>
-    </div>
+    <aside class="panel">
+      <div class="card steps"><ol id="steps"></ol></div>
 
-    <div class="card">
-      <h3>중심지 군집</h3>
-      <p class="sub">임계값 이상 격자가 이어진 군집 · 막대 = 지역 전체 아파트 중 군집이 차지하는 비율</p>
-      <div id="clusterChart"><div class="empty-msg">분석 후 표시됩니다</div></div>
-    </div>
+      <div class="card hero placeholder" id="hero"></div>
 
-    <div class="card">
-      <h3>행정동별 지역대비 밀도</h3>
-      <p class="sub" id="dongSub">SGIS 주택총조사 아파트 수 + OSM 아파트 건물의 LQ 평균</p>
-      <div id="dongChart"><div class="empty-msg">SGIS 키를 설정하면 표시됩니다</div></div>
-      <details id="dongDetails" hidden><summary>표로 보기</summary><div class="tbl-wrap" id="dongTable"></div></details>
-    </div>
+      <div class="tiles" id="tiles"></div>
 
-    <div class="card method">
-      <details>
-        <summary>산정 방법</summary>
-        <ul>
-          <li><b>지역 지정</b> — 검색·지도 클릭은 Nominatim(OSM) 행정 경계 폴리곤을, 직접 그리기는 그린 다각형을 분석 영역으로 씁니다.</li>
-          <li><b>아파트</b> — Overpass로 영역 범위의 <code>building=apartments</code> 건물을 받아 영역 폴리곤 안의 것만 남깁니다. 연면적 추정은 바닥면적(건물 외곽 사각형의 75%로 추정) × <code>building:levels</code>(없으면 설정의 기본 층수)입니다.</li>
-          <li><b>지역대비 밀도(LQ)</b> — 영역을 육각 격자로 나누고, 격자 밀도(가우시안 커널 평활화 선택)를 지역 평균 밀도(전체 아파트 ÷ 영역 면적)로 나눕니다. LQ 2는 평균의 두 배입니다.</li>
-          <li><b>CBD 선정</b> — LQ가 임계값 이상인 격자 중 맞닿은 것끼리 군집으로 묶고, 아파트 규모(밀도×면적 합)가 가장 큰 군집을 CBD, 그다음 군집을 부도심으로 표시합니다. 임계값을 넘는 격자가 없으면 상위 3% 격자로 대신합니다.</li>
-          <li><b>SGIS(선택)</b> — 행정동 경계(UTM-K → WGS84 변환)와 주택총조사 아파트 수(<code>stats/house.json</code>)로 행정동별 LQ를 계산해 OSM 결과와 평균합니다.</li>
-        </ul>
-        <p>여기서 CBD는 전통적인 업무 중심지가 아니라 <b>아파트가 지역 평균보다 두드러지게 밀집한 핵심 권역</b>을 뜻합니다. OSM 건물 입력이 부족한 지역은 결과가 치우칠 수 있으니 SGIS 통계와 함께 보세요.</p>
-      </details>
-    </div>
-  </aside>
-</main>
+      <div class="card" id="bldCard">
+        <div class="card-head">
+          <div>
+            <h3 data-i18n="bld.title"></h3>
+            <p class="sub" id="bldSub" data-i18n="bld.subDefault"></p>
+          </div>
+          <select id="bldRadius" data-i18n-attr="aria-label:bld.radiusAria"></select>
+        </div>
+        <div id="bldChart"></div>
+        <details><summary data-i18n="bld.rules"></summary><div class="rules" id="bldRules"></div></details>
+      </div>
+
+      <div class="card">
+        <h3 data-i18n="ctl.title"></h3>
+        <p class="sub" data-i18n="ctl.sub"></p>
+        <div class="ctl">
+          <label for="thr" class="help-t" data-help="thr"><span data-i18n="ctl.thr"></span><span class="qi" tabindex="0" role="button" data-help-aria="thr">?</span></label>
+          <input id="thr" type="range" min="1.2" max="6" step="0.1" value="2">
+          <output id="thrOut">×2.0</output>
+
+          <label for="cell" class="help-t" data-help="cell"><span data-i18n="ctl.cell"></span><span class="qi" tabindex="0" role="button" data-help-aria="cell">?</span></label>
+          <select id="cell">
+            <option value="0" selected data-i18n="cell.auto"></option>
+            <option value="0.15">150 m</option>
+            <option value="0.25">250 m</option>
+            <option value="0.5">500 m</option>
+            <option value="1">1 km</option>
+            <option value="2">2 km</option>
+          </select>
+
+          <label for="smooth" class="help-t" data-help="smooth"><span data-i18n="ctl.smooth"></span><span class="qi" tabindex="0" role="button" data-help-aria="smooth">?</span></label>
+          <select id="smooth">
+            <option value="0" data-i18n="smooth.0"></option>
+            <option value="0.75" data-i18n="smooth.075"></option>
+            <option value="1.25" selected data-i18n="smooth.125"></option>
+            <option value="2" data-i18n="smooth.2"></option>
+          </select>
+
+          <label class="help-t" data-help="mode"><span data-i18n="ctl.mode"></span><span class="qi" tabindex="0" role="button" data-help-aria="mode">?</span></label>
+          <div class="seg" role="radiogroup" data-i18n-attr="aria-label:ctl.mode">
+            <label><input type="radio" name="mode" value="count" checked><span data-i18n="mode.count"></span></label>
+            <label><input type="radio" name="mode" value="floor"><span data-i18n="mode.floor"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 data-i18n="hist.title"></h3>
+        <p class="sub" data-i18n="hist.sub"></p>
+        <div id="histChart"></div>
+      </div>
+
+      <div class="card">
+        <h3 data-i18n="cluster.title"></h3>
+        <p class="sub" data-i18n="cluster.sub"></p>
+        <div id="clusterChart"></div>
+      </div>
+
+      <div class="card">
+        <h3 data-i18n="dong.title"></h3>
+        <p class="sub" id="dongSub" data-i18n="dong.subDefault"></p>
+        <div id="dongChart"></div>
+        <details id="dongDetails" hidden><summary data-i18n="dong.table"></summary><div class="tbl-wrap" id="dongTable"></div></details>
+      </div>
+
+      <div class="card method">
+        <details>
+          <summary data-i18n="method.summary"></summary>
+          <div data-i18n-html="method.body"></div>
+        </details>
+      </div>
+    </aside>
+  </main>
+</div>
 
 <dialog id="settingsDlg">
   <form method="dialog" id="settingsForm">
-    <h2>SGIS API 설정</h2>
-    <p class="hint-txt">SGIS 개발지원센터(sgis.mods.go.kr)에서 발급받은 서비스 ID와 보안 Key를 입력하세요. 값은 이 브라우저의 localStorage에만 저장되고 SGIS API 호출에만 쓰입니다.</p>
-    <label>서비스 ID (consumer_key)<input name="sgisKey" autocomplete="off" spellcheck="false"></label>
-    <label>보안 Key (consumer_secret)<input name="sgisSecret" type="password" autocomplete="off" spellcheck="false"></label>
+    <h2 data-i18n="dlg.title"></h2>
+    <p class="hint-txt" data-i18n="dlg.hint"></p>
+    <label><span data-i18n="dlg.key"></span><input name="sgisKey" autocomplete="off" spellcheck="false"></label>
+    <label><span data-i18n="dlg.secret"></span><input name="sgisSecret" type="password" autocomplete="off" spellcheck="false"></label>
     <div class="row2">
-      <label>기준 연도<select name="year"></select></label>
-      <label>아파트 주택유형 코드<input name="aptType" spellcheck="false"></label>
+      <label><span data-i18n="dlg.year"></span><select name="year"></select></label>
+      <label><span data-i18n="dlg.aptType"></span><input name="aptType" spellcheck="false"></label>
     </div>
     <div class="row2">
-      <label>연면적 추정 기본 층수<input name="floors" type="number" min="1" max="80"></label>
-      <label>Overpass 서버<select name="overpass">
-        <option value="https://maps.mail.ru/osm/tools/overpass/api/interpreter">maps.mail.ru (권장)</option>
+      <label><span data-i18n="dlg.floors"></span><input name="floors" type="number" min="1" max="80"></label>
+      <label><span data-i18n="dlg.overpass"></span><select name="overpass">
+        <option value="https://maps.mail.ru/osm/tools/overpass/api/interpreter" data-i18n="dlg.recommended"></option>
         <option value="https://overpass-api.de/api/interpreter">overpass-api.de</option>
       </select></label>
     </div>
     <p id="sgisTestMsg"></p>
     <div class="dlg-actions">
-      <button type="button" class="btn ghost" id="clearKeys">키 지우기</button>
-      <button type="button" class="btn" id="testSgis">연결 테스트</button>
-      <button value="cancel" class="btn">취소</button>
-      <button value="save" class="btn primary">저장</button>
+      <button type="button" class="btn ghost" id="clearKeys" data-i18n="dlg.clear"></button>
+      <button type="button" class="btn" id="testSgis" data-i18n="dlg.test"></button>
+      <button value="cancel" class="btn" data-i18n="dlg.cancel"></button>
+      <button value="save" class="btn primary" data-i18n="dlg.save"></button>
     </div>
   </form>
 </dialog>
 
 <div id="tip" class="tip" hidden></div>
 <div id="helpPop" class="help-pop" role="tooltip" hidden></div>
+<div id="aboutPop" class="about-pop" role="dialog" aria-modal="false" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.1.0/turf.min.js"></script>
-<script>
-'use strict';
-
-/* ============================================================
-   constants & helpers
-   ============================================================ */
-const SGIS_BASE = 'https://sgisapi.mods.go.kr/OpenAPI3';
-/* 2026-09 측정: overpass-api.de는 슬롯이 비어도 요청의 절반가량을 7~12초 뒤 504로 거절하고,
-   kumi.systems·private.coffee는 응답이 없었다. maps.mail.ru는 같은 데이터 시각에 3~4초로 안정적이라 기본으로 쓴다. */
-const OVERPASS_ENDPOINTS = ['https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass-api.de/api/interpreter'];
-const BBOX_FILL = 0.75;   // 건물 외곽 사각형 면적 중 실제 바닥면적 비율(추정)
-const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · 통계: SGIS';
-const EXAMPLES = ['성남시 분당구', '서울특별시 송파구', '고양시 일산서구', '대전광역시 서구', '세종특별자치시'];
-const MAX_AREA_KM2 = 2500;
-const LQ_BREAKS = [0.5, 1, 1.5, 2, 3, 5];
-const LQ_LABELS = ['<0.5', '0.5', '1', '1.5', '2', '3', '5+'];
-const RAMP_LIGHT = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b'];
-const RAMP_DARK = ['#0d366b', '#184f95', '#256abf', '#2a78d6', '#5598e7', '#86b6ef', '#cde2fb'];
-const SETTINGS_KEY = 'cbd-dash-settings-v1';
-const THEME_KEY = 'cbd-dash-theme';
-
-/* 건물 유형 — 색은 기준 팔레트 슬롯 1·3·4·5·6 (2번 주황은 지도의 CBD 표시와 겹쳐 제외; 1·3은 전쌍 검증 통과), 미분류는 중립 회색.
-   도넛에서 이웃하는 순서 그대로 둔다. */
-const BLD_TYPES = [
-  { key: 'res', label: '주거', light: '#2a78d6', dark: '#3987e5',
-    values: ['apartments', 'residential', 'house', 'detached', 'semidetached_house', 'semi_detached_house', 'terrace', 'dormitory', 'bungalow', 'cabin', 'farm', 'hut', 'static_caravan', 'houseboat'] },
-  { key: 'com', label: '상업·업무', light: '#1baf7a', dark: '#199e70',
-    values: ['commercial', 'office', 'officetel', 'retail', 'supermarket', 'kiosk', 'hotel', 'mall', 'shop', 'bank'] },
-  { key: 'pub', label: '공공·교육', light: '#eda100', dark: '#c98500',
-    values: ['public', 'government', 'civic', 'school', 'university', 'college', 'kindergarten', 'hospital', 'clinic', 'fire_station', 'police', 'library', 'train_station', 'transportation', 'military', 'toilets'] },
-  { key: 'rel', label: '종교·문화', light: '#e87ba4', dark: '#d55181',
-    values: ['religious', 'church', 'cathedral', 'chapel', 'mosque', 'temple', 'shrine', 'monastery', 'synagogue', 'museum', 'theatre', 'sports_hall', 'stadium', 'grandstand', 'pavilion'] },
-  { key: 'ind', label: '공업', light: '#008300', dark: '#008300',
-    values: ['industrial', 'factory', 'manufacture', 'warehouse', 'hangar', 'storage_tank'] },
-  { key: 'unk', label: '미분류', light: '#c3c2b7', dark: '#5f5e5a', values: [] },
-];
-/* building=yes 처럼 용도가 없는 건물은 같은 건물에 붙은 시설 태그로 보완 분류 */
-const BLD_AMENITY = {
-  pub: ['school', 'kindergarten', 'university', 'college', 'hospital', 'clinic', 'library', 'townhall', 'police', 'fire_station', 'post_office', 'community_centre', 'courthouse', 'social_facility'],
-  rel: ['place_of_worship', 'theatre', 'arts_centre', 'cinema'],
-  com: ['bank', 'restaurant', 'cafe', 'fast_food', 'pharmacy', 'marketplace', 'fuel', 'bar', 'pub'],
-};
-
-proj4.defs('EPSG:5179', '+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
-const utmkToWgs = proj4('EPSG:5179', 'EPSG:4326');
-
-const $ = (s, r = document) => r.querySelector(s);
-const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const norm = s => String(s || '').replace(/\s+/g, '');
-const num = v => { const n = Number(String(v ?? '').replace(/,/g, '')); return v !== '' && v != null && Number.isFinite(n) ? n : null; };
-const fmt = (v, d = 1) => Number.isFinite(v) ? v.toLocaleString('ko-KR', { maximumFractionDigits: d }) : '–';
-const fmtFixed = (v, d = 1) => Number.isFinite(v) ? v.toLocaleString('ko-KR', { maximumFractionDigits: d, minimumFractionDigits: d }) : '–';
-const fmtInt = v => Number.isFinite(v) ? Math.round(v).toLocaleString('ko-KR') : '–';
-const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-function isDark() {
-  const t = document.documentElement.dataset.theme;
-  return t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-}
-function lqClass(lq) { let i = 0; while (i < LQ_BREAKS.length && lq >= LQ_BREAKS[i]) i++; return i; }
-/* 지도 위 색은 UI 테마가 아니라 지도 바탕을 따른다: OSM 기본 타일은 항상 밝고, 흑백 타일만 다크 테마에서 반전된다 */
-let grayBase = false;
-const darkGround = () => grayBase && isDark();
-function lqColor(lq) { return (darkGround() ? RAMP_DARK : RAMP_LIGHT)[lqClass(lq)]; }
-function mapInk() {
-  const d = darkGround();
-  return {
-    ground: d ? '#1a1a19' : '#ffffff', ink: d ? '#ffffff' : '#0b0b0b', ink2: d ? '#c3c2b7' : '#52514e',
-    cbd: d ? '#d95926' : '#eb6834', sub: d ? '#9085e9' : '#4a3aa7',
-  };
-}
-
-function niceStep(x) {
-  if (!(x > 0)) return 1;
-  const p = 10 ** Math.floor(Math.log10(x)), m = x / p;
-  return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p;
-}
-async function pool(items, n, fn) {
-  const q = [...items];
-  await Promise.all(Array.from({ length: Math.min(n, q.length) }, async () => { while (q.length) await fn(q.shift()); }));
-}
-function readJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback; } catch { return fallback; } }
-function writeJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* storage unavailable */ } }
-
-/* planar ring area (m²) around the ring's first vertex – accurate enough for building footprints and hex cells */
-function ringAreaM2(ring) {
-  const lat0 = ring[0][1] * Math.PI / 180, kx = 111320 * Math.cos(lat0), ky = 110574;
-  const x0 = ring[0][0], y0 = ring[0][1];
-  let s = 0;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    s += ((ring[j][0] - x0) * kx) * ((ring[i][1] - y0) * ky) - ((ring[i][0] - x0) * kx) * ((ring[j][1] - y0) * ky);
-  }
-  return Math.abs(s) / 2;
-}
-function reprojectGeom(g) {
-  const f = c => typeof c[0] === 'number' ? utmkToWgs.forward([c[0], c[1]]) : c.map(f);
-  return { type: g.type, coordinates: f(g.coordinates) };
-}
-
-/* ============================================================
-   settings & theme
-   ============================================================ */
-const DEFAULTS = { sgisKey: '', sgisSecret: '', year: '2023', aptType: '02', floors: 15, overpass: OVERPASS_ENDPOINTS[0] };
-let settings = { ...DEFAULTS, ...readJSON(SETTINGS_KEY, {}) };
-// 예전 기본값(overpass-api.de·kumi)을 저장해 둔 브라우저도 한 번은 새 기본 서버로 옮긴다
-if (!settings.overpassV2 || !OVERPASS_ENDPOINTS.includes(settings.overpass)) {
-  settings.overpass = OVERPASS_ENDPOINTS[0];
-  settings.overpassV2 = true;
-}
-const hasSgisKey = () => !!(settings.sgisKey && settings.sgisSecret);
-
-function updateBadge() {
-  const b = $('#sgisBadge');
-  b.textContent = hasSgisKey() ? '키 설정됨' : '키 없음';
-  b.classList.toggle('on', hasSgisKey());
-}
-
-/* 테마는 라이트 ↔ 다크 두 가지만 오간다. 저장된 선택이 없을 때만 처음 한 번 OS 설정을 따른다. */
-const THEME_TXT = { light: '라이트', dark: '다크' };
-const THEME_ICON = { light: '☀', dark: '☾' };
-function applyTheme(t) {
-  document.documentElement.dataset.theme = t;
-  $('#themeIcon').textContent = THEME_ICON[t];
-  $('#themeTxt').textContent = THEME_TXT[t];
-  $('#themeBtn').title = `${THEME_TXT[t === 'dark' ? 'light' : 'dark']} 모드로 전환`;
-}
-let theme = readJSON(THEME_KEY, null);
-if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-applyTheme(theme);
-$('#themeBtn').addEventListener('click', () => {
-  theme = theme === 'dark' ? 'light' : 'dark';
-  writeJSON(THEME_KEY, theme); applyTheme(theme); onThemeChange();
-});
-
-/* ============================================================
-   map (OpenStreetMap tiles)
-   ============================================================ */
-const map = L.map('map', { zoomControl: false, minZoom: 5 }).setView([36.35, 127.8], 7);
-L.control.zoom({ position: 'bottomright' }).addTo(map);
-const baseLayers = {
-  'OSM 기본 지도': L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTR }),
-  'OSM 흑백 (데이터 강조)': L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTR, className: 'basemap-gray' }),
-};
-baseLayers['OSM 기본 지도'].addTo(map);
-map.on('baselayerchange', e => { grayBase = e.layer === baseLayers['OSM 흑백 (데이터 강조)']; onThemeChange(); });
-
-const PANES = { dongFill: 410, hex: 420, dongLine: 430, region: 435, apts: 440, bld: 445, cbd: 450 };
-const renderers = {};
-for (const [name, z] of Object.entries(PANES)) {
-  map.createPane(name).style.zIndex = z;
-  renderers[name] = L.canvas({ pane: name, padding: 0.3 });
-}
-const layers = {
-  dongFill: L.layerGroup(), hex: L.layerGroup().addTo(map), dongLine: L.layerGroup().addTo(map),
-  region: L.layerGroup().addTo(map), apts: L.layerGroup(), cbd: L.layerGroup().addTo(map),
-  bldRing: L.layerGroup().addTo(map), bldPts: L.layerGroup(),
-};
-const drawLayer = L.layerGroup().addTo(map);
-L.control.layers(baseLayers, {
-  '육각 격자 밀도': layers.hex,
-  '행정동 밀도 (SGIS)': layers.dongFill,
-  '행정동 경계 (SGIS)': layers.dongLine,
-  '아파트 건물 (OSM)': layers.apts,
-  'CBD · 부도심': layers.cbd,
-  '건물 유형 분석 반경': layers.bldRing,
-  '건물 유형별 건물 (반경 내)': layers.bldPts,
-}, { collapsed: innerWidth < 1200, position: 'topright' }).addTo(map);
-
-const legend = L.control({ position: 'bottomleft' });
-legend.onAdd = () => { const d = L.DomUtil.create('div', 'map-legend'); d.id = 'mapLegend'; return d; };
-legend.addTo(map);
-function renderLegend() {
-  const ramp = darkGround() ? RAMP_DARK : RAMP_LIGHT;
-  $('#mapLegend').innerHTML = `
-    <div class="t">지역대비 아파트 밀도 (LQ)</div>
-    <div class="ramp">${ramp.map(c => `<i style="background:${c}"></i>`).join('')}</div>
-    <div class="ramp-l">${LQ_LABELS.map(l => `<span>${l}</span>`).join('')}</div>
-    <div class="k"><span class="ln"></span>CBD 군집</div>
-    <div class="k"><span class="ln sub"></span>부도심 군집</div>`;
-}
-renderLegend();
-
-/* ============================================================
-   UI: steps, tooltips, busy
-   ============================================================ */
-const STEPS = [
-  ['geo', '분석 지역 지정', 'Nominatim'],
-  ['osm', '아파트 건물 수집', 'Overpass'],
-  ['sgis', '행정동 경계 · 주택통계', 'SGIS'],
-  ['calc', '지역대비 밀도 분석 · CBD 선정', ''],
-];
-const STATUS_TXT = { wait: '대기', run: '진행 중', ok: '완료', err: '오류', skip: '생략' };
-function resetSteps() {
-  $('#steps').innerHTML = STEPS.map(([id, label, src]) => `
-    <li id="step-${id}" data-status="wait">
-      <span class="ic" aria-hidden="true"></span>
-      <span><span class="lb">${label}${src ? ` <span class="src">· ${src}</span>` : ''}</span>
-      <span class="sr" data-sr>대기</span>
-      <span class="detail"></span></span>
-    </li>`).join('');
-}
-function setStep(id, status, detail = '') {
-  const li = $(`#step-${id}`); if (!li) return;
-  li.dataset.status = status;
-  li.querySelector('.ic').textContent = { ok: '✓', err: '!', skip: '–' }[status] || '';
-  li.querySelector('[data-sr]').textContent = STATUS_TXT[status];
-  li.querySelector('.detail').textContent = detail;
-}
-resetSteps();
-
-const tip = $('#tip');
-function moveTip(e) {
-  const pad = 14; const r = tip.getBoundingClientRect();
-  let x = e.clientX + pad, y = e.clientY + pad;
-  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - pad;
-  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - pad;
-  tip.style.left = x + 'px'; tip.style.top = y + 'px';
-}
-document.addEventListener('mouseover', e => {
-  const el = e.target.closest('[data-tip]');
-  if (!el) return;
-  tip.innerHTML = el.dataset.tip; tip.hidden = false; moveTip(e);
-});
-document.addEventListener('mousemove', e => { if (!tip.hidden) moveTip(e); });
-document.addEventListener('mouseout', e => {
-  const el = e.target.closest('[data-tip]');
-  if (el && !el.contains(e.relatedTarget)) tip.hidden = true;
-});
-
-function setBusy(on, txt) {
-  $('#goBtn').disabled = on;
-  $('#busyPill').hidden = !on;
-  if (txt) $('#busyTxt').textContent = txt;
-}
-
-$('#examples').innerHTML = EXAMPLES.map(x => `<button class="chip" type="button" data-q="${esc(x)}">${esc(x)}</button>`).join('');
-$('#examples').addEventListener('click', e => {
-  const b = e.target.closest('[data-q]'); if (!b) return;
-  $('#q').value = b.dataset.q; startSearch(b.dataset.q);
-});
-
-/* ============================================================
-   state
-   ============================================================ */
-const state = {
-  runId: 0, abort: null, candidates: [], lastRegion: null,
-  region: null, apts: [], medianFp: 400, dongs: null, sgisLevel: null, result: null,
-  names: new Map(),
-};
-
-/* ============================================================
-   data sources
-   ============================================================ */
-async function nominatimSearch(q, signal) {
-  const u = new URL('https://nominatim.openstreetmap.org/search');
-  u.search = new URLSearchParams({
-    q, format: 'jsonv2', countrycodes: 'kr', polygon_geojson: '1', polygon_threshold: '0.0002',
-    addressdetails: '1', limit: '8', 'accept-language': 'ko',
-  });
-  const r = await fetch(u, { signal });
-  if (!r.ok) throw new Error(`Nominatim HTTP ${r.status}`);
-  const js = await r.json();
-  return js
-    .filter(x => x.geojson && /Polygon/.test(x.geojson.type))
-    .sort((a, b) => (b.category === 'boundary') - (a.category === 'boundary'));
-}
-
-async function nominatimReverseArea(latlng, zoom, signal) {
-  const u = new URL('https://nominatim.openstreetmap.org/reverse');
-  u.search = new URLSearchParams({
-    lat: latlng.lat.toFixed(6), lon: latlng.lng.toFixed(6), zoom, format: 'jsonv2',
-    polygon_geojson: '1', polygon_threshold: '0.0002', 'accept-language': 'ko',
-  });
-  const r = await fetch(u, { signal });
-  if (!r.ok) throw new Error(`Nominatim HTTP ${r.status}`);
-  const js = await r.json();
-  return js?.geojson && /Polygon/.test(js.geojson.type) ? js : null;
-}
-
-async function nominatimReverseName(lat, lon) {
-  const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
-  if (state.names.has(key)) return state.names.get(key);
-  const u = new URL('https://nominatim.openstreetmap.org/reverse');
-  u.search = new URLSearchParams({ lat, lon, format: 'jsonv2', zoom: '15', 'accept-language': 'ko' });
-  try {
-    const r = await fetch(u); const js = await r.json(); const a = js.address || {};
-    const name = a.quarter || a.suburb || a.neighbourhood || a.village || a.town || a.city_district || a.borough || js.name || null;
-    state.names.set(key, name);
-    return name;
-  } catch { return null; }
-}
-
-/* Overpass의 area() 질의는 서버 부하에 민감해 자주 504가 나므로,
-   영역 bbox로 질의한 뒤 브라우저에서 폴리곤으로 잘라낸다 (직접 그린 영역도 같은 경로). */
-async function fetchApartments(region, signal, onRetry) {
-  const [w, s, e, n] = region.bbox.map(v => +v.toFixed(6));
-  const bb = `(${s},${w},${n},${e})`;
-  // 윤곽 전체(geom) 대신 외곽 사각형(bb)만 받아 응답 크기를 절반 이하로 줄인다
-  const q = `[out:json][timeout:60];` +
-    `way["building"="apartments"]${bb};out tags bb qt;` +
-    `relation["building"="apartments"]${bb};out tags center qt;`;
-  return overpassQuery(q, signal, onRetry);
-}
-
-/* 설정한 서버부터 차례로 시도하고, 실패하면 다음 서버로 넘어간다 */
-/* overpass-api.de는 IP당 슬롯 2개이고, 쿼리가 끝난 뒤에도 슬롯이 1분가량 묶여
-   연달아 보낸 요청은 504로 거절된다. /api/status를 읽어 슬롯이 모두 풀릴 때까지 기다린다. */
-async function overpassSlotWait(ep, signal, onRetry) {
-  if (!/overpass-api\.de/.test(ep)) { await sleep(5000); return; }
-  const statusUrl = ep.replace(/interpreter$/, 'status');
-  for (let k = 0; k < 6; k++) {
-    let txt;
-    try { txt = await (await fetch(statusUrl, { signal })).text(); }
-    catch (e) { if (signal.aborted) throw e; await sleep(5000); return; }
-    const limit = +(txt.match(/Rate limit: (\d+)/)?.[1] ?? 0);
-    const free = +(txt.match(/(\d+) slots? available now/)?.[1] ?? 0);
-    if (limit && free >= limit) return;
-    const waits = [...txt.matchAll(/in (\d+) seconds/g)].map(m => +m[1]);
-    const w = clamp(waits.length ? Math.max(...waits) + 1 : 10, 2, 60);
-    onRetry?.(new Error(`Overpass 요청 한도로 ${w}초 대기`));
-    await sleep(w * 1000);
-    if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
-  }
-}
-
-/* 같은 지역을 다시 분석할 때(후보 재선택, SGIS 설정 변경 등) 공용 서버에 다시 요청하지 않도록 최근 결과를 보관 */
-const overpassCache = new Map();
-const OVERPASS_CACHE_MAX = 6;
-
-async function overpassQuery(q, signal, onRetry) {
-  if (overpassCache.has(q)) {
-    const hit = overpassCache.get(q);
-    overpassCache.delete(q); overpassCache.set(q, hit);
-    return hit;
-  }
-  const servers = [settings.overpass, ...OVERPASS_ENDPOINTS.filter(x => x !== settings.overpass)];
-  // 한 바퀴 모두 실패하면 overpass-api.de 슬롯이 풀리길 기다렸다가 한 바퀴 더 돈다
-  const endpoints = [...servers, ...servers];
-  const slotServer = servers.find(s => /overpass-api\.de/.test(s)) ?? servers[0];
-  let lastErr;
-  for (const [i, ep] of endpoints.entries()) {
-    if (i === servers.length) await overpassSlotWait(slotServer, signal, onRetry);
-    const host = new URL(ep).host;
-    const timeout = new AbortController();
-    const timer = setTimeout(() => timeout.abort(), 65000);   // 정상 응답은 수 초 — 멈춘 서버에 오래 묶이지 않게
-    const onAbort = () => timeout.abort();
-    signal.addEventListener('abort', onAbort, { once: true });
-    try {
-      const r = await fetch(ep, {
-        method: 'POST', signal: timeout.signal,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-        body: 'data=' + encodeURIComponent(q),
-      });
-      if (!r.ok) throw new Error(`${host} HTTP ${r.status}${r.status === 429 ? ' (요청 과다)' : r.status === 504 ? ' (서버 혼잡)' : ''}`);
-      const js = await r.json();
-      if (js.remark && /error|timed out/i.test(js.remark)) throw new Error(`${host}: ${js.remark}`);
-      const els = js.elements || [];
-      overpassCache.set(q, els);
-      if (overpassCache.size > OVERPASS_CACHE_MAX) overpassCache.delete(overpassCache.keys().next().value);
-      return els;
-    } catch (err) {
-      if (signal.aborted) throw err;
-      lastErr = err.name === 'AbortError' ? new Error(`${host} 응답 시간 초과`) : err;
-      onRetry?.(lastErr, host);
-    } finally {
-      clearTimeout(timer);
-      signal.removeEventListener('abort', onAbort);
-    }
-  }
-  throw lastErr;
-}
-
-function parseApartments(elements, region) {
-  const out = [], fps = [];
-  const [bw, bs, be, bn] = region.bbox;
-  const inside = (lon, lat) => lon >= bw && lon <= be && lat >= bs && lat <= bn && turf.booleanPointInPolygon([lon, lat], region.feature);
-  for (const el of elements) {
-    let lon, lat, fp = null;
-    if (el.bounds) {
-      const b = el.bounds;
-      lon = (b.minlon + b.maxlon) / 2; lat = (b.minlat + b.maxlat) / 2;
-      fp = (b.maxlon - b.minlon) * 111320 * Math.cos(lat * Math.PI / 180) * (b.maxlat - b.minlat) * 110574 * BBOX_FILL;
-      if (!(fp > 20 && fp < 60000)) fp = null;
-    } else if (el.type === 'way' && el.geometry?.length >= 3) {
-      const ring = el.geometry.filter(Boolean).map(p => [p.lon, p.lat]);
-      const n = ring.length - (ring[0][0] === ring.at(-1)[0] && ring[0][1] === ring.at(-1)[1] ? 1 : 0);
-      let sx = 0, sy = 0;
-      for (let i = 0; i < n; i++) { sx += ring[i][0]; sy += ring[i][1]; }
-      lon = sx / n; lat = sy / n;
-      if (n >= 3) { fp = ringAreaM2(ring.slice(0, n)); if (!(fp > 20 && fp < 60000)) fp = null; }
-    } else if (el.center) {
-      lon = el.center.lon; lat = el.center.lat;
-    } else continue;
-    if (!inside(lon, lat)) continue;
-    const lv = parseFloat(el.tags?.['building:levels']);
-    out.push({
-      id: `${el.type}/${el.id}`, lon, lat, fp,
-      levels: Number.isFinite(lv) && lv > 0 && lv < 120 ? lv : null,
-      name: el.tags?.name || el.tags?.['addr:housename'] || '',
-    });
-    if (fp) fps.push(fp);
-  }
-  fps.sort((a, b) => a - b);
-  return { apts: out, medianFp: fps.length ? fps[Math.floor(fps.length / 2)] : 400 };
-}
-
-/* ----- 건물 유형 (CBD 중심 반경) ----- */
-async function fetchBuildings(center, radiusKm, signal, onRetry) {
-  const dLat = radiusKm / 110.574, dLon = radiusKm / (111.32 * Math.cos(center.lat * Math.PI / 180));
-  const bb = `(${(center.lat - dLat).toFixed(6)},${(center.lon - dLon).toFixed(6)},${(center.lat + dLat).toFixed(6)},${(center.lon + dLon).toFixed(6)})`;
-  const q = `[out:json][timeout:90];(way["building"]${bb};relation["building"]${bb};);out tags center qt;`;
-  return overpassQuery(q, signal, onRetry);
-}
-
-const BLD_INDEX = new Map(BLD_TYPES.flatMap(t => t.values.map(v => [v, t.key])));
-function classifyBuilding(tags = {}) {
-  for (const v of [tags.building, tags['building:use']]) if (BLD_INDEX.has(v)) return BLD_INDEX.get(v);
-  const a = tags.amenity;
-  if (BLD_AMENITY.pub.includes(a)) return 'pub';
-  if (BLD_AMENITY.rel.includes(a) || tags.religion) return 'rel';
-  if (tags.shop || tags.office || BLD_AMENITY.com.includes(a) || /^(hotel|motel|guest_house|hostel)$/.test(tags.tourism || '')) return 'com';
-  if (tags.craft || tags.industrial || tags.man_made === 'works') return 'ind';
-  return 'unk';
-}
-
-function summarizeBuildings(elements, center, radiusKm) {
-  const kx = 111.32 * Math.cos(center.lat * Math.PI / 180), ky = 110.574, r2 = radiusKm * radiusKm;
-  const counts = Object.fromEntries(BLD_TYPES.map(t => [t.key, 0]));
-  const pts = [];
-  for (const el of elements) {
-    const c = el.center; if (!c) continue;
-    if (((c.lon - center.lon) * kx) ** 2 + ((c.lat - center.lat) * ky) ** 2 > r2) continue;
-    const type = classifyBuilding(el.tags);
-    counts[type]++;
-    pts.push({ lat: c.lat, lon: c.lon, type });
-  }
-  return { center, radiusKm, counts, pts, total: pts.length };
-}
-
-/* ----- SGIS ----- */
-let sgisToken = null;
-async function sgisRaw(path, params, signal) {
-  const u = new URL(SGIS_BASE + path);
-  u.search = new URLSearchParams(params);
-  const r = await fetch(u, { signal });
-  if (!r.ok) throw new Error(`SGIS ${path} HTTP ${r.status}`);
-  const js = await r.json();
-  const cd = Number(js.errCd ?? 0);
-  if (cd !== 0) { const e = new Error(`${js.errMsg || 'SGIS 오류'} (${js.errCd})`); e.code = cd; throw e; }
-  return js;
-}
-async function sgisAuth(signal, key = settings.sgisKey, secret = settings.sgisSecret) {
-  if (sgisToken && sgisToken.key === key && Date.now() - sgisToken.t < 3.5 * 3600e3) return sgisToken.v;
-  const js = await sgisRaw('/auth/authentication.json', { consumer_key: key, consumer_secret: secret }, signal);
-  sgisToken = { v: js.result.accessToken, t: Date.now(), key };
-  return sgisToken.v;
-}
-async function sgis(path, params, signal) {
-  const tok = await sgisAuth(signal);
-  try {
-    return await sgisRaw(path, { accessToken: tok, ...params }, signal);
-  } catch (e) {
-    if (e.code !== -401) throw e;
-    sgisToken = null;
-    return sgisRaw(path, { accessToken: await sgisAuth(signal), ...params }, signal);
-  }
-}
-function sidoKey(name) {
-  const n = norm(name).replace(/(특별자치도|특별자치시|특별시|광역시|도)$/, '');
-  const alias = { 전라북: '전북', 전라남: '전남', 경상북: '경북', 경상남: '경남', 충청북: '충북', 충청남: '충남' };
-  return alias[n] || n;
-}
-
-async function loadSgis(region, signal, onProgress) {
-  const parts = region.parts;
-  const year = settings.year;
-  const sidos = (await sgis('/addr/stage.json', {}, signal)).result || [];
-  let sido = null;
-  for (const p of [...parts].reverse()) {
-    sido = sidos.find(s => sidoKey(s.addr_name) === sidoKey(p));
-    if (sido) break;
-  }
-  if (!sido) throw new Error('SGIS 시·도 코드를 찾지 못했습니다');
-  const sggs = (await sgis('/addr/stage.json', { cd: sido.cd }, signal)).result || [];
-  const own = norm(parts[0]);
-  let codes, level;
-  if (sidoKey(parts[0]) === sidoKey(sido.addr_name)) {
-    if (sggs.length <= 1) { codes = [sggs[0]?.cd ?? sido.cd]; level = '읍면동'; }
-    else { codes = [sido.cd]; level = '시군구'; }
-  } else if (/(동|읍|면|리|가)$/.test(parts[0])) {
-    const e = new Error('읍·면·동 단위 지역은 행정동 비교를 생략합니다'); e.skip = true; throw e;
-  } else {
-    const m = sggs.filter(s => {
-      const n = norm(s.addr_name);
-      return n === own || n.startsWith(own) || (n.endsWith(own) && parts.slice(1).some(p => n.startsWith(norm(p))));
-    });
-    if (!m.length) throw new Error(`SGIS에서 '${parts[0]}' 코드를 찾지 못했습니다`);
-    codes = m.map(s => s.cd); level = '읍면동';
-  }
-
-  const features = [], stats = new Map(), warnings = [];
-  const stat = cd => { if (!stats.has(cd)) stats.set(cd, { apt: null, tot: null }); return stats.get(cd); };
-  let done = 0;
-  await pool(codes, 3, async cd => {
-    const soft = p => p.catch(e => { if (e.name === 'AbortError') throw e; warnings.push(e.message); return { result: [] }; });
-    const [geo, apt, tot] = await Promise.all([
-      sgis('/boundary/hadmarea.geojson', { year, adm_cd: cd, low_search: 1 }, signal),
-      soft(sgis('/stats/house.json', { year, adm_cd: cd, low_search: 1, house_type: settings.aptType }, signal)),
-      soft(sgis('/stats/house.json', { year, adm_cd: cd, low_search: 1 }, signal)),
-    ]);
-    for (const f of geo.features || []) {
-      if (!f.geometry) continue;
-      features.push({
-        type: 'Feature',
-        properties: { adm_cd: String(f.properties.adm_cd), adm_nm: f.properties.adm_nm },
-        geometry: reprojectGeom(f.geometry),
-      });
-    }
-    for (const r of apt.result || []) stat(String(r.adm_cd)).apt = num(r.house_cnt);
-    for (const r of tot.result || []) stat(String(r.adm_cd)).tot = num(r.house_cnt);
-    onProgress?.(++done, codes.length);
-  });
-  if (!features.length) throw new Error(`${year}년 행정구역 경계가 비어 있습니다`);
-  return { level, features, stats, warnings: [...new Set(warnings)] };
-}
-
-/* ============================================================
-   region sources: search · map click · drawing
-   ============================================================ */
-function regionFromNominatim(c) {
-  const parts = c.display_name.split(',').map(s => s.trim()).filter(p => p && p !== '대한민국' && !/^\d{5}(-\d+)?$/.test(p));
-  if (c.name && norm(parts[0]) !== norm(c.name)) parts.unshift(c.name);
-  const feature = { type: 'Feature', properties: {}, geometry: c.geojson };
-  return {
-    kind: 'osm', name: c.name || parts[0], display: parts.join(' · '), parts,
-    addresstype: c.addresstype, feature, bbox: turf.bbox(feature), areaKm2: turf.area(feature) / 1e6,
-  };
-}
-function regionFromLatLngs(latlngs) {
-  const ring = latlngs.map(ll => [ll.lng, ll.lat]);
-  ring.push(ring[0]);
-  const feature = turf.polygon([ring]);
-  return {
-    kind: 'custom', name: '직접 그린 영역', display: `직접 그린 영역 (꼭짓점 ${latlngs.length}개)`, parts: ['직접 그린 영역'],
-    feature, bbox: turf.bbox(feature), areaKm2: turf.area(feature) / 1e6,
-  };
-}
-
-function beginRun() {
-  const run = ++state.runId;
-  state.abort?.abort();
-  const ac = new AbortController(); state.abort = ac;
-  $('#mapEmpty').hidden = true;
-  resetSteps(); clearResults();
-  return { run, signal: ac.signal };
-}
-function failRun(e, run) {
-  if (e.name === 'AbortError' || run !== state.runId) return;
-  console.error(e);
-  const running = [...document.querySelectorAll('#steps li[data-status="run"]')];
-  if (running.length) running.forEach(li => setStep(li.id.slice(5), 'err', e.message));
-  else setStep('geo', 'err', e.message);
-  heroMessage('분석을 완료하지 못했습니다 — 단계별 오류를 확인하세요');
-}
-
-/* --- search --- */
-let lastStart = { q: '', t: 0 };
-function startSearch(q) {
-  q = q.trim(); if (!q) { $('#q').focus(); return; }
-  if (q === lastStart.q && Date.now() - lastStart.t < 800) return;   // IME 확정 + submit 중복 방지
-  lastStart = { q, t: Date.now() };
-  try { history.replaceState(null, '', '#' + new URLSearchParams({ q })); } catch { /* file:// */ }
-  runSearch(q);
-}
-async function runSearch(q) {
-  setMode(null);
-  const { run, signal } = beginRun();
-  setBusy(true, '지역 검색 중…');
-  setStep('geo', 'run', `"${q}" 검색 중`);
-  try {
-    const found = await nominatimSearch(q, signal);
-    if (run !== state.runId) return;
-    state.candidates = found.map(regionFromNominatim);
-    if (!found.length) {
-      renderResults();
-      setStep('geo', 'err', '경계가 있는 지역을 찾지 못했습니다. 시·군·구 이름으로 검색하거나 지도에서 직접 지정해 보세요.');
-      heroMessage('검색 결과가 없습니다');
-      return;
-    }
-    renderResults(0);
-    await analyzeRegion(state.candidates[0], run, signal);
-  } catch (e) { failRun(e, run); }
-  finally { if (run === state.runId) setBusy(false); }
-}
-async function runRegion(region, { keepCandidates = false } = {}) {
-  setMode(null);
-  if (!keepCandidates) { state.candidates = []; renderResults(); }
-  const { run, signal } = beginRun();
-  setBusy(true, '분석 준비 중…');
-  try { await analyzeRegion(region, run, signal); }
-  catch (e) { failRun(e, run); }
-  finally { if (run === state.runId) setBusy(false); }
-}
-function renderResults(active = -1) {
-  const box = $('#results'), c = state.candidates;
-  box.hidden = c.length < 2;
-  if (box.hidden) return;
-  box.innerHTML = `<div class="results-h"><span>검색 결과 ${c.length}곳 · 다른 지역을 고를 수 있습니다</span><button type="button" class="x" data-close aria-label="닫기">×</button></div>` +
-    c.map((r, i) => `<button type="button" class="cand" data-i="${i}" aria-current="${i === active}">${esc(r.name)}<small>${esc(r.display)} · ${fmt(r.areaKm2, 1)} km²</small></button>`).join('');
-}
-$('#results').addEventListener('click', e => {
-  if (e.target.closest('[data-close]')) { $('#results').hidden = true; return; }
-  const b = e.target.closest('[data-i]'); if (!b) return;
-  const i = +b.dataset.i;
-  renderResults(i);
-  runRegion(state.candidates[i], { keepCandidates: true });
-});
-$('#searchForm').addEventListener('submit', e => { e.preventDefault(); startSearch($('#q').value); });
-$('#q').addEventListener('keydown', e => {
-  // 한글 조합 중 Enter는 조합 확정에 쓰여 submit이 빠질 수 있으므로 확정 직후 검색한다
-  if (e.key === 'Enter' && e.isComposing) {
-    e.preventDefault();
-    $('#q').addEventListener('compositionend', () => startSearch($('#q').value), { once: true });
-  }
-});
-
-/* --- map click / drawing modes --- */
-const PICK_LABEL = { sido: '시·도', sgg: '시·군·구', dong: '읍·면·동' };
-/* Nominatim reverse zoom은 지역마다 반환 단위가 달라(서울 z10=동, 분당 z10=구) 순서대로 시도한다 */
-const PICK_ZOOMS = { sido: [5], sgg: [10, 8], dong: [13, 12, 10] };
-const dongLike = r => /^(suburb|quarter|neighbourhood|village|hamlet)$/.test(r.addresstype || '') || /(동|읍|면|리|가)$/.test(r.name || '');
-let mode = null;
-const draw = { pts: [], cursor: null };
-
-function setMode(m) {
-  mode = m;
-  $('#pickBtn').setAttribute('aria-pressed', String(m === 'pick'));
-  $('#drawBtn').setAttribute('aria-pressed', String(m === 'draw'));
-  map.getContainer().classList.toggle('picking', !!m);
-  draw.pts = []; draw.cursor = null; renderDraw();
-  if (m === 'draw') map.doubleClickZoom.disable(); else map.doubleClickZoom.enable();
-  if (m) { $('#mapEmpty').hidden = true; $('#results').hidden = true; }
-  if (m === 'pick') showHint(`지도에서 분석할 곳을 클릭하세요 — 그 위치의 <b>${PICK_LABEL[$('#pickLevel').value]}</b> 경계를 가져옵니다 · <button type="button" class="link" data-cancel>취소</button>`);
-  else if (m === 'draw') showHint('지도를 클릭해 꼭짓점을 찍고, 마지막 점을 <b>더블클릭</b>하거나 <button type="button" class="link" data-finish>완료</button>를 누르세요 · <button type="button" class="link" data-undo>되돌리기</button> · <button type="button" class="link" data-cancel>취소</button>');
-  else showHint(null);
-}
-function showHint(html) { const h = $('#mapHint'); h.hidden = !html; if (html) h.innerHTML = html; }
-$('#mapHint').addEventListener('click', e => {
-  if (e.target.closest('[data-cancel]')) setMode(null);
-  else if (e.target.closest('[data-finish]')) finishDraw();
-  else if (e.target.closest('[data-undo]')) { draw.pts.pop(); renderDraw(); }
-});
-$('#pickBtn').addEventListener('click', () => setMode(mode === 'pick' ? null : 'pick'));
-$('#drawBtn').addEventListener('click', () => setMode(mode === 'draw' ? null : 'draw'));
-$('#pickLevel').addEventListener('change', () => setMode('pick'));
-addEventListener('keydown', e => {
-  if (e.key === 'Escape' && mode) setMode(null);
-  if (e.key === 'Enter' && mode === 'draw' && document.activeElement === document.body) finishDraw();
-});
-
-map.on('click', e => {
-  if (mode === 'pick') { pickAt(e.latlng); return; }
-  if (mode !== 'draw') return;
-  const last = draw.pts.at(-1);
-  if (last && map.latLngToContainerPoint(last).distanceTo(e.containerPoint) < 6) return;
-  draw.pts.push(e.latlng); renderDraw();
-});
-map.on('dblclick', () => { if (mode === 'draw') finishDraw(); });
-map.on('mousemove', e => { if (mode === 'draw' && draw.pts.length) { draw.cursor = e.latlng; renderDraw(); } });
-
-function renderDraw() {
-  drawLayer.clearLayers();
-  if (!draw.pts.length) return;
-  const { cbd: color, ground: surf } = mapInk();
-  const path = draw.cursor ? [...draw.pts, draw.cursor] : draw.pts;
-  const style = { renderer: renderers.cbd, color, weight: 2, dashArray: '6 4', interactive: false };
-  if (path.length >= 3) L.polygon(path, { ...style, fillColor: color, fillOpacity: .1 }).addTo(drawLayer);
-  else L.polyline(path, style).addTo(drawLayer);
-  for (const p of draw.pts) L.circleMarker(p, { renderer: renderers.cbd, radius: 4, color: surf, weight: 2, fillColor: color, fillOpacity: 1, interactive: false }).addTo(drawLayer);
-}
-function finishDraw() {
-  if (draw.pts.length < 3) {
-    showHint('꼭짓점이 3개 이상 필요합니다 · 계속 클릭하세요 · <button type="button" class="link" data-cancel>취소</button>');
-    return;
-  }
-  const region = regionFromLatLngs(draw.pts);
-  try { history.replaceState(null, '', location.pathname); } catch { /* file:// */ }
-  runRegion(region);
-}
-
-async function pickAt(latlng) {
-  const level = $('#pickLevel').value;
-  setMode(null);
-  state.candidates = []; renderResults();
-  const { run, signal } = beginRun();
-  L.circleMarker(latlng, { renderer: renderers.cbd, radius: 6, color: mapInk().ground, weight: 2, fillColor: mapInk().cbd, fillOpacity: 1, interactive: false }).addTo(drawLayer);
-  setBusy(true, `${PICK_LABEL[level]} 경계 찾는 중…`);
-  setStep('geo', 'run', `${PICK_LABEL[level]} 경계 조회 중 (${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)})`);
-  try {
-    let hit = null, fallback = null;
-    const zooms = PICK_ZOOMS[level];
-    for (let i = 0; i < zooms.length; i++) {
-      if (i) await sleep(1100);                         // Nominatim 이용 정책: 초당 1회
-      const r = await nominatimReverseArea(latlng, zooms[i], signal);
-      if (run !== state.runId) return;
-      if (!r) continue;
-      const ok = level === 'sgg' ? !dongLike(r) : level === 'dong' ? dongLike(r) : true;
-      if (ok) { hit = r; break; }
-      fallback ??= r;
-    }
-    drawLayer.clearLayers();
-    if (!hit && !fallback) {
-      setStep('geo', 'err', '이 위치에서 행정 경계를 찾지 못했습니다. 다른 곳을 클릭하거나 영역을 직접 그려 보세요.');
-      heroMessage('경계를 찾지 못했습니다');
-      return;
-    }
-    const region = regionFromNominatim(hit ?? fallback);
-    if (!hit) region.note = `OSM에 ${PICK_LABEL[level]} 경계가 없어 '${region.name}' 경계를 사용`;
-    $('#q').value = region.parts.slice(0, 2).reverse().join(' ');
-    try { history.replaceState(null, '', '#' + new URLSearchParams({ q: $('#q').value })); } catch { /* file:// */ }
-    await analyzeRegion(region, run, signal);
-  } catch (e) { failRun(e, run); }
-  finally { if (run === state.runId) setBusy(false); }
-}
-
-/* ============================================================
-   pipeline
-   ============================================================ */
-function clearResults() {
-  tip.hidden = true;
-  clearTimeout(bld.timer);
-  bld.ac?.abort();
-  Object.assign(bld, { ac: null, data: null, req: null, loading: false, error: null, retryMsg: null });
-  $('#bldChart').innerHTML = '<div class="empty-msg">분석 후 표시됩니다</div>';
-  for (const g of Object.values(layers)) g.clearLayers();
-  drawLayer.clearLayers();
-  state.region = null; state.apts = []; state.dongs = null; state.result = null;
-  $('#hero').className = 'card hero placeholder';
-  $('#hero').innerHTML = `<div class="eyebrow"><span class="dot"></span>선정된 CBD</div><div class="name">분석 중…</div>`;
-  $('#tiles').innerHTML = '';
-  $('#histChart').innerHTML = '<div class="empty-msg">분석 후 표시됩니다</div>';
-  $('#clusterChart').innerHTML = '<div class="empty-msg">분석 후 표시됩니다</div>';
-  $('#dongChart').innerHTML = `<div class="empty-msg">${hasSgisKey() ? '분석 후 표시됩니다' : 'SGIS 키를 설정하면 표시됩니다'}</div>`;
-  $('#dongDetails').hidden = true;
-}
-
-async function analyzeRegion(region, run, signal) {
-  state.region = region; state.lastRegion = region;
-  setStep('geo', 'ok', `${region.display} — ${fmt(region.areaKm2)} km²${region.note ? ` · ${region.note}` : ''}`);
-  drawRegion();
-  map.fitBounds([[region.bbox[1], region.bbox[0]], [region.bbox[3], region.bbox[2]]], { padding: [40, 40] });
-
-  if (region.areaKm2 > MAX_AREA_KM2) {
-    setStep('osm', 'err', `영역이 너무 넓습니다 (${fmt(region.areaKm2, 0)} km² > ${fmtInt(MAX_AREA_KM2)} km²). 시·군·구 단위로 좁혀 주세요.`);
-    heroMessage('영역이 너무 넓습니다');
-    return;
-  }
-
-  setStep('osm', 'run', region.areaKm2 > 400 ? '넓은 지역이라 수집에 시간이 걸릴 수 있습니다' : 'building=apartments 질의 중');
-  setBusy(true, '아파트 건물 수집 중…');
-  const osmP = fetchApartments(region, signal, err => {
-    if (run === state.runId) setStep('osm', 'run', `${err.message} · 재시도 중`);
-  }).then(els => {
-    if (run !== state.runId) return null;
-    const parsed = parseApartments(els, region);
-    const withLv = parsed.apts.filter(a => a.levels).length;
-    setStep('osm', parsed.apts.length ? 'ok' : 'err',
-      parsed.apts.length
-        ? `아파트 건물 ${fmtInt(parsed.apts.length)}동 (층수 정보 ${fmt(withLv / parsed.apts.length * 100, 0)}%)`
-        : 'OSM에 입력된 아파트 건물(building=apartments)이 없습니다');
-    return parsed;
-  }).catch(e => {
-    if (signal.aborted) throw e;
-    setStep('osm', 'err', `수집 실패: ${e.message}`);
-    return { apts: [], medianFp: 400, error: e };
-  });
-
-  let sgisP = Promise.resolve(null);
-  if (region.kind === 'custom') {
-    setStep('sgis', 'skip', '직접 그린 영역은 행정동 비교를 생략합니다');
-  } else if (!hasSgisKey()) {
-    setStep('sgis', 'skip', '키 미설정 — 우측 상단 SGIS 설정에서 입력하면 행정동 비교가 추가됩니다');
-  } else {
-    setStep('sgis', 'run', '인증 · 행정구역 코드 조회 중');
-    sgisP = loadSgis(region, signal, (d, n) => { if (run === state.runId) setStep('sgis', 'run', `경계 · 주택통계 수신 ${d}/${n}`); })
-      .then(s => {
-        if (run !== state.runId) return null;
-        const w = s.warnings.length ? ` · 통계 일부 실패: ${s.warnings[0]}` : '';
-        setStep('sgis', 'ok', `${s.level} ${s.features.length}개 경계 (${settings.year}년)${w}`);
-        return s;
-      })
-      .catch(e => {
-        if (signal.aborted) throw e;
-        setStep('sgis', e.skip ? 'skip' : 'err', e.message);
-        return null;
-      });
-  }
-
-  const [osm, sg] = await Promise.all([osmP, sgisP]);
-  if (run !== state.runId || !osm) return;
-  state.apts = osm.apts; state.medianFp = osm.medianFp;
-  state.sgisLevel = sg?.level || null;
-  state.dongs = sg ? buildDongs(sg) : null;
-
-  if (!state.apts.length && !state.dongs) {
-    heroMessage('분석할 아파트 데이터가 없습니다');
-    setStep('calc', 'err', 'OSM 아파트 건물과 SGIS 통계가 모두 없습니다');
-    return;
-  }
-  setStep('calc', 'run', '격자 밀도 계산 중');
-  setBusy(true, '밀도 분석 중…');
-  await sleep(20);
-  if (run !== state.runId) return;
-  drawApartments();
-  drawDongLines();
-  recompute();
-  const r = state.result;
-  setStep('calc', 'ok', r.cbdSource === 'hex'
-    ? `격자 ${fmtInt(r.cells.length)}개 (한 변 ${fmt(r.sideKm * 1000, 0)} m) · 군집 ${fmtInt(r.allClusterCount)}개`
-    : '행정동 통계로 CBD 선정 (OSM 건물 없음)');
-}
-
-/* ----- SGIS dongs: area, point membership ----- */
-function buildDongs(sg) {
-  const dongs = sg.features.map(f => {
-    const st = sg.stats.get(f.properties.adm_cd) || {};
-    const full = f.properties.adm_nm || f.properties.adm_cd;
-    return {
-      cd: f.properties.adm_cd, fullName: full, name: full.split(' ').at(-1), feature: f,
-      areaKm2: turf.area(f) / 1e6, bbox: turf.bbox(f), aptUnits: st.apt ?? null, totHouses: st.tot ?? null, ptIdx: [],
-    };
-  });
-  state.apts.forEach((a, i) => {
-    for (const d of dongs) {
-      const b = d.bbox;
-      if (a.lon < b[0] || a.lon > b[2] || a.lat < b[1] || a.lat > b[3]) continue;
-      if (turf.booleanPointInPolygon([a.lon, a.lat], d.feature)) { d.ptIdx.push(i); break; }
-    }
-  });
-  return dongs;
-}
-
-/* ============================================================
-   analysis
-   ============================================================ */
-function readControls() {
-  return {
-    threshold: +$('#thr').value,
-    cellKm: +$('#cell').value,
-    smooth: +$('#smooth').value,
-    mode: $('input[name="mode"]:checked').value,
-  };
-}
-function weightOf(a, m) {
-  if (m !== 'floor') return 1;
-  return (a.fp ?? state.medianFp) * (a.levels ?? settings.floors) / 1000;
-}
-const unitOf = m => m === 'floor' ? '천㎡' : '동';
-
-function computeHex(P) {
-  const R = state.region, bbox = R.bbox;
-  const lat0 = (bbox[1] + bbox[3]) / 2, lon0 = (bbox[0] + bbox[2]) / 2;
-  const kx = 111.32 * Math.cos(lat0 * Math.PI / 180), ky = 110.574;
-  const proj = (lon, lat) => [(lon - lon0) * kx, (lat - lat0) * ky];
-
-  const pts = state.apts.map(a => { const [x, y] = proj(a.lon, a.lat); return { a, x, y, w: weightOf(a, P.mode) }; }).filter(p => p.w > 0);
-  const N = pts.length, W = pts.reduce((s, p) => s + p.w, 0);
-  const D = W / R.areaKm2;
-
-  let side = P.cellKm > 0 ? P.cellKm : clamp(Math.sqrt(R.areaKm2 / 650 / 2.598), 0.12, 3);
-  const bboxArea = (bbox[2] - bbox[0]) * kx * (bbox[3] - bbox[1]) * ky;
-  while (bboxArea / (2.598 * side * side) > 7000) side *= 1.25;
-
-  const padLon = side * 2 / kx, padLat = side * 2 / ky;
-  const grid = turf.hexGrid([bbox[0] - padLon, bbox[1] - padLat, bbox[2] + padLon, bbox[3] + padLat], side, { units: 'kilometers' });
-  let cells = grid.features.map(f => {
-    const ring = f.geometry.coordinates[0];
-    let sx = 0, sy = 0;
-    for (let k = 0; k < 6; k++) { sx += ring[k][0]; sy += ring[k][1]; }
-    const lon = sx / 6, lat = sy / 6, [x, y] = proj(lon, lat);
-    return { feature: f, lon, lat, x, y, raw: 0, n: 0, f: 0, lq: 0, cl: -1 };
-  });
-  const empty = { cells: [], clusters: [], allClusterCount: 0, N, W, D, sideKm: side, cellArea: 0, threshold: P.threshold, mode: P.mode };
-  if (!cells.length) return empty;
-
-  const mid = cells[Math.floor(cells.length / 2)];
-  let nn = Infinity;
-  for (const c of cells) { const d = Math.hypot(c.x - mid.x, c.y - mid.y); if (d > 1e-9 && d < nn) nn = d; }
-  const cellArea = ringAreaM2(mid.feature.geometry.coordinates[0].slice(0, 6)) / 1e6;
-
-  const bucket = (arr, size) => {
-    const h = new Map();
-    for (const o of arr) {
-      const k = `${Math.floor(o.x / size)},${Math.floor(o.y / size)}`;
-      (h.get(k) || h.set(k, []).get(k)).push(o);
-    }
-    return h;
-  };
-  const near = (h, size, x, y, fn) => {
-    const i = Math.floor(x / size), j = Math.floor(y / size);
-    for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
-      const arr = h.get(`${i + di},${j + dj}`); if (arr) for (const o of arr) fn(o);
-    }
-  };
-
-  // 건물 → 가장 가까운 격자 중심 (= 그 육각형에 포함)
-  const cellHash = bucket(cells, nn);
-  for (const p of pts) {
-    let best = null, bd = Infinity;
-    near(cellHash, nn, p.x, p.y, c => { const d = (c.x - p.x) ** 2 + (c.y - p.y) ** 2; if (d < bd) { bd = d; best = c; } });
-    if (best) { best.raw += p.w; best.n++; }
-  }
-  cells = cells.filter(c => c.n > 0 || turf.booleanPointInPolygon([c.lon, c.lat], R.feature));
-
-  // km²당 밀도
-  if (P.smooth > 0 && N) {
-    const h = side * P.smooth, cut = 3 * h, cut2 = cut * cut, inv2h2 = 1 / (2 * h * h), k = 1 / (2 * Math.PI * h * h);
-    const ph = bucket(pts, cut);
-    for (const c of cells) {
-      let s = 0;
-      near(ph, cut, c.x, c.y, p => { const d2 = (p.x - c.x) ** 2 + (p.y - c.y) ** 2; if (d2 < cut2) s += p.w * Math.exp(-d2 * inv2h2); });
-      c.f = s * k;
-    }
-  } else {
-    for (const c of cells) c.f = c.raw / cellArea;
-  }
-  for (const c of cells) c.lq = D > 0 ? c.f / D : 0;
-
-  // 후보 격자 → 인접 군집
-  let cand = cells.filter(c => c.lq >= P.threshold && c.f > 0);
-  let fallback = false;
-  if (!cand.length && N) {
-    const sorted = cells.filter(c => c.f > 0).sort((a, b) => b.lq - a.lq);
-    cand = sorted.slice(0, Math.max(3, Math.ceil(cells.length * 0.03)));
-    fallback = true;
-  }
-  const parent = new Map(cand.map(c => [c, c]));
-  const find = c => { while (parent.get(c) !== c) { parent.set(c, parent.get(parent.get(c))); c = parent.get(c); } return c; };
-  const candHash = bucket(cand, nn);
-  const adj2 = (nn * 1.2) ** 2;
-  for (const c of cand) {
-    near(candHash, nn, c.x, c.y, o => {
-      if (o !== c && (o.x - c.x) ** 2 + (o.y - c.y) ** 2 <= adj2) { const a = find(c), b = find(o); if (a !== b) parent.set(a, b); }
-    });
-  }
-  const groups = new Map();
-  for (const c of cand) { const r = find(c); (groups.get(r) || groups.set(r, []).get(r)).push(c); }
-  const clusters = [...groups.values()].map(cs => {
-    let mass = 0, n = 0, peak = 0, sx = 0, sy = 0, sf = 0;
-    for (const c of cs) {
-      mass += c.f * cellArea; n += c.n; peak = Math.max(peak, c.lq);
-      sx += c.lon * c.f; sy += c.lat * c.f; sf += c.f;
-    }
-    const areaKm2 = cs.length * cellArea;
-    return { cells: cs, mass, n, peak, areaKm2, lqMean: D > 0 ? (mass / areaKm2) / D : 0, lon: sx / sf, lat: sy / sf };
-  }).sort((a, b) => b.mass - a.mass);
-
-  const cbdMass = clusters[0]?.mass || 0;
-  const shown = clusters.filter((c, i) => i === 0 || c.mass >= cbdMass * 0.05).slice(0, 5);
-  shown.forEach((cl, i) => { for (const c of cl.cells) c.cl = i; cl.rank = i; });
-
-  return { cells, clusters: shown, allClusterCount: clusters.length, N, W, D, sideKm: side, cellArea, threshold: P.threshold, fallback, mode: P.mode };
-}
-
-function computeDongs(P, hex) {
-  const dongs = state.dongs; if (!dongs?.length) return null;
-  const totArea = dongs.reduce((s, d) => s + d.areaKm2, 0);
-  const rows = dongs.map(d => ({ d, osmW: d.ptIdx.reduce((s, i) => s + weightOf(state.apts[i], P.mode), 0), osmN: d.ptIdx.length }));
-  const totOsm = rows.reduce((s, r) => s + r.osmW, 0);
-  const aptKnown = rows.filter(r => r.d.aptUnits != null);
-  const totApt = aptKnown.reduce((s, r) => s + r.d.aptUnits, 0);
-  const totAptArea = aptKnown.reduce((s, r) => s + r.d.areaKm2, 0);
-  for (const r of rows) {
-    const a = r.d.areaKm2 || 1e-9;
-    r.lqOsm = totOsm > 0 ? (r.osmW / a) / (totOsm / totArea) : null;
-    r.lqSgis = r.d.aptUnits != null && totApt > 0 ? (r.d.aptUnits / a) / (totApt / totAptArea) : null;
-    const vs = [r.lqOsm, r.lqSgis].filter(v => v != null);
-    r.comp = vs.length ? vs.reduce((s, v) => s + v, 0) / vs.length : null;
-    r.aptShare = r.d.aptUnits != null && r.d.totHouses ? r.d.aptUnits / r.d.totHouses : null;
-  }
-  const ranking = rows.filter(r => r.comp != null).sort((a, b) => b.comp - a.comp);
-  const cbd = hex?.clusters?.[0];
-  const cbdDong = cbd ? rows.find(r => turf.booleanPointInPolygon([cbd.lon, cbd.lat], r.d.feature)) || null : null;
-  return { rows, ranking, totApt, totOsm, cbdDong, hasSgisStats: aptKnown.length > 0 };
-}
-
-let recomputeTimer = null;
-function scheduleRecompute() { clearTimeout(recomputeTimer); recomputeTimer = setTimeout(recompute, 120); }
-
-function recompute() {
-  if (!state.region || (!state.apts.length && !state.dongs)) return;
-  const P = readControls();
-  const hex = state.apts.length ? computeHex(P)
-    : { cells: [], clusters: [], allClusterCount: 0, N: 0, W: 0, D: 0, sideKm: 0, threshold: P.threshold, mode: P.mode };
-  const dong = computeDongs(P, hex);
-  if (dong) for (const cl of hex.clusters) {
-    const r = dong.rows.find(r => turf.booleanPointInPolygon([cl.lon, cl.lat], r.d.feature));
-    cl.dongName = r?.d.name || null;
-  }
-  const cbdSource = hex.clusters.length ? 'hex' : (dong?.ranking.length ? 'dong' : null);
-  state.result = { ...hex, dong, cbdSource, P };
-  renderAll();
-  scheduleBuildingMix();
-  if (!dong) resolveClusterNames();
-}
-
-async function resolveClusterNames() {
-  const r = state.result, run = state.runId;
-  for (const cl of r.clusters.slice(0, 3)) {
-    if (cl.dongName || cl.revName !== undefined) continue;
-    const key = `${cl.lat.toFixed(3)},${cl.lon.toFixed(3)}`;
-    const cached = state.names.has(key);
-    const name = await nominatimReverseName(cl.lat, cl.lon);
-    if (run !== state.runId || state.result !== r) return;
-    cl.revName = name;
-    renderHero(); renderClusterChart();
-    if (!cached) await sleep(1100);
-  }
-}
-
-/* ============================================================
-   rendering – map
-   ============================================================ */
-function drawRegion() {
-  layers.region.clearLayers();
-  L.geoJSON(state.region.feature, {
-    renderer: renderers.region, interactive: false,
-    style: { color: mapInk().ink, weight: 2, opacity: .7, dashArray: '2 5', fill: false },
-  }).addTo(layers.region);
-}
-
-function drawApartments() {
-  layers.apts.clearLayers();
-  const color = mapInk().ink2;
-  for (const a of state.apts) {
-    L.circleMarker([a.lat, a.lon], { renderer: renderers.apts, radius: 2, stroke: false, fillColor: color, fillOpacity: .75, interactive: false }).addTo(layers.apts);
-  }
-}
-
-function drawDongLines() {
-  layers.dongLine.clearLayers();
-  if (!state.dongs) return;
-  L.geoJSON(turf.featureCollection(state.dongs.map(d => d.feature)), {
-    renderer: renderers.dongLine, interactive: false,
-    style: { color: mapInk().ink2, weight: 1, opacity: .5, fill: false },
-  }).addTo(layers.dongLine);
-}
-
-function hexTip(c, r) {
-  const u = unitOf(r.mode);
-  const tag = c.cl === 0 ? '<b style="color:var(--cbd)">●</b> CBD 군집<br>' : c.cl > 0 ? `<b style="color:var(--sub)">●</b> 부도심 ${c.cl}<br>` : '';
-  return `${tag}아파트 <b>${fmtInt(c.n)}동</b><br><span class="m">밀도 ${fmt(c.f, 1)} ${u}/km²</span><br>지역 평균 대비 <b>×${fmtFixed(c.lq, 2)}</b>`;
-}
-
-function drawHex(r) {
-  layers.hex.clearLayers();
-  if (!r.cells.length) return;
-  const surf = mapInk().ground;
-  for (const c of r.cells) {
-    if (c.f <= 0 || (c.n === 0 && c.lq < 0.05)) continue;
-    L.polygon(c.feature.geometry.coordinates[0].map(([x, y]) => [y, x]), {
-      renderer: renderers.hex, color: surf, weight: 1, opacity: .9, fillColor: lqColor(c.lq), fillOpacity: .72,
-    }).bindTooltip(() => hexTip(c, r), { sticky: true, direction: 'top', opacity: 1 }).addTo(layers.hex);
-  }
-}
-
-function clusterOutline(cl) {
-  if (cl._outline) return cl._outline;
-  let g = null;
-  try { g = cl.cells.length === 1 ? cl.cells[0].feature : turf.union(turf.featureCollection(cl.cells.map(c => c.feature))); } catch { g = null; }
-  if (!g) g = turf.convex(turf.featureCollection(cl.cells.map(c => turf.point([c.lon, c.lat])))) || cl.cells[0].feature;
-  return (cl._outline = g);
-}
-
-function drawCbd(r) {
-  layers.cbd.clearLayers();
-  const { ground: surf, cbd: cbdC, sub: subC } = mapInk();
-  if (r.cbdSource === 'hex') {
-    [...r.clusters].reverse().forEach(cl => {
-      const isC = cl.rank === 0, color = isC ? cbdC : subC;
-      L.geoJSON(clusterOutline(cl), {
-        renderer: renderers.cbd, interactive: false,
-        style: { color, weight: isC ? 3 : 2, opacity: 1, dashArray: isC ? null : '6 4', fill: false },
-      }).addTo(layers.cbd);
-      L.circleMarker([cl.lat, cl.lon], { renderer: renderers.cbd, radius: isC ? 7 : 5, color: surf, weight: 2, fillColor: color, fillOpacity: 1 })
-        .bindTooltip(isC ? 'CBD' : `부도심 ${cl.rank}`, { permanent: true, direction: 'top', offset: [0, -7], className: 'lbl', opacity: 1 })
-        .addTo(layers.cbd);
-    });
-  } else if (r.cbdSource === 'dong') {
-    const top = r.dong.ranking[0];
-    L.geoJSON(top.d.feature, { renderer: renderers.cbd, interactive: false, style: { color: cbdC, weight: 3, fill: false } }).addTo(layers.cbd);
-    const [lon, lat] = turf.pointOnFeature(top.d.feature).geometry.coordinates;
-    L.circleMarker([lat, lon], { renderer: renderers.cbd, radius: 7, color: surf, weight: 2, fillColor: cbdC, fillOpacity: 1 })
-      .bindTooltip('CBD', { permanent: true, direction: 'top', offset: [0, -7], className: 'lbl', opacity: 1 }).addTo(layers.cbd);
-  }
-}
-
-function drawDongFill(r) {
-  layers.dongFill.clearLayers();
-  if (!r.dong) return;
-  const surf = mapInk().ground;
-  for (const row of r.dong.rows) {
-    L.geoJSON(row.d.feature, {
-      renderer: renderers.dongFill,
-      style: { color: surf, weight: 1, fill: row.comp != null, fillColor: row.comp != null ? lqColor(row.comp) : surf, fillOpacity: .72 },
-    }).bindTooltip(() => dongTip(row, r), { sticky: true, direction: 'top', opacity: 1 }).addTo(layers.dongFill);
-  }
-}
-
-function dongTip(row, r) {
-  const u = unitOf(r.mode);
-  return `<b>${esc(row.d.fullName)}</b><br>
-    <span class="m">면적 ${fmt(row.d.areaKm2, 2)} km²</span><br>
-    SGIS 아파트 ${row.d.aptUnits != null ? fmtInt(row.d.aptUnits) + '호' : '–'}${row.aptShare != null ? ` <span class="m">(주택의 ${fmt(row.aptShare * 100, 0)}%)</span>` : ''}<br>
-    OSM 아파트 ${fmtInt(row.osmN)}동${r.mode === 'floor' ? ` <span class="m">(${fmt(row.osmW, 0)} ${u})</span>` : ''}<br>
-    LQ SGIS ×${fmtFixed(row.lqSgis, 2)} · OSM ×${fmtFixed(row.lqOsm, 2)}<br>
-    종합 <b>×${fmtFixed(row.comp, 2)}</b>`;
-}
-
-/* ============================================================
-   rendering – panel
-   ============================================================ */
-function heroMessage(msg) {
-  $('#hero').className = 'card hero placeholder';
-  $('#hero').innerHTML = `<div class="eyebrow"><span class="dot"></span>선정된 CBD</div><div class="name">${esc(msg)}</div>`;
-}
-
-function clusterName(cl) {
-  if (cl.dongName) return `${cl.dongName} 일대`;
-  if (cl.revName) return `${cl.revName} 일대`;
-  return null;
-}
-
-function renderHero() {
-  const r = state.result, hero = $('#hero');
-  if (!r?.cbdSource) { heroMessage('CBD를 선정할 데이터가 부족합니다'); return; }
-  hero.className = 'card hero';
-  if (r.cbdSource === 'dong') {
-    const top = r.dong.ranking[0];
-    hero.innerHTML = `
-      <div class="eyebrow"><span class="dot"></span>선정된 CBD · 행정동 기준</div>
-      <div class="name">${esc(top.d.fullName)}</div>
-      <div class="num">×${fmtFixed(top.comp, 1)}<small>지역 평균 대비</small></div>
-      <div class="desc">OSM 아파트 건물이 없어 SGIS 아파트 주택 수 밀도로만 선정했습니다.</div>`;
-    return;
-  }
-  const cbd = r.clusters[0];
-  const name = clusterName(cbd) || `CBD 중심 ${cbd.lat.toFixed(4)}, ${cbd.lon.toFixed(4)}`;
-  const share = r.N ? cbd.n / r.N : 0;
-  const bestDong = r.dong?.ranking[0];
-  hero.innerHTML = `
-    <div class="eyebrow"><span class="dot"></span>선정된 CBD · ${esc(state.region.name)}</div>
-    <div class="name">${esc(name)}</div>
-    <div class="num">×${fmtFixed(cbd.lqMean, 1)}<small>지역 평균 대비 밀도</small></div>
-    <div class="desc">군집 ${fmt(cbd.areaKm2, 2)} km²(영역의 ${fmt(cbd.areaKm2 / state.region.areaKm2 * 100, 1)}%)에 아파트 ${fmt(share * 100, 1)}%가 모여 있습니다 · 최고 격자 ×${fmtFixed(cbd.peak, 1)}</div>
-    ${r.fallback ? `<div class="note">임계값 ×${fmtFixed(r.threshold, 1)}을 넘는 격자가 없어 상위 3% 격자로 선정했습니다. 임계값을 낮춰 보세요.</div>` : ''}
-    ${bestDong && r.dong.cbdDong && bestDong !== r.dong.cbdDong
-      ? `<div class="note">행정동 기준 최고 밀도는 <b>${esc(bestDong.d.name)}</b>(×${fmtFixed(bestDong.comp, 1)})입니다.</div>` : ''}`;
-}
-
-function renderTiles() {
-  const r = state.result, R = state.region;
-  const u = unitOf(r.mode);
-  const cbd = r.cbdSource === 'hex' ? r.clusters[0] : null;
-  const tiles = [
-    ['분석 면적', fmt(R.areaKm2, 1), 'km²'],
-    ['아파트 건물 (OSM)', fmtInt(r.N), '동'],
-    ['지역 평균 밀도', fmt(r.D, r.D < 10 ? 2 : 1), `${u}/km²`],
-    ['CBD 면적', cbd ? fmt(cbd.areaKm2, 2) : '–', 'km²'],
-    ['CBD 아파트 비율', cbd && r.N ? fmt(cbd.n / r.N * 100, 1) : '–', '%'],
-    r.dong?.hasSgisStats
-      ? ['SGIS 아파트 주택', fmtInt(r.dong.totApt), '호']
-      : ['격자 한 변', r.sideKm ? fmt(r.sideKm * 1000, 0) : '–', 'm'],
-  ];
-  $('#tiles').innerHTML = tiles.map(([l, v, s]) => `<div class="tile"><div class="l" title="${esc(l)}">${esc(l)}</div><div class="v">${v}<small>${s}</small></div></div>`).join('');
-}
-
-function barTop(x, y, w, h, rad) {
-  if (h <= 0) return '';
-  const rr = Math.min(rad, w / 2, h);
-  return `M${x},${y + h}V${y + rr}Q${x},${y} ${x + rr},${y}H${x + w - rr}Q${x + w},${y} ${x + w},${y + rr}V${y + h}Z`;
-}
-
-function renderHist() {
-  const r = state.result, el = $('#histChart');
-  const vals = r.cells.filter(c => c.n > 0).map(c => c.lq).sort((a, b) => a - b);
-  if (!vals.length) { el.innerHTML = '<div class="empty-msg">격자 데이터가 없습니다</div>'; return; }
-  const q99 = vals[Math.floor(0.99 * (vals.length - 1))];
-  const maxX = Math.max(r.threshold * 1.4, Math.min(q99 * 1.05, 20), 2);
-  const bw = niceStep(maxX / 22);
-  const nb = Math.ceil(maxX / bw);
-  const bins = Array.from({ length: nb }, (_, i) => ({ x0: i * bw, x1: (i + 1) * bw, n: 0 }));
-  for (const v of vals) bins[Math.min(nb - 1, Math.floor(v / bw))].n++;
-  const W = 380, H = 170, L0 = 34, R0 = 8, T0 = 12, B0 = 24;
-  const iw = W - L0 - R0, ih = H - T0 - B0;
-  const maxN = Math.max(...bins.map(b => b.n));
-  const ys = niceStep(maxN / 3), yMax = Math.max(ys, Math.ceil(maxN / ys) * ys);
-  const sx = v => L0 + v / (nb * bw) * iw, sy = v => T0 + ih - v / yMax * ih;
-  const colW = iw / nb;
-  let g = '';
-  for (let t = 0; t <= yMax + 1e-9; t += ys) {
-    g += `<line class="gridline" x1="${L0}" x2="${W - R0}" y1="${sy(t)}" y2="${sy(t)}"/><text x="${L0 - 6}" y="${sy(t) + 3.5}" text-anchor="end">${fmtInt(t)}</text>`;
-  }
-  const xs = niceStep(nb * bw / 6);
-  for (let t = 0; t <= nb * bw + 1e-9; t += xs) g += `<text x="${sx(t)}" y="${H - 7}" text-anchor="middle">×${fmt(t, 1)}</text>`;
-  const barW = Math.min(24, colW - 2);
-  bins.forEach((b, i) => {
-    const on = b.x0 >= r.threshold - 1e-9;
-    const partial = !on && b.x1 > r.threshold;
-    const x = sx(b.x0) + (colW - barW) / 2;
-    g += `<path d="${barTop(x, sy(b.n), barW, sy(0) - sy(b.n), 4)}" fill="${on ? 'var(--cbd)' : 'var(--bar-soft)'}"/>`;
-    const label = i === nb - 1 ? `×${fmt(b.x0, 2)} 이상` : `×${fmt(b.x0, 2)} – ${fmt(b.x1, 2)}`;
-    const tipHtml = `<b>LQ ${label}</b><br>격자 ${fmtInt(b.n)}개 (${fmt(b.n / vals.length * 100, 1)}%)${on ? '<br><span class="m">CBD 후보 구간</span>' : partial ? '<br><span class="m">임계값이 걸친 구간</span>' : ''}`;
-    g += `<rect class="hit" x="${sx(b.x0)}" y="${T0}" width="${colW}" height="${ih}" data-tip="${esc(tipHtml)}"/>`;
-  });
-  g += `<line class="baseline" x1="${L0}" x2="${W - R0}" y1="${sy(0)}" y2="${sy(0)}"/>`;
-  const tx = sx(Math.min(r.threshold, nb * bw));
-  const flip = tx > W - 100;
-  g += `<line class="thr" x1="${tx}" x2="${tx}" y1="${T0 - 4}" y2="${sy(0)}"/>`;
-  g += `<text class="thr-l" x="${tx + (flip ? -5 : 5)}" y="${T0 + 6}" text-anchor="${flip ? 'end' : 'start'}">임계값 ×${fmtFixed(r.threshold, 1)}</text>`;
-  const over = vals.filter(v => v >= r.threshold).length;
-  el.innerHTML = `
-    <div class="legend-row">
-      <span><i class="sw" style="background:var(--cbd)"></i>CBD 후보 (LQ ≥ ${fmtFixed(r.threshold, 1)}) ${fmtInt(over)}개</span>
-      <span><i class="sw" style="background:var(--bar-soft)"></i>그 외 ${fmtInt(vals.length - over)}개</span>
-    </div>
-    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="격자 LQ 분포 히스토그램">${g}</svg>`;
-}
-
-function renderClusterChart() {
-  const r = state.result, el = $('#clusterChart');
-  if (r.cbdSource !== 'hex') { el.innerHTML = '<div class="empty-msg">군집이 없습니다</div>'; return; }
-  const maxShare = Math.max(...r.clusters.map(c => c.n / (r.N || 1)), 1e-9);
-  const rows = r.clusters.map(cl => {
-    const isC = cl.rank === 0;
-    const share = r.N ? cl.n / r.N : 0;
-    const label = isC ? 'CBD' : `부도심 ${cl.rank}`;
-    const nm = clusterName(cl);
-    const tipHtml = `<b>${label}</b>${nm ? ` · ${esc(nm)}` : ''}<br>아파트 ${fmtInt(cl.n)}동 (${fmt(share * 100, 1)}%)<br><span class="m">면적 ${fmt(cl.areaKm2, 2)} km² · 격자 ${cl.cells.length}개</span><br>평균 ×${fmtFixed(cl.lqMean, 2)} · 최고 ×${fmtFixed(cl.peak, 2)}<br><span class="m">클릭하면 지도에서 확대</span>`;
-    return `<div class="bar-row" data-cl="${cl.rank}" data-tip="${esc(tipHtml)}">
-      <div class="nm">${label}${nm ? `<br><small>${esc(nm)}</small>` : ''}</div>
-      <div class="track"><div class="fill" style="width:calc(${share / maxShare} * (100% - 110px));background:${isC ? 'var(--cbd)' : 'var(--sub)'}"></div>
-      <span class="val">${fmt(share * 100, 1)}% · ×${fmtFixed(cl.lqMean, 1)}</span></div>
-    </div>`;
-  }).join('');
-  const more = r.allClusterCount > r.clusters.length ? `<div class="ref-note">작은 군집 ${r.allClusterCount - r.clusters.length}개는 생략했습니다 (CBD 규모의 5% 미만 또는 6번째 이후)</div>` : '';
-  el.innerHTML = `
-    <div class="legend-row"><span><i class="sw" style="background:var(--cbd)"></i>CBD</span><span><i class="sw" style="background:var(--sub)"></i>부도심</span><span style="color:var(--muted)">값 = 아파트 비율 · 군집 평균 LQ</span></div>
-    <div class="bars">${rows}</div>${more}`;
-}
-$('#clusterChart').addEventListener('click', e => {
-  const row = e.target.closest('[data-cl]'); if (!row) return;
-  const cl = state.result?.clusters[+row.dataset.cl]; if (!cl) return;
-  const b = turf.bbox(clusterOutline(cl));
-  map.fitBounds([[b[1], b[0]], [b[3], b[2]]], { padding: [60, 60], maxZoom: 16 });
-});
-
-function renderDongChart() {
-  const r = state.result, el = $('#dongChart');
-  if (!r.dong) {
-    const msg = state.region?.kind === 'custom' ? '직접 그린 영역은 행정동 비교를 하지 않습니다'
-      : hasSgisKey() ? 'SGIS 데이터를 불러오지 못했습니다 — 단계 상태를 확인하세요'
-      : 'SGIS 키를 설정하면 행정동별 비교가 표시됩니다';
-    el.innerHTML = `<div class="empty-msg">${msg}</div>`;
-    $('#dongDetails').hidden = true;
-    return;
-  }
-  const d = r.dong;
-  $('#dongSub').textContent = d.hasSgisStats
-    ? `SGIS ${settings.year}년 아파트 주택 수와 OSM 아파트 건물의 LQ 평균 · 지역 평균 = ×1`
-    : 'SGIS 주택통계가 없어 OSM 아파트 건물 LQ만 사용 · 지역 평균 = ×1';
-  const top = d.ranking.slice(0, 12);
-  if (!top.length) { el.innerHTML = '<div class="empty-msg">행정동 LQ를 계산할 수 없습니다</div>'; return; }
-  const maxV = Math.max(...top.map(x => x.comp), 1.2);
-  const trackCalc = '(100% - 50px)';
-  const cbdRow = r.cbdSource === 'dong' ? d.ranking[0] : d.cbdDong;
-  const rows = top.map(row => `<div class="bar-row" data-cd="${esc(row.d.cd)}" data-tip="${esc(dongTip(row, r))}">
-      <div class="nm" title="${esc(row.d.fullName)}">${esc(row.d.name)}</div>
-      <div class="track"><div class="fill" style="width:calc(${row.comp / maxV} * ${trackCalc});background:${row === cbdRow ? 'var(--cbd)' : 'var(--bar)'}"></div>
-      <span class="val">×${fmtFixed(row.comp, 1)}</span>
-      <span class="refline" style="left:calc(${1 / maxV} * ${trackCalc})"></span></div>
-    </div>`).join('');
-  el.innerHTML = `
-    <div class="legend-row"><span><i class="sw" style="background:var(--cbd)"></i>CBD가 속한 행정동</span><span><i class="sw" style="background:var(--bar)"></i>그 외</span><span style="color:var(--muted)">세로선 = 지역 평균(×1)</span></div>
-    <div class="bars">${rows}</div>
-    ${d.ranking.length > 12 ? `<div class="ref-note">상위 12개 / 전체 ${d.ranking.length}개 — 전체는 아래 표에서 확인하세요</div>` : ''}`;
-
-  $('#dongDetails').hidden = false;
-  $('#dongTable').innerHTML = `<table>
-    <thead><tr><th>행정동</th><th>면적 km²</th><th>SGIS 아파트(호)</th><th>아파트 비중</th><th>OSM 동수</th><th>LQ SGIS</th><th>LQ OSM</th><th>종합</th></tr></thead>
-    <tbody>${d.ranking.map(row => `<tr class="${row === cbdRow ? 'is-cbd' : ''}">
-      <td>${esc(row.d.name)}</td><td>${fmtFixed(row.d.areaKm2, 2)}</td><td>${row.d.aptUnits != null ? fmtInt(row.d.aptUnits) : '–'}</td>
-      <td>${row.aptShare != null ? fmt(row.aptShare * 100, 0) + '%' : '–'}</td><td>${fmtInt(row.osmN)}</td>
-      <td>${fmtFixed(row.lqSgis, 2)}</td><td>${fmtFixed(row.lqOsm, 2)}</td><td><b>${fmtFixed(row.comp, 2)}</b></td></tr>`).join('')}</tbody></table>`;
-}
-$('#dongChart').addEventListener('click', e => {
-  const row = e.target.closest('[data-cd]'); if (!row || !state.dongs) return;
-  const d = state.dongs.find(x => x.cd === row.dataset.cd); if (!d) return;
-  if (!map.hasLayer(layers.dongFill)) map.addLayer(layers.dongFill);
-  map.fitBounds([[d.bbox[1], d.bbox[0]], [d.bbox[3], d.bbox[2]]], { padding: [60, 60], maxZoom: 16 });
-});
-
-/* ----- 건물 유형 구성 (도넛) ----- */
-const bld = { ac: null, data: null, req: null, loading: false, error: null, retryMsg: null, timer: null };
-const bldColor = (t, dark = isDark()) => dark ? t.dark : t.light;
-const distKm = (a, b) => Math.hypot((a.lon - b.lon) * 111.32 * Math.cos(a.lat * Math.PI / 180), (a.lat - b.lat) * 110.574);
-
-/* 칸 안 라벨은 채움색과 대비가 더 큰 쪽(흰색/먹색)을 쓴다 */
-function textOn(hex) {
-  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
-    .map(v => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
-  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return (lum + 0.05) / 0.05 > 1.05 / (lum + 0.05) ? '#0b0b0b' : '#ffffff';
-}
-
-function bldCenter(r) {
-  if (r.cbdSource === 'hex') return { lat: r.clusters[0].lat, lon: r.clusters[0].lon, label: 'CBD 중심' };
-  if (r.cbdSource === 'dong') {
-    const [lon, lat] = turf.pointOnFeature(r.dong.ranking[0].d.feature).geometry.coordinates;
-    return { lat, lon, label: 'CBD 행정동' };
-  }
-  const [lon, lat] = turf.centroid(state.region.feature).geometry.coordinates;
-  return { lat, lon, label: '영역 중심' };
-}
-
-function scheduleBuildingMix() { clearTimeout(bld.timer); bld.timer = setTimeout(() => updateBuildingMix(), 700); }
-
-async function updateBuildingMix(force = false) {
-  const r = state.result; if (!r || !state.region) return;
-  const center = bldCenter(r), radiusKm = +$('#bldRadius').value, region = state.region;
-  const same = x => x && x.region === region && x.radiusKm === radiusKm && distKm(x.center, center) < 0.3;
-  if (!force && same(bld.data)) return;            // 임계값을 조금 바꿔 중심이 300 m 안에서 움직이면 다시 받지 않는다
-  if (!force && bld.loading && same(bld.req)) return;
-
-  bld.ac?.abort();
-  const ac = new AbortController();
-  Object.assign(bld, { ac, loading: true, error: null, retryMsg: null, req: { center, radiusKm, region } });
-  renderBuildingMix();
-  try {
-    const els = await fetchBuildings(center, radiusKm, ac.signal, err => {
-      if (ac !== bld.ac) return;
-      bld.retryMsg = err.message; renderBuildingMix();
-    });
-    if (ac !== bld.ac) return;
-    bld.data = { ...summarizeBuildings(els, center, radiusKm), region };
-  } catch (e) {
-    if (ac.signal.aborted) return;
-    bld.error = e.message; bld.data = null;
-  } finally {
-    if (ac === bld.ac) { bld.loading = false; renderBuildingMix(); drawBuildingLayer(); }
-  }
-}
-
-function donutArc(cx, cy, R, r, a0, a1) {
-  const large = a1 - a0 > Math.PI ? 1 : 0;
-  const pt = (rad, a) => `${(cx + rad * Math.sin(a)).toFixed(2)},${(cy - rad * Math.cos(a)).toFixed(2)}`;
-  return `M${pt(R, a0)}A${R},${R} 0 ${large} 1 ${pt(R, a1)}L${pt(r, a1)}A${r},${r} 0 ${large} 0 ${pt(r, a0)}Z`;
-}
-
-function renderBuildingMix() {
-  const el = $('#bldChart');
-  const radiusKm = +$('#bldRadius').value;
-  const center = bld.loading ? bld.req?.center : bld.data?.center;
-  $('#bldSub').textContent = `${center?.label ?? 'CBD 중심'} 반경 ${radiusKm} km 안의 OSM 건물을 용도별로 분류합니다`;
-  if (!state.result) { el.innerHTML = '<div class="empty-msg">분석 후 표시됩니다</div>'; return; }
-  if (bld.loading) {
-    el.innerHTML = `<div class="loading-msg"><span class="spin"></span><span>반경 ${radiusKm} km 건물 수집 중…${bld.retryMsg ? `<br><small>${esc(bld.retryMsg)} · 재시도 중</small>` : ''}</span></div>`;
-    return;
-  }
-  if (bld.error) {
-    el.innerHTML = `<div class="empty-msg">건물 수집 실패: ${esc(bld.error)} · <button type="button" class="link" data-bld-retry>다시 시도</button></div>`;
-    return;
-  }
-  const d = bld.data;
-  if (!d) { el.innerHTML = '<div class="empty-msg">분석 후 표시됩니다</div>'; return; }
-  if (!d.total) { el.innerHTML = `<div class="empty-msg">반경 ${d.radiusKm} km 안에 OSM 건물이 없습니다</div>`; return; }
-
-  const dark = isDark();
-  const types = BLD_TYPES.map(t => ({ ...t, n: d.counts[t.key], share: d.counts[t.key] / d.total, color: bldColor(t, dark) }));
-  const cx = 90, cy = 90, R = 88, r = 48;
-  let a = 0, segs = '', labels = '';
-  for (const t of types) {
-    if (!t.n) continue;
-    const a1 = a + t.share * 2 * Math.PI;
-    const tipAttr = esc(`<b>${t.label}</b><br>${fmtInt(t.n)}동 · ${fmtFixed(t.share * 100, 1)}%`);
-    segs += t.share > 0.9999
-      ? `<path d="${donutArc(cx, cy, R, r, 0, Math.PI)}" fill="${t.color}" data-tip="${tipAttr}"/><path d="${donutArc(cx, cy, R, r, Math.PI, 2 * Math.PI)}" fill="${t.color}" data-tip="${tipAttr}"/>`
-      : `<path d="${donutArc(cx, cy, R, r, a, a1)}" fill="${t.color}" data-tip="${tipAttr}"/>`;
-    if (t.share >= 0.09) {
-      const m = (a + a1) / 2, rr = (R + r) / 2;
-      labels += `<text class="seg-l" x="${(cx + rr * Math.sin(m)).toFixed(1)}" y="${(cy - rr * Math.cos(m) + 4).toFixed(1)}" text-anchor="middle" fill="${textOn(t.color)}">${fmtFixed(t.share * 100, 1)}%</text>`;
-    }
-    a = a1;
-  }
-  const unkShare = d.counts.unk / d.total;
-  el.innerHTML = `
-    <div class="donut-title">반경 ${d.radiusKm}km 건물 ${fmtInt(d.total)}동</div>
-    <div class="donut-wrap">
-      <svg class="donut" viewBox="0 0 180 180" role="img" aria-label="반경 ${d.radiusKm}km 건물 유형 구성 도넛 차트">
-        ${segs}${labels}
-        <text class="c-num" x="90" y="92" text-anchor="middle">${fmtFixed((1 - unkShare) * 100, 1)}%</text>
-        <text class="c-sub" x="90" y="109" text-anchor="middle">용도 확인됨</text>
-      </svg>
-      <div class="bld-legend">
-        ${types.map(t => `<div class="lg-row${t.n ? '' : ' zero'}" data-tip="${esc(`<b>${t.label}</b><br>${fmtInt(t.n)}동 · ${fmtFixed(t.share * 100, 1)}%`)}">
-          <i class="sw" style="background:${t.color}"></i><span>${t.label}</span>
-          <span class="lg-c">${fmtInt(t.n)}동</span><span class="lg-p">${fmtFixed(t.share * 100, 1)}%</span></div>`).join('')}
-      </div>
-    </div>
-    ${unkShare > 0.3 ? `<div class="ref-note">OSM 건물의 ${fmt(unkShare * 100, 0)}%가 용도 없이(building=yes 등) 입력돼 미분류입니다. 지도 레이어 '건물 유형별 건물'에서 분포를 볼 수 있습니다.</div>` : ''}`;
-}
-
-function drawBuildingLayer() {
-  layers.bldRing.clearLayers(); layers.bldPts.clearLayers();
-  const d = bld.data;
-  if (!d || !state.region || d.region !== state.region) return;
-  const dark = darkGround();
-  L.circle([d.center.lat, d.center.lon], {
-    radius: d.radiusKm * 1000, renderer: renderers.region, color: mapInk().ink, weight: 1.5, opacity: .7, dashArray: '8 6', fill: false, interactive: false,
-  }).addTo(layers.bldRing);
-  const col = Object.fromEntries(BLD_TYPES.map(t => [t.key, bldColor(t, dark)]));
-  for (const p of d.pts) {
-    L.circleMarker([p.lat, p.lon], { renderer: renderers.bld, radius: 2.5, stroke: false, fillColor: col[p.type], fillOpacity: .9, interactive: false }).addTo(layers.bldPts);
-  }
-}
-
-$('#bldRadius').addEventListener('change', () => updateBuildingMix());
-$('#bldChart').addEventListener('click', e => { if (e.target.closest('[data-bld-retry]')) updateBuildingMix(true); });
-$('#bldRules').innerHTML = BLD_TYPES.filter(t => t.values.length)
-  .map(t => `<div><b>${t.label}</b> — building=${t.values.join(', ')}</div>`).join('') +
-  `<div><b>보완 분류</b> — building=yes 등 용도가 없으면 같은 건물의 amenity·shop·office·tourism·craft 태그로 분류합니다.</div>
-   <div><b>미분류</b> — 위에 해당하지 않는 건물 (building=yes, roof, greenhouse, construction 등)</div>`;
-
-function renderAll() {
-  tip.hidden = true;   // 다시 그리면 마우스 아래 요소가 바뀌어 mouseout이 오지 않는다
-  const r = state.result; if (!r) return;
-  drawHex(r); drawDongFill(r); drawCbd(r);
-  renderHero(); renderTiles(); renderHist(); renderClusterChart(); renderDongChart();
-}
-
-function onThemeChange() {
-  renderLegend(); renderDraw();
-  if (state.region) { drawRegion(); drawApartments(); drawDongLines(); }
-  if (state.result) renderAll();
-  renderBuildingMix(); drawBuildingLayer();
-}
-
-/* ============================================================
-   controls & settings
-   ============================================================ */
-/* ----- 분석 조건 설명 팝오버: 그림 + 설명 ----- */
-const figSvg = (w, h, body) => `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${body}</svg>`;
-const figArrow = (x, y) => `<path d="M${x - 7},${y}h12m-4,-4l4,4-4,4" stroke="var(--muted)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-function hexPath(cx, cy, s) {
-  let d = '';
-  for (let i = 0; i < 6; i++) {
-    const a = Math.PI / 180 * (60 * i - 30);
-    d += `${i ? 'L' : 'M'}${(cx + s * Math.cos(a)).toFixed(1)},${(cy + s * Math.sin(a)).toFixed(1)}`;
-  }
-  return d + 'Z';
-}
-const figRamp = () => isDark() ? RAMP_DARK : RAMP_LIGHT;
-
-/* 같은 격자 값에 임계값만 달리 적용 */
-function figThreshold() {
-  const vals = [[0.4, 1.2, 1.8, 1.1, 0.5], [0.9, 2.2, 3.6, 2.0, 0.8], [0.6, 1.6, 2.4, 1.3, 0.4]];
-  const panel = (ox, thr, title, caption) => {
-    const s = 10.5, w = Math.sqrt(3) * s;
-    let g = '', n = 0;
-    vals.forEach((row, r) => row.forEach((v, c) => {
-      const on = v >= thr; if (on) n++;
-      g += `<path d="${hexPath(ox + 12 + c * w + (r % 2 ? w / 2 : 0), 30 + r * 1.5 * s, s - 0.9)}" fill="${on ? 'var(--cbd)' : figRamp()[lqClass(v)]}"/>`;
-    }));
-    return `<text class="t-b" x="${ox + 58}" y="11" text-anchor="middle">${title}</text>${g}
-      <text x="${ox + 58}" y="86" text-anchor="middle">${caption.replace('{n}', n)}</text>`;
-  };
-  return figSvg(262, 92, panel(4, 1.5, '임계값 ×1.5', '후보 {n}칸 → CBD 넓게') + figArrow(131, 42) + panel(142, 3.0, '임계값 ×3.0', '후보 {n}칸 → 핵심만'));
-}
-
-/* 같은 건물 분포를 작은 칸 / 큰 칸으로 집계 */
-const HELP_PTS = (() => {
-  let seed = 11;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const pts = [];
-  for (const [cx, cy, sd, k] of [[38, 44, 9, 26], [80, 56, 6, 14], [22, 66, 5, 8], [92, 30, 12, 6]]) {
-    for (let i = 0; i < k; i++) {
-      const r = Math.sqrt(-2 * Math.log(rnd() || 1e-9)) * sd, t = 2 * Math.PI * rnd();
-      pts.push([clamp(cx + r * Math.cos(t), 3, 113), clamp(cy + r * Math.sin(t), 19, 75)]);
-    }
-  }
-  return pts;
-})();
-function figCell() {
-  const panel = (ox, s, id, title, caption) => {
-    const w = Math.sqrt(3) * s, cells = [];
-    for (let r = 0, y = 17; y <= 80 + s; r++, y += 1.5 * s) {
-      for (let x = (r % 2 ? w / 2 : 0); x <= 118 + w; x += w) cells.push({ x, y, n: 0 });
-    }
-    for (const [px, py] of HELP_PTS) {
-      let best = null, bd = Infinity;
-      for (const c of cells) { const d = (c.x - px) ** 2 + (c.y - py) ** 2; if (d < bd) { bd = d; best = c; } }
-      best.n++;
-    }
-    const avg = HELP_PTS.length * (2.598 * s * s) / (116 * 58);
-    const g = cells.map(c => `<path d="${hexPath(ox + c.x, c.y, s - 0.5)}" fill="${c.n ? figRamp()[lqClass(c.n / avg)] : 'none'}" stroke="var(--grid)" stroke-width="${c.n ? 0 : 0.6}"/>`).join('');
-    const dots = HELP_PTS.map(([px, py]) => `<circle cx="${(ox + px).toFixed(1)}" cy="${py.toFixed(1)}" r="1.1" fill="var(--ink)" opacity=".55"/>`).join('');
-    return `<text class="t-b" x="${ox + 58}" y="11" text-anchor="middle">${title}</text>
-      <clipPath id="${id}"><rect x="${ox}" y="17" width="116" height="60" rx="4"/></clipPath>
-      <g clip-path="url(#${id})">${g}${dots}</g>
-      <text x="${ox + 58}" y="89" text-anchor="middle">${caption}</text>`;
-  };
-  return figSvg(262, 94, panel(4, 5, 'hpc1', '작은 칸', '세밀하지만 들쭉날쭉') + figArrow(131, 47) + panel(142, 13, 'hpc2', '큰 칸', '매끈하지만 뭉개짐'));
-}
-
-/* 칸별 개수(막대) vs 커널로 부드럽게 만든 밀도(곡선) */
-function figSmooth() {
-  const counts = [0, 1, 0, 2, 6, 3, 1, 0, 0, 3, 5, 2, 0, 1, 0, 0];
-  const W = 116, H = 56, top = 20, bw = W / counts.length, maxC = 6;
-  const bars = ox => counts.map((c, i) => c ? `<rect x="${(ox + i * bw + 0.6).toFixed(1)}" y="${top + H - c / maxC * H}" width="${(bw - 1.2).toFixed(1)}" height="${c / maxC * H}" rx="1.5" fill="var(--bar)"/>` : '').join('');
-  const curve = (ox, sigma) => {
-    const f = x => counts.reduce((s, c, j) => s + c * Math.exp(-((x - j - 0.5) ** 2) / (2 * sigma * sigma)), 0);
-    const xs = Array.from({ length: 65 }, (_, k) => k / 64 * counts.length), ys = xs.map(f), m = Math.max(...ys);
-    return xs.map((x, k) => `${k ? 'L' : 'M'}${(ox + x * bw).toFixed(1)},${(top + H - ys[k] / m * H * 0.92).toFixed(1)}`).join('');
-  };
-  const base = ox => `<line x1="${ox}" x2="${ox + W}" y1="${top + H}" y2="${top + H}" stroke="var(--axis)"/>`;
-  const faint = ox => counts.map((c, i) => c ? `<rect x="${(ox + i * bw + 0.6).toFixed(1)}" y="${top + H - c / maxC * H}" width="${(bw - 1.2).toFixed(1)}" height="${c / maxC * H}" rx="1.5" fill="var(--grid)"/>` : '').join('');
-  const ox2 = 142;
-  return figSvg(262, 98,
-    `<text class="t-b" x="62" y="11" text-anchor="middle">없음</text>${bars(4)}${base(4)}
-     <text x="62" y="92" text-anchor="middle">칸 경계에서 뚝뚝 끊김</text>
-     ${figArrow(131, 48)}
-     <text class="t-b" x="${ox2 + 58}" y="11" text-anchor="middle">평활화 적용</text>${faint(ox2)}${base(ox2)}
-     <path d="${curve(ox2, 1.3)}" fill="none" stroke="var(--bar)" stroke-width="2" stroke-linejoin="round"/>
-     <path d="${curve(ox2, 3.2)}" fill="none" stroke="var(--cbd)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>
-     <line x1="${ox2 + 2}" x2="${ox2 + 14}" y1="89" y2="89" stroke="var(--bar)" stroke-width="2"/><text x="${ox2 + 17}" y="92">보통</text>
-     <line x1="${ox2 + 48}" x2="${ox2 + 60}" y1="89" y2="89" stroke="var(--cbd)" stroke-width="2" stroke-dasharray="4 3"/><text x="${ox2 + 63}" y="92">강하게(뭉침)</text>`);
-}
-
-/* 저층 3동 + 고층 1동을 동수 / 연면적으로 셀 때 */
-function figMode() {
-  const blds = [{ w: 18, f: 5 }, { w: 18, f: 5 }, { w: 18, f: 6 }, { w: 22, f: 25 }];
-  const ground = 74, unit = 2.1, gap = 7;
-  const panel = (ox, title, weight, caption) => {
-    let x = ox + 8, g = '';
-    const base = blds[0].w * blds[0].f;
-    for (const b of blds) {
-      const h = b.f * unit;
-      g += `<rect x="${x}" y="${ground - h}" width="${b.w}" height="${h}" rx="1.5" fill="var(--bar-soft)"/>`;
-      for (let fl = 1; fl < b.f; fl += 2) g += `<line x1="${x + 3}" x2="${x + b.w - 3}" y1="${ground - fl * unit}" y2="${ground - fl * unit}" stroke="var(--surface)" stroke-width=".8" opacity=".7"/>`;
-      g += `<text class="t-b" x="${x + b.w / 2}" y="${ground - h - 3}" text-anchor="middle">${weight(b, base)}</text>`;
-      x += b.w + gap;
-    }
-    return `<text class="t-b" x="${ox + 58}" y="11" text-anchor="middle">${title}</text>${g}
-      <line x1="${ox + 2}" x2="${ox + 114}" y1="${ground}" y2="${ground}" stroke="var(--axis)"/>
-      <text x="${ox + 58}" y="89" text-anchor="middle">${caption}</text>`;
-  };
-  return figSvg(262, 94,
-    panel(4, '건물 동수', () => '1', '고층도 저층도 똑같이 1') + figArrow(131, 50) +
-    panel(142, '연면적 추정', (b, base) => fmt(b.w * b.f / base, 1), '고층 1동 ≈ 저층 6동'));
-}
-
-const HELP = {
-  thr: {
-    title: 'CBD 임계값', fig: figThreshold,
-    current: () => `현재 ×${(+$('#thr').value).toFixed(1)}`,
-    what: '격자의 아파트 밀도가 <b>지역 평균의 몇 배 이상</b>이어야 CBD 후보가 되는지 정하는 기준입니다. ×2.0은 “평균의 2배 이상”이라는 뜻입니다.',
-    rows: [
-      ['▲ 올리면', '기준이 엄격해져 가장 빽빽한 핵심만 남습니다. CBD가 작아지고, 부도심은 사라질 수 있어요.'],
-      ['▼ 내리면', '덜 밀집한 곳까지 후보가 되어 CBD가 넓어집니다. 떨어져 있던 군집이 하나로 합쳐질 수 있어요.'],
-    ],
-    note: '넘는 격자가 하나도 없으면 상위 3% 격자로 대신 선정합니다.',
-  },
-  cell: {
-    title: '격자 크기', fig: figCell,
-    current: () => {
-      const auto = +$('#cell').value === 0, side = state.result?.sideKm;
-      return auto ? `현재 자동${side ? ` · 한 변 ${fmt(side * 1000, 0)} m` : ''}` : `현재 ${$('#cell').selectedOptions[0].text}`;
-    },
-    what: '지역을 나누는 <b>육각형 한 칸의 크기</b>(한 변 길이)입니다. 칸마다 아파트를 세어 밀도를 계산합니다.',
-    rows: [
-      ['▲ 크게', '넓게 묶어 결과가 안정적이지만, 좁은 밀집지는 주변과 섞여 흐려집니다.'],
-      ['▼ 작게', '단지 단위까지 세밀하게 보이지만, 건물 몇 동 차이로 값이 크게 흔들립니다.'],
-    ],
-    note: '자동은 지역 면적에 맞춰 격자가 약 650칸이 되도록 정합니다.',
-  },
-  smooth: {
-    title: '평활화', fig: figSmooth,
-    current: () => `현재 ${$('#smooth').selectedOptions[0].text}`,
-    what: '칸 밖의 가까운 건물도 <b>거리에 따라 조금씩 나눠 반영</b>해(가우시안 커널) 밀도를 부드럽게 만듭니다.',
-    rows: [
-      ['▲ 강하게', '계단처럼 끊기던 값이 매끄러워져 큰 흐름이 드러납니다. 너무 강하면 가까운 두 중심이 하나로 뭉칩니다.'],
-      ['▼ 약하게', '칸 안의 실제 개수에 가까워집니다. “없음”은 칸 안 건물만 세서, 경계에서 값이 뚝 끊깁니다.'],
-    ],
-  },
-  mode: {
-    title: '가중치', fig: figMode,
-    current: () => `현재 ${$('input[name="mode"]:checked').parentElement.textContent.trim()}`,
-    what: '아파트 <b>한 동을 얼마만큼으로 셀지</b> 정합니다.',
-    rows: [
-      ['건물 동수', '모든 건물을 1로 셉니다. 저층 단지가 넓게 퍼진 곳이 크게 잡힙니다.'],
-      ['연면적 추정', '바닥면적 × 층수로 셉니다. 고층 아파트가 몰린 곳이 크게 잡힙니다.'],
-    ],
-    note: 'OSM에 층수 정보가 없는 건물은 SGIS 설정의 기본 층수(15층)를 씁니다.',
-  },
-};
-
-const helpPop = $('#helpPop');
-let helpAnchor = null, helpTimer = null, helpHideTimer = null;
-
-function positionHelp(anchor) {
-  const a = anchor.getBoundingClientRect(), card = anchor.closest('.card').getBoundingClientRect();
-  const pw = helpPop.offsetWidth, ph = helpPop.offsetHeight, m = 8;
-  const midY = a.top + a.height / 2;
-  let side, x, y;
-  if (card.left - pw - 16 >= m) {                   // 넓은 화면: 패널 왼쪽(지도 위)에 띄운다
-    side = 'left'; x = card.left - pw - 16;
-  } else if (a.right + 14 + pw <= innerWidth - m) { // 중간 폭: 항목 이름 오른쪽 옆에 띄워 이름을 가리지 않는다
-    side = 'right'; x = a.right + 14;
-  }
-  if (side) {
-    y = clamp(midY - ph / 2, m, innerHeight - ph - m);
-    helpPop.style.setProperty('--ay', `${clamp(midY - y, 14, ph - 14)}px`);
-  } else {                                           // 휴대폰 폭: 아래·위 중 공간이 넓은 쪽
-    const below = innerHeight - a.bottom, above = a.top;
-    side = below >= ph + 20 || below >= above ? 'bottom' : 'top';
-    y = side === 'bottom' ? Math.min(a.bottom + 12, innerHeight - ph - m) : Math.max(m, a.top - ph - 12);
-    x = clamp(a.left - 8, m, innerWidth - pw - m);
-    helpPop.style.setProperty('--ax', `${a.left + 30 - x}px`);
-  }
-  helpPop.dataset.side = side;
-  helpPop.style.left = `${x}px`; helpPop.style.top = `${y}px`;
-}
-
-function openHelp(anchor) {
-  const h = HELP[anchor.dataset.help]; if (!h) return;
-  clearTimeout(helpHideTimer);
-  document.querySelectorAll('.help-t.open').forEach(el => el.classList.remove('open'));
-  anchor.classList.add('open');
-  helpAnchor = anchor;
-  helpPop.innerHTML = `
-    <div class="hp-head"><span class="hp-title">${h.title}</span><span class="hp-cur">${esc(h.current())}</span></div>
-    <div class="hp-fig">${h.fig()}</div>
-    <p class="hp-what">${h.what}</p>
-    <div class="hp-rows">${h.rows.map(([tag, txt]) => `<div class="hp-row"><span class="hp-tag">${tag}</span><span>${txt}</span></div>`).join('')}</div>
-    ${h.note ? `<div class="hp-note">${h.note}</div>` : ''}`;
-  const wasShown = !helpPop.hidden && helpPop.classList.contains('show');
-  helpPop.hidden = false;
-  positionHelp(anchor);
-  if (!wasShown) {
-    helpPop.classList.remove('show');
-    void helpPop.offsetWidth;                        // 시작 상태를 확정해야 전환 애니메이션이 재생된다
-    helpPop.classList.add('show');
-  }
-}
-function closeHelp() {
-  if (!helpAnchor) return;
-  helpAnchor.classList.remove('open');
-  helpAnchor = null;
-  helpPop.classList.remove('show');
-  helpHideTimer = setTimeout(() => { if (!helpAnchor) helpPop.hidden = true; }, 220);
-}
-
-document.querySelectorAll('.help-t').forEach(el => {
-  el.addEventListener('mouseenter', () => { clearTimeout(helpTimer); helpTimer = setTimeout(() => openHelp(el), helpAnchor ? 0 : 120); });
-  el.addEventListener('mouseleave', () => { clearTimeout(helpTimer); helpTimer = setTimeout(closeHelp, 90); });
-  const qi = el.querySelector('.qi');
-  // 라벨 안의 ? 를 눌러도 입력칸으로 포커스가 넘어가지 않게 하고, 터치 기기에서는 탭으로 열고 닫는다
-  qi.addEventListener('click', e => { e.preventDefault(); helpAnchor === el ? closeHelp() : openHelp(el); });
-  qi.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); helpAnchor === el ? closeHelp() : openHelp(el); } });
-  qi.addEventListener('focus', () => { if (qi.matches(':focus-visible')) openHelp(el); });
-  qi.addEventListener('blur', closeHelp);
-});
-addEventListener('keydown', e => { if (e.key === 'Escape') closeHelp(); });
-addEventListener('scroll', () => { if (helpAnchor) positionHelp(helpAnchor); }, true);
-addEventListener('resize', () => { if (helpAnchor) positionHelp(helpAnchor); });
-
-$('#thr').addEventListener('input', e => { $('#thrOut').textContent = '×' + (+e.target.value).toFixed(1); scheduleRecompute(); });
-['#cell', '#smooth'].forEach(s => $(s).addEventListener('change', scheduleRecompute));
-document.querySelectorAll('input[name="mode"]').forEach(i => i.addEventListener('change', scheduleRecompute));
-
-const dlg = $('#settingsDlg'), form = $('#settingsForm');
-for (let y = 2024; y >= 2015; y--) form.elements.year.insertAdjacentHTML('beforeend', `<option value="${y}">${y}년</option>`);
-$('#settingsBtn').addEventListener('click', () => {
-  for (const k of Object.keys(DEFAULTS)) if (form.elements[k]) form.elements[k].value = settings[k];
-  $('#sgisTestMsg').textContent = '';
-  dlg.showModal();
-});
-$('#clearKeys').addEventListener('click', () => { form.elements.sgisKey.value = ''; form.elements.sgisSecret.value = ''; });
-$('#testSgis').addEventListener('click', async () => {
-  const msg = $('#sgisTestMsg');
-  const key = form.elements.sgisKey.value.trim(), secret = form.elements.sgisSecret.value.trim();
-  if (!key || !secret) { msg.style.color = 'var(--crit)'; msg.textContent = '서비스 ID와 보안 Key를 모두 입력하세요.'; return; }
-  msg.style.color = 'var(--ink2)'; msg.textContent = '인증 요청 중…';
-  try {
-    sgisToken = null;
-    await sgisAuth(undefined, key, secret);
-    msg.style.color = 'var(--good)'; msg.textContent = '✓ 인증 성공 — accessToken을 받았습니다.';
-  } catch (e) {
-    sgisToken = null;
-    msg.style.color = 'var(--crit)'; msg.textContent = `✕ 인증 실패: ${e.message}`;
-  }
-});
-dlg.addEventListener('close', () => {
-  if (dlg.returnValue !== 'save') return;
-  const prev = JSON.stringify(settings);
-  settings = {
-    sgisKey: form.elements.sgisKey.value.trim(), sgisSecret: form.elements.sgisSecret.value.trim(),
-    year: form.elements.year.value, aptType: form.elements.aptType.value.trim() || '02',
-    floors: clamp(+form.elements.floors.value || 15, 1, 80), overpass: form.elements.overpass.value, overpassV2: true,
-  };
-  if (JSON.stringify(settings) === prev) return;
-  sgisToken = null;
-  writeJSON(SETTINGS_KEY, settings);
-  updateBadge();
-  if (state.lastRegion) runRegion(state.lastRegion, { keepCandidates: true });
-});
-updateBadge();
-
-new ResizeObserver(() => map.invalidateSize()).observe($('.map-wrap'));
-
-/* boot from #q=… */
-(() => {
-  const q = new URLSearchParams(location.hash.slice(1)).get('q');
-  if (q) { $('#q').value = q; startSearch(q); }
-})();
-</script>
+<script src="i18n.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
