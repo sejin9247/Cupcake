@@ -189,12 +189,17 @@ section.slab{padding:clamp(80px,11vw,150px) 0;position:relative;background:var(-
 
 /* ---------- 프로젝트 쇼케이스 ---------- */
 .showcase{position:relative;height:100vh;min-height:620px;overflow:hidden;background:#111}
+/* 꺼진 패널은 투명하기만 해서는 안 된다 — 위에 겹쳐 클릭과 탭 이동을 가로챈다 */
 .panel{
-  position:absolute;inset:0;opacity:0;transition:opacity .8s ease;
+  position:absolute;inset:0;opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .8s ease,visibility 0s linear .8s;
   display:flex;flex-direction:column;justify-content:center;
   padding:clamp(60px,9vh,110px) var(--pad) 130px;color:#fff;
 }
-.panel.on{opacity:1}
+.panel.on{
+  opacity:1;visibility:visible;pointer-events:auto;
+  transition:opacity .8s ease,visibility 0s;
+}
 .panel[data-proj="cbd"]{background:linear-gradient(168deg,#1d4f86 0%,#123253 42%,#080d14 100%)}
 .panel[data-proj="mc"]{background:linear-gradient(168deg,#c2661f 0%,#8c3d16 45%,#180d06 100%)}
 .panel-in{max-width:var(--maxw);margin:0 auto;width:100%}
@@ -379,7 +384,7 @@ footer.foot .foot-link:hover{color:var(--accent)}
   .stage{height:460vh}
   .head-nav{gap:16px}
   .showcase{height:auto;min-height:0}
-  .panel{position:relative;opacity:1;padding-bottom:40px}
+  .panel{position:relative;opacity:1;visibility:visible;pointer-events:auto;padding-bottom:40px}
   .panel:not(.on){display:none}
   .tabs{position:sticky;bottom:18px}
 }
