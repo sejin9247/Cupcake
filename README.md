@@ -2,6 +2,8 @@
 
 전세진(JEON SE JIN)의 작업 저장소입니다.
 
+🌐 **배포된 사이트 — <https://cupcakeprofile.vercel.app>**
+
 ## 📁 내용물
 
 | 경로 | 설명 |

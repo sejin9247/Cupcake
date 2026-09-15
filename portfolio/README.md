@@ -5,6 +5,8 @@
 바다 위를 항해하듯 스크롤하며 포트폴리오를 둘러보는 개인 사이트입니다.
 빌드 도구·프레임워크 없이 HTML / CSS / Vanilla JS로만 동작합니다.
 
+🌐 <https://cupcakeprofile.vercel.app>
+
 ## 📁 구조
 
 ```
