@@ -33,7 +33,33 @@
   /* [시작, 끝] 구간에서 나타났다 사라지는 창 */
   function win(p, a, b, c, d) { return ss(a, b, p) * (1 - ss(c, d, p)); }
 
-  let ticking = false;
+  /* 문구는 스크롤 원값이 아니라 캔버스와 같은 보간값을 따라간다.
+     둘이 어긋나면 배경은 흐르는데 글자만 계단으로 튄다. */
+  function paintChapters(p) {
+    if (cue) cue.style.opacity = String((1 - ss(0.02, 0.10, p)) * 0.6);
+
+    const o1 = 1 - ss(0.10, 0.20, p);
+    const o2 = win(p, 0.46, 0.54, 0.62, 0.70);
+    const o3 = ss(0.88, 0.95, p);
+    const set = (el, o, shift) => {
+      if (!el) return;
+      el.style.opacity = o.toFixed(3);
+      el.style.transform = 'translateY(' + (shift * (1 - o)).toFixed(1) + 'px)';
+      el.classList.toggle('live', o > 0.6);
+    };
+    set(chaps[0], o1, 0);
+    set(chaps[1], o2, 26);
+    set(chaps[2], o3, 34);
+
+    if (lines.length) {
+      const u = clamp((p - 0.46) / 0.20, 0, 1);
+      const idx = Math.min(lines.length - 1, Math.floor(u * lines.length));
+      lines.forEach((li, i) => li.classList.toggle('hot', o2 > 0.3 && i <= idx));
+    }
+    shots.forEach((s, i) => s.classList.toggle('in', o2 > 0.45 && p > 0.48 + i * 0.04));
+  }
+
+  let ticking = false, first = true;
   function onScroll() {
     if (ticking) return;
     ticking = true;
@@ -45,7 +71,9 @@
       const p = clamp((window.scrollY - top) / span, 0, 1);
       const inStage = window.scrollY < top + stage.offsetHeight - window.innerHeight * 0.5;
 
-      if (window.VOYAGE) window.VOYAGE.set(p);
+      /* 첫 호출은 스냅 — 스크롤된 채로 새로고침하면 장면이 0부터 흘러오면 안 된다 */
+      if (window.VOYAGE) { window.VOYAGE.set(p, first); window.VOYAGE.visible(inStage); first = false; }
+      else paintChapters(p);                 // 캔버스가 없으면 스크롤 값으로 직접
       document.body.classList.toggle('on-stage', inStage);
 
       /* 헤더가 어두운 섹션 위에 있으면 흰 글씨로 */
@@ -55,29 +83,6 @@
       });
       document.body.classList.toggle('on-dark', onDark);
       if (skip) skip.classList.toggle('show', inStage && p < 0.95);
-      if (cue) cue.style.opacity = String((1 - ss(0.02, 0.10, p)) * 0.6);
-
-      /* 챕터 별 투명도 */
-      const o1 = 1 - ss(0.10, 0.20, p);
-      const o2 = win(p, 0.29, 0.38, 0.52, 0.60);
-      const o3 = ss(0.80, 0.90, p);
-      const set = (el, o, shift) => {
-        if (!el) return;
-        el.style.opacity = o.toFixed(3);
-        el.style.transform = 'translateY(' + (shift * (1 - o)).toFixed(1) + 'px)';
-        el.classList.toggle('live', o > 0.6);
-      };
-      set(chaps[0], o1, 0);
-      set(chaps[1], o2, 26);
-      set(chaps[2], o3, 34);
-
-      /* 라인 순차 강조 */
-      if (lines.length) {
-        const u = clamp((p - 0.30) / 0.24, 0, 1);
-        const idx = Math.min(lines.length - 1, Math.floor(u * lines.length));
-        lines.forEach((li, i) => li.classList.toggle('hot', o2 > 0.3 && i <= idx));
-      }
-      shots.forEach((s, i) => s.classList.toggle('in', o2 > 0.45 && p > 0.33 + i * 0.05));
 
       /* 우측 레일 */
       const mid = window.scrollY + window.innerHeight * 0.4;
@@ -91,6 +96,8 @@
     link, el: document.querySelector(link.getAttribute('href'))
   }));
   const darkAreas = $$('.showcase, #contact, footer.foot');
+
+  if (window.VOYAGE) window.VOYAGE.onFrame(paintChapters);
 
   addEventListener('scroll', onScroll, { passive: true });
   addEventListener('resize', onScroll, { passive: true });
