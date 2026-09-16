@@ -44,7 +44,7 @@
   <a href="#stage" class="on"><span>Intro</span><i></i></a>
   <a href="#work"><span>Work</span><i></i></a>
   <a href="#cbd"><span>CBD Finder</span><i></i></a>
-  <a href="#mc"><span>Pixel World</span><i></i></a>
+  <a href="#mc"><span>Editorial</span><i></i></a>
   <a href="#about"><span>About</span><i></i></a>
   <a href="#contact"><span>Contact</span><i></i></a>
 </nav>
@@ -127,19 +127,19 @@
   <article class="panel" data-proj="mc">
     <div class="panel-in">
       <div class="panel-top">
-        <h3>Pixel<br>World</h3>
+        <h3>Editorial<br>Profile</h3>
         <div>
-          <p class="desc">캔버스로 직접 그린 픽셀 월드 위에 이력을 얹은 실험적 포트폴리오. 지형·구름·몹·파티클·업적 알림까지 외부 라이브러리 없이 HTML5 Canvas로 렌더링했습니다.</p>
+          <p class="desc">이력서를 한 권의 편집물처럼 읽히게 만든 프로필 페이지. 크림 바탕과 세로 컬럼 괘선 위에 고대비 세리프를 얹고, 썸네일 띠가 한 장으로 모여 화면 전체로 열리는 인트로로 시작합니다.</p>
           <dl class="meta">
             <div><dt>Year</dt><dd>2026</dd></div>
             <div><dt>Role</dt><dd>기획 · 디자인 · 개발 단독</dd></div>
-            <div><dt>Stack</dt><dd>HTML5 Canvas · Vanilla JS</dd></div>
-            <div><dt>Type</dt><dd>인터랙티브 페이지</dd></div>
+            <div><dt>Stack</dt><dd>Vanilla JS · CSS Grid</dd></div>
+            <div><dt>Type</dt><dd>편집 디자인 페이지</dd></div>
           </dl>
           <div class="panel-links">
-            <a class="plink solid" href="minecraft/index.html">열어 보기 →</a>
+            <a class="plink solid" href="profile/index.html">열어 보기 →</a>
             <a class="plink" href="#mc">자세히 보기</a>
-            <a class="plink" href="https://github.com/sejin9247/Cupcake/tree/main/portfolio/minecraft" target="_blank" rel="noopener">GitHub</a>
+            <a class="plink" href="https://github.com/sejin9247/Cupcake/tree/main/portfolio/profile" target="_blank" rel="noopener">GitHub</a>
           </div>
         </div>
       </div>
@@ -148,7 +148,7 @@
 
   <div class="tabs" role="tablist" aria-label="프로젝트 선택">
     <button role="tab" aria-selected="true" data-target="cbd">CBD Finder</button>
-    <button role="tab" aria-selected="false" data-target="mc">Pixel World</button>
+    <button role="tab" aria-selected="false" data-target="mc">Editorial</button>
   </div>
 </section>
 
@@ -293,19 +293,19 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="no">Project 02</span>
-      <h2>Pixel World<br>Résumé</h2>
-      <p>이력서도 하나의 공간이 될 수 있다는 생각으로 만든 인터랙티브 페이지입니다.</p>
+      <h2>Editorial<br>Profile</h2>
+      <p>이력서를 정보의 나열이 아니라 한 권의 편집물처럼 읽히게 만든 페이지입니다.</p>
     </div>
 
     <div class="proj-grid">
       <aside class="reveal">
         <span class="mono">Overview</span>
-        <p class="sum">마인크래프트에서 착안한 픽셀 월드 위에 이력을 얹었습니다. 하늘·구름·산·나무·지형을 실시간으로 그리고, 탭을 옮길 때마다 다른 파티클과 업적 알림이 뜹니다.</p>
+        <p class="sum">크림 바탕과 세로 컬럼 괘선 위에 고대비 세리프를 얹은 편집 디자인 스타일의 개인 프로필 페이지. 썸네일 띠가 한 장으로 모이고 화면 전체로 열리는 인트로로 시작합니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd>2026.09</dd></div>
           <div><dt>역할</dt><dd>기획 · 디자인 · 개발 단독</dd></div>
-          <div><dt>기술</dt><dd>HTML5 Canvas 2D, Vanilla JS</dd></div>
-          <div><dt>의존성</dt><dd>없음 (웹폰트 1종 제외)</dd></div>
+          <div><dt>기술</dt><dd>Vanilla JS, CSS Grid, mix-blend-mode</dd></div>
+          <div><dt>서체</dt><dd>Bodoni Moda · Caveat · Pretendard</dd></div>
         </dl>
       </aside>
 
@@ -313,23 +313,23 @@
         <div class="block reveal">
           <h4>Highlights</h4>
           <ul>
-            <li><b>절차적 배경</b> — 하늘 그라데이션, 별, 태양, 원경 산맥, 나무, 지표 블록을 코드로 생성합니다.</li>
-            <li><b>몹 애니메이션</b> — 문자열 맵으로 정의한 픽셀 스프라이트를 캔버스에 직접 렌더링해 걷는 동작을 만듭니다.</li>
-            <li><b>파티클 시스템</b> — 탭마다 폭발·경험치·마법부여·불꽃·하트·물약 효과가 달라집니다.</li>
-            <li><b>업적 토스트 · 로딩 스크린</b> — 게임 UI 문법을 그대로 웹 인터랙션으로 옮겼습니다.</li>
+            <li><b>3단 인트로</b> — 썸네일 필름스트립 → 가운데 한 장 → 화면 전면으로 이어지는 시퀀스. 누르면 건너뜁니다.</li>
+            <li><b>세로 컬럼 괘선</b> — 편집 디자인의 격자를 화면에 고정해 모든 섹션이 같은 기둥 위에 놓이게 했습니다.</li>
+            <li><b>겹치는 헤드라인</b> — 제목의 아랫줄이 사진 윗변에 걸치고, <code>mix-blend-mode</code>로 크림 위에서는 어둡게 사진 위에서는 밝게 반전됩니다.</li>
+            <li><b>비대칭 스캐터</b> — 12칼럼 그리드 위에 이미지와 글을 어긋나게 배치해 잡지 지면처럼 읽히게 했습니다.</li>
           </ul>
         </div>
         <div class="block reveal">
           <h4>Why</h4>
-          <p>정보를 나열하는 대신 “걸어 다니며 보는 이력서”를 만들고 싶었습니다. 지금 보고 계신 이 항해형 사이트도 같은 생각의 연장선입니다.</p>
+          <p>같은 이력이라도 담는 형식에 따라 다르게 읽힙니다. 항해형 허브가 ‘흐름’으로 읽히는 사이트라면, 이 페이지는 ‘지면’으로 읽히는 사이트를 목표로 했습니다.</p>
         </div>
 
         <figure class="figure reveal">
-          <img src="assets/img/minecraft.png" alt="Pixel World 이력서 페이지 화면" data-slot loading="lazy">
-          <figcaption>절차적으로 그린 픽셀 월드 위에 얹은 이력 패널</figcaption>
+          <img src="assets/img/profile-page.jpg" alt="Editorial Profile 페이지 화면" data-slot loading="lazy">
+          <figcaption>인트로가 끝나고 전면으로 열린 히어로</figcaption>
         </figure>
         <div class="panel-links reveal" style="margin-top:6px">
-          <a class="chip" href="minecraft/index.html">페이지 열기 →</a>
+          <a class="chip" href="profile/index.html">페이지 열기 →</a>
         </div>
       </div>
     </div>

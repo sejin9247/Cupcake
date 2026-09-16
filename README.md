@@ -10,7 +10,7 @@
 |---|---|
 | [`portfolio/`](portfolio/) | **포트폴리오 사이트** — 배포 대상. 자세한 내용은 [portfolio/README.md](portfolio/README.md) |
 | └ `portfolio/cbd-dashboard/` | 프로젝트 01 — 아파트 밀도 CBD 탐색기 |
-| └ `portfolio/minecraft/` | 프로젝트 02 — Pixel World 이력서 페이지 |
+| └ `portfolio/profile/` | 프로젝트 02 — 편집 디자인 프로필 페이지 |
 
 ## ☁️ 배포
 
@@ -22,7 +22,7 @@ Vercel에서 이 저장소를 **Import 하고 그대로 Deploy만 누르면 됩�
 { "framework": null, "buildCommand": null, "outputDirectory": "portfolio" }
 ```
 
-배포되면 `/`는 포트폴리오 허브, `/cbd-dashboard/`와 `/minecraft/`는 각 프로젝트 데모로 열립니다.
+배포되면 `/`는 포트폴리오 허브, `/cbd-dashboard/`와 `/profile/`는 각 프로젝트 데모로 열립니다.
 
 > Import 화면에서 Framework Preset이 `Other`가 아닌 값으로 자동 감지되면 `Other`로 바꿔 주세요.
 
