@@ -21,6 +21,12 @@
     if (img.complete && img.naturalWidth === 0) { placeholder(img); return; }
     img.addEventListener('error', () => placeholder(img), { once: true });
   });
+  /* 있으면 쓰고 없으면 조용히 빠지는 이미지 — 뒤의 톤 배경이 대신 보인다 */
+  $$('img[data-optional]').forEach(img => {
+    const drop = () => img.remove();
+    if (img.complete && img.naturalWidth === 0) { drop(); return; }
+    img.addEventListener('error', drop, { once: true });
+  });
 
   /* ---------- 인트로 ---------- */
   const intro = $('#intro'), bar = $('.bar'), heroCopy = $('.hero-copy');

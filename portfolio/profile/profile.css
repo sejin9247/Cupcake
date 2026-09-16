@@ -16,6 +16,7 @@
   --sans:'Pretendard Variable',Pretendard,-apple-system,'Segoe UI',sans-serif;
   --pad:clamp(20px,5vw,64px);
   --maxw:1440px;
+  --hero-tone:radial-gradient(120% 90% at 30% 20%,#5a5046 0%,#2e2923 48%,#15130f 100%);
 }
 
 *{box-sizing:border-box}
@@ -117,10 +118,16 @@ body.over-media .bar::before{opacity:1}
   display:flex;justify-content:center;gap:4px;z-index:1;
   transition:opacity .55s ease;
 }
-.strip img{
+.strip img,.strip i{
   width:clamp(44px,4.6vw,66px);aspect-ratio:3/4;object-fit:cover;
-  flex:0 0 auto;animation:slide 9s linear infinite;
+  flex:0 0 auto;animation:slide 9s linear infinite;display:block;
 }
+/* 사진 대신 쓰는 톤 견본 — 크림에서 먹색까지 */
+.strip .t1{background:#d9d3c5}
+.strip .t2{background:#b8ae9c}
+.strip .t3{background:#8a7f6e}
+.strip .t4{background:#4d463d}
+.strip .t5{background:#23211e}
 @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-70px)}}
 .intro.s2 .strip,.intro.s3 .strip{opacity:0}
 
@@ -140,6 +147,7 @@ body.over-media .bar::before{opacity:1}
   position:absolute;left:50%;top:50%;z-index:2;
   width:clamp(44px,4.6vw,66px);height:calc(clamp(44px,4.6vw,66px) * 4 / 3);
   transform:translate(-50%,-50%);overflow:hidden;
+  background:var(--hero-tone);
   transition:width 1.15s cubic-bezier(.76,0,.24,1),height 1.15s cubic-bezier(.76,0,.24,1);
 }
 .grow img{width:100%;height:100%;object-fit:cover}
@@ -148,7 +156,8 @@ body.over-media .bar::before{opacity:1}
 
 /* ---------- 히어로 ---------- */
 .hero{position:relative;z-index:2;height:100vh;min-height:560px;overflow:hidden;background:var(--ink)}
-.hero-img{position:absolute;inset:0}
+/* hero.jpg가 없으면 이 톤이 그대로 히어로가 된다 */
+.hero-img{position:absolute;inset:0;background:var(--hero-tone)}
 .hero-img img{width:100%;height:100%;object-fit:cover}
 .hero-img::after{
   content:'';position:absolute;inset:0;
@@ -204,16 +213,16 @@ body.over-media .bar::before{opacity:1}
 }
 
 /* 헤드라인 아랫줄이 이미지 위를 가로지른다 (참고 사이트의 "is a composition.") */
-/* isolation — 혼합이 페이지 전체가 아니라 이 블록(크림+사진)을 바탕으로 계산되게 한다 */
-.overlap{position:relative;isolation:isolate;text-align:center;margin:clamp(26px,5vh,54px) 0 clamp(50px,9vh,110px)}
+.overlap{position:relative;text-align:center;margin:clamp(26px,5vh,54px) 0 clamp(50px,9vh,110px)}
 .overlap h3{font-size:clamp(34px,7.6vw,116px)}
 .overlap .mid{position:relative;width:min(34vw,430px);margin:clamp(30px,4.4vw,72px) auto 0}
 .overlap .mid img,.overlap .mid .ph{width:100%;aspect-ratio:3/4;object-fit:cover}
-/* 아랫줄이 사진 윗변에 걸친다 — 크림 위에서는 어둡게, 사진 위에서는 밝게 */
+/* 아랫줄이 사진 윗변에 걸친다.
+   mix-blend-mode는 격리하면 바탕이 투명해져 크림 위에서 글자가 사라지고,
+   격리하지 않으면 뒤의 괘선 띠에 따라 얼룩진다 — 먹색으로 고정한다 */
 .overlap .lo{
   position:absolute;left:50%;top:-.45em;transform:translateX(-50%);
-  width:max-content;max-width:94vw;z-index:2;
-  mix-blend-mode:difference;color:#f4f1ea;
+  width:max-content;max-width:94vw;z-index:2;color:var(--ink);
 }
 
 /* ---------- 이력 목록 ---------- */
