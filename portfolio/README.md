@@ -17,7 +17,6 @@ assets/
   js/site.js            스크롤 진행도 · 챕터 전환 · 탭 · 등장 애니메이션
   img/                  프로필 · 스크린샷
 cbd-dashboard/          프로젝트 01 — 아파트 밀도 CBD 탐색기 (실행 가능한 데모)
-profile/                프로젝트 02 — 편집 디자인 프로필 페이지
 ```
 
 ## 🌊 항해 인트로
@@ -56,7 +55,6 @@ Vercel에서 Import 후 Deploy만 누르면 됩니다.
 | `assets/img/cbd-landing.png` | CBD Finder 표지 화면 | ✅ 준비됨 |
 | `assets/img/og.png` | 링크 공유용 썸네일 (1200×630) | ✅ 준비됨 |
 | `assets/img/cbd-analysis.jpg` | CBD Finder 분석 결과 화면 (송파구) | ✅ 준비됨 |
-| `assets/img/profile-page.jpg` | Editorial Profile 페이지 화면 | ⬜ 필요 |
 | `assets/img/profile.png` | 프로필 이미지 | ✅ 준비됨 |
 
 분석 화면을 다시 캡처하려면 대시보드에서 분석을 돌린 뒤 창 전체를 캡처하고,
