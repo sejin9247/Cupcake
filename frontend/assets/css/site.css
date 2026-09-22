@@ -187,33 +187,88 @@ section.slab{padding:clamp(80px,11vw,150px) 0;position:relative;background:var(-
 .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.7,.3,1),transform .8s cubic-bezier(.2,.7,.3,1)}
 .reveal.in{opacity:1;transform:none}
 
-/* ---------- 프로젝트 쇼케이스 ---------- */
-.showcase{position:relative;height:100vh;min-height:620px;overflow:hidden;background:#111}
+/* ---------- 프로젝트 쇼케이스 ----------
+   패널마다 그 페이지의 표지를 닮게 한다: 바탕색·글꼴·버튼 모양을 각 페이지에서 가져왔다.
+   색은 --pv-* 변수로만 바꾼다. */
+.showcase{position:relative;height:100vh;min-height:680px;overflow:hidden;background:#111}
 /* 꺼진 패널은 투명하기만 해서는 안 된다 — 위에 겹쳐 클릭과 탭 이동을 가로챈다 */
 .panel{
   position:absolute;inset:0;opacity:0;visibility:hidden;pointer-events:none;
   transition:opacity .8s ease,visibility 0s linear .8s;
   display:flex;flex-direction:column;justify-content:center;
-  padding:clamp(60px,9vh,110px) var(--pad) 130px;color:#fff;
+  padding:clamp(80px,11vh,120px) var(--pad) 130px;
+  background:var(--pv-bg);color:var(--pv-ink);
 }
-.panel.on{
-  opacity:1;visibility:visible;pointer-events:auto;
-  transition:opacity .8s ease,visibility 0s;
-}
-.panel[data-proj="cbd"]{background:linear-gradient(168deg,#1d4f86 0%,#123253 42%,#080d14 100%)}
-.panel[data-proj="mc"]{background:linear-gradient(168deg,#c2661f 0%,#8c3d16 45%,#180d06 100%)}
-.panel[data-proj="dongtan"]{background:linear-gradient(168deg,#3c7a5c 0%,#1f4a3a 44%,#08120e 100%)}
-.panel-in{max-width:var(--maxw);margin:0 auto;width:100%}
-.panel-top{display:flex;gap:40px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
-.panel h3{
-  margin:0;font-family:var(--serif);font-weight:400;
-  font-size:clamp(44px,7.6vw,116px);line-height:.94;letter-spacing:-.03em;
-}
-.panel .desc{max-width:42ch;font-size:clamp(15px,1.5vw,19px);line-height:1.6;opacity:.94;margin:0}
-.panel .meta{display:flex;gap:38px;flex-wrap:wrap;margin:34px 0 0}
-.panel .meta dt{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin:0 0 6px}
+.panel.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .8s ease,visibility 0s}
+.panel-in{max-width:var(--maxw);margin:0 auto;width:100%;display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(30px,5vw,80px);align-items:center}
+@media (min-width:980px){.panel-in{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)}}
+.panel h3{margin:0}
+.panel .desc{max-width:44ch;font-size:clamp(15px,1.3vw,17.5px);line-height:1.65;margin:22px 0 0;color:var(--pv-ink2)}
+.panel .meta{display:flex;gap:14px 34px;flex-wrap:wrap;margin:28px 0 0}
+.panel .meta dt{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--pv-muted);margin:0 0 5px}
 .panel .meta dd{margin:0;font-size:14px}
-.panel-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:34px}
+.panel-links{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;margin-top:32px}
+.pv-eyebrow{margin:0 0 16px;font-size:12px;font-weight:600;letter-spacing:.1em;color:var(--pv-muted)}
+.pv-cta{display:inline-flex;align-items:center;gap:12px;text-decoration:none;cursor:pointer;
+  background:var(--pv-ink);color:var(--pv-bg-solid);transition:transform .2s ease,box-shadow .2s ease,background .2s,color .2s}
+.pv-cta .arr{display:grid;place-items:center}
+.pv-cta:hover{transform:translateY(-2px)}
+.pv-link{font-size:14px;text-decoration:none;color:var(--pv-ink);border-bottom:1px solid var(--pv-line);padding:2px 0;transition:border-color .2s}
+.pv-link:hover{border-color:var(--pv-ink)}
+.pv-art{display:flex;justify-content:center;align-items:center;min-width:0}
+
+/* 01 · CBD Finder — 연회색 표지, 900 굵기 대문자, 먹색 알약 버튼, 파랑·주황 점 */
+.panel--cbd{--pv-bg:#e8e8e6;--pv-bg-solid:#e8e8e6;--pv-ink:#111110;--pv-ink2:#5b5b58;--pv-muted:#7c7c78;--pv-line:rgba(17,17,16,.25)}
+.panel--cbd h3{font-family:var(--sans);font-weight:900;text-transform:uppercase;letter-spacing:-.058em;line-height:.88;font-size:clamp(64px,10.5vw,168px)}
+.panel--cbd .pv-eyebrow{text-transform:uppercase}
+.panel--cbd .meta dt::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#2a78d6;margin-right:7px;vertical-align:1px}
+.panel--cbd .meta div:nth-child(even) dt::before{background:#eb6834}
+.panel--cbd .pv-cta{height:52px;padding-inline:26px 20px;border-radius:99px;font-weight:700;font-size:15.5px}
+.panel--cbd .pv-cta .arr{width:28px;height:28px;border-radius:50%;background:#e8e8e6;color:#111110;transition:transform .2s}
+.panel--cbd .pv-cta:hover{box-shadow:0 14px 34px rgba(0,0,0,.22)}
+.panel--cbd .pv-cta:hover .arr{transform:translateX(4px)}
+.panel--cbd .pv-art img{width:min(100%,400px);height:auto;animation:pv-float 7s ease-in-out infinite}
+@keyframes pv-float{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(-14px) rotate(2.5deg)}}
+
+/* 02 · 동탄 조례 지표판 — 연녹회색 바탕, IBM Plex, 주황 테두리 카드, 용도지역 색 */
+.panel--dongtan{--pv-bg:#eef1ee;--pv-bg-solid:#ffffff;--pv-ink:#16201c;--pv-ink2:#4e5a54;--pv-muted:#7d8882;--pv-line:#c9d1cb;
+  font-family:"IBM Plex Sans KR",var(--sans)}
+.panel--dongtan h3{font-family:"IBM Plex Sans KR",var(--sans);font-weight:700;letter-spacing:-.035em;line-height:1.02;font-size:clamp(46px,6.6vw,104px)}
+.panel--dongtan h3 span{color:#7d8882;font-weight:400}
+.panel--dongtan .pv-eyebrow{font-family:var(--mono);font-weight:500;letter-spacing:.06em}
+.panel--dongtan .pv-cta{height:46px;padding-inline:20px;border-radius:8px;font-weight:700;font-size:15px}
+.panel--dongtan .pv-cta:hover{background:#2a78d6}
+.panel--dongtan .pv-art{flex-direction:column;align-items:stretch;gap:16px;max-width:460px;width:100%;justify-self:center}
+.dt-card{background:#fff;border:1.5px solid #eb6834;border-radius:12px;padding:22px 24px;box-shadow:0 22px 50px -30px rgba(22,32,28,.45)}
+.dt-card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:#4e5a54}
+.dt-pill{font-family:var(--mono);font-size:11px;color:#2a78d6;border:1px solid #2a78d6;border-radius:99px;padding:2px 10px 2px 8px;white-space:nowrap}
+.dt-pill::before{content:"●";margin-right:5px;font-size:8px;vertical-align:1px}
+.dt-num{margin:14px 0 16px;font-family:var(--mono);font-weight:500;font-size:clamp(52px,5vw,72px);line-height:1;letter-spacing:-.03em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.dt-num small{font-family:"IBM Plex Sans KR",var(--sans);font-size:16px;font-weight:400;letter-spacing:0}
+.dt-num em{font-style:normal;font-family:"IBM Plex Sans KR",var(--sans);font-size:13px;letter-spacing:0;color:#b8481c;background:#fbe4d9;padding:3px 8px;border-radius:4px}
+.dt-kv{margin:0;border-top:1px solid #e7ebe8;padding-top:12px;display:grid;gap:6px}
+.dt-kv div{display:grid;grid-template-columns:52px 1fr;gap:10px;font-size:12.5px}
+.dt-kv dt{color:#7d8882}
+.dt-kv dd{margin:0;font-family:var(--mono);font-size:12px;color:#16201c}
+.dt-zones{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:#4e5a54}
+.dt-zones li::before{content:"";display:inline-block;width:11px;height:11px;border-radius:3px;background:var(--c);margin-right:7px;vertical-align:-1px}
+
+/* 03 · 프로필 — 먹갈색 첫 화면, Bodoni 세리프, Caveat 손글씨, 세로 괘선이 있는 크림 지면의 초상 */
+.panel--profile{--pv-bg:radial-gradient(120% 90% at 30% 20%,#5a5046 0%,#2e2923 48%,#15130f 100%);--pv-bg-solid:#17171a;
+  --pv-ink:#f2f0ea;--pv-ink2:rgba(242,240,234,.74);--pv-muted:rgba(242,240,234,.5);--pv-line:rgba(242,240,234,.35)}
+.panel--profile h3{font-family:'Bodoni Moda','Noto Serif KR',Georgia,serif;font-weight:400;letter-spacing:-.01em;line-height:1.04;font-size:clamp(31px,4.9vw,84px);white-space:nowrap}
+.pv-script{margin:0 0 10px;font-family:'Caveat',cursive;font-size:clamp(22px,2vw,30px);color:var(--pv-ink2)}
+.panel--profile .pv-cta{height:46px;padding-inline:22px;border:1px solid #f2f0ea;background:#f2f0ea;color:#17171a;
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+.panel--profile .pv-cta:hover{background:transparent;color:#f2f0ea}
+.pf-sheet{margin:0;color:#17171a;padding:18px 18px 16px;width:min(100%,360px);transform:rotate(2deg);
+  box-shadow:0 40px 80px -40px rgba(0,0,0,.8);
+  background:repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),rgba(23,23,26,.09) calc(25% - 1px) 25%) #f2f0ea}
+.pf-sheet img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.pf-sheet figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:12px}
+.pf-sheet b{font-family:'Bodoni Moda',Georgia,serif;font-weight:400;font-size:18px;letter-spacing:.12em}
+.pf-sheet span{font-family:'Caveat',cursive;font-size:18px;color:#3c3c3e}
+
 .plink{
   display:inline-flex;align-items:center;gap:10px;text-decoration:none;
   border:1px solid rgba(255,255,255,.55);padding:11px 18px;
@@ -226,14 +281,17 @@ section.slab{padding:clamp(80px,11vw,150px) 0;position:relative;background:var(-
 .tabs{
   position:absolute;left:50%;bottom:38px;transform:translateX(-50%);
   display:flex;background:#fff;padding:5px;gap:4px;z-index:3;
-  box-shadow:0 14px 40px rgba(0,0,0,.28);
+  box-shadow:0 14px 40px rgba(0,0,0,.2);
 }
 .tabs button{
   border:0;background:transparent;cursor:pointer;color:#111;
   padding:12px 22px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
   text-transform:uppercase;transition:.25s;white-space:nowrap;
 }
-.tabs button[aria-selected="true"]{background:var(--accent);color:#fff}
+/* 선택된 탭은 그 페이지의 강조색 */
+.tabs button[aria-selected="true"]{background:var(--tab-on,#111110);color:#fff}
+.showcase[data-active="dongtan"]{--tab-on:#eb6834}
+.showcase[data-active="profile"]{--tab-on:#5a5046}
 
 /* ---------- 프로젝트 상세 ---------- */
 .proj{border-top:1px solid var(--line)}
@@ -418,6 +476,10 @@ footer.foot .foot-link:hover{color:var(--accent)}
   .showcase{height:auto;min-height:0}
   .panel{position:relative;opacity:1;visibility:visible;pointer-events:auto;padding-bottom:40px}
   .panel:not(.on){display:none}
+  .pv-art{order:2}
+  .panel--cbd .pv-art img{width:min(60%,240px)}
+  .pf-sheet{width:min(70%,260px)}
+  .panel{padding-top:96px}
   .tabs{position:sticky;bottom:18px;left:auto;transform:none;margin:0 auto;width:fit-content;max-width:calc(100% - 32px)}
   .tabs button{padding:11px 12px;letter-spacing:.06em}
 }

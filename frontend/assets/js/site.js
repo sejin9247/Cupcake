@@ -78,6 +78,8 @@
 
       /* 헤더가 어두운 섹션 위에 있으면 흰 글씨로 */
       const onDark = darkAreas.some(el => {
+        /* 쇼케이스는 지금 보이는 패널의 바탕을 따른다 (CBD·동탄은 밝고 프로필은 어둡다) */
+        if (el.matches(".showcase")) { const on = $(".panel.on", el); if (on && on.dataset.tone !== "dark") return false; }
         const r = el.getBoundingClientRect();
         return r.top < 74 && r.bottom > 26;
       });
@@ -126,6 +128,9 @@
       const key = btn.dataset.target;
       tabs.forEach(b => b.setAttribute('aria-selected', String(b === btn)));
       $$('.panel').forEach(pn => pn.classList.toggle('on', pn.dataset.proj === key));
+      const sc = btn.closest('.showcase');
+      if (sc) sc.dataset.active = key;      // 선택된 탭 색
+      onScroll();                            // 헤더 글자색을 새 패널 바탕에 맞춘다
     });
   });
 

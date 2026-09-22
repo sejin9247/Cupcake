@@ -25,7 +25,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' fill='%2311141a'/><path d='M20 8l10 6v12l-10 6-10-6V14z' fill='none' stroke='%23c2542a' stroke-width='2.4'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Caveat:wght@500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;700&family=Instrument+Serif:ital@0;1&family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/css/site.css">
 </head>
@@ -103,54 +103,100 @@
 <main>
 
 <!-- ===================== 프로젝트 쇼케이스 ===================== -->
-<section class="showcase" id="work" aria-label="프로젝트">
-  <article class="panel on" data-proj="cbd">
+<section class="showcase" id="work" aria-label="프로젝트" data-active="cbd">
+  <!-- 각 패널은 그 페이지의 표지를 닮게 한다 (바탕색·글꼴·버튼 모양) — data-tone은 헤더 글자색 전환용 -->
+
+  <!-- 01 · CBD Finder 표지: 연회색 바탕, 굵은 대문자, 먹색 알약 버튼, 육각기둥 그림 -->
+  <article class="panel panel--cbd on" data-proj="cbd" data-tone="light">
     <div class="panel-in">
-      <div class="panel-top">
+      <div class="pv-copy">
+        <p class="pv-eyebrow">Project 01 · 아파트 밀도로 읽는 도시의 중심</p>
         <h3>CBD<br>Finder</h3>
-        <div>
-          <p class="desc">아파트 밀도로 도시의 중심을 찾습니다. 지역을 지정하면 아파트가 지역 평균보다 두드러지게 모인 권역을 CBD로 선정하고, 지도와 차트로 보여 주는 공간분석 대시보드.</p>
-          <dl class="meta">
-            <div><dt>Year</dt><dd>2026</dd></div>
-            <div><dt>Role</dt><dd>기획 · 설계 · 개발 단독</dd></div>
-            <div><dt>Stack</dt><dd>JavaScript · Leaflet · Turf.js</dd></div>
-            <div><dt>Data</dt><dd>OSM · Overpass · SGIS</dd></div>
-          </dl>
-          <div class="panel-links">
-            <a class="plink solid" href="cbd-dashboard/index.html">데모 열기 →</a>
-            <a class="plink" href="#cbd">자세히 보기</a>
-            <a class="plink" href="https://github.com/sejin9247/Cupcake/tree/main/frontend/cbd-dashboard" target="_blank" rel="noopener">GitHub</a>
-          </div>
+        <p class="desc">아파트 밀도로 도시의 중심을 찾습니다. 지역을 지정하면 아파트가 지역 평균보다 두드러지게 모인 권역을 CBD로 선정하고, 지도와 차트로 보여 주는 공간분석 대시보드.</p>
+        <dl class="meta">
+          <div><dt>Year</dt><dd>2026</dd></div>
+          <div><dt>Role</dt><dd>기획 · 설계 · 개발 단독</dd></div>
+          <div><dt>Stack</dt><dd>JavaScript · Leaflet · Turf.js</dd></div>
+          <div><dt>Data</dt><dd>OSM · Overpass · SGIS</dd></div>
+        </dl>
+        <div class="panel-links">
+          <a class="pv-cta" href="cbd-dashboard/index.html"><span>데모 열기</span><span class="arr"><svg viewBox="0 0 20 20" width="14" height="14" fill="none" aria-hidden="true"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
+          <a class="pv-link" href="#cbd">자세히 보기</a>
+          <a class="pv-link" href="https://github.com/sejin9247/Cupcake/tree/main/frontend/cbd-dashboard" target="_blank" rel="noopener">GitHub ↗</a>
         </div>
       </div>
+      <div class="pv-art"><img src="assets/img/cbd-art.png" alt="" width="440" height="503" loading="lazy"></div>
     </div>
   </article>
 
-  <article class="panel" data-proj="dongtan">
+  <!-- 02 · 동탄 조례 지표판: 연녹회색 바탕, IBM Plex, 주황 테두리 용적률 카드, 용도지역 색 -->
+  <article class="panel panel--dongtan" data-proj="dongtan" data-tone="light">
     <div class="panel-in">
-      <div class="panel-top">
-        <h3>Dongtan<br>Ordinance</h3>
-        <div>
-          <p class="desc">조례가 땅에 허락하는 밀도를 한 화면에. 「화성시 도시계획 조례」의 용도지역 21종 건폐율·용적률을 조문 출처와 함께 표와 지도로 보여 주는 화성시 동탄구 조례 지표판.</p>
-          <dl class="meta">
-            <div><dt>Year</dt><dd>2026</dd></div>
-            <div><dt>Team</dt><dd>LUOGO · 캡스톤디자인</dd></div>
-            <div><dt>Stack</dt><dd>HTML · SVG · 법령 API</dd></div>
-            <div><dt>Data</dt><dd>화성시 조례 · 브이월드</dd></div>
-          </dl>
-          <div class="panel-links">
-            <a class="plink solid" href="https://cupcakegroundused.vercel.app" target="_blank" rel="noopener">대시보드 열기 ↗</a>
-            <a class="plink" href="#dongtan">자세히 보기</a>
-            <a class="plink" href="assets/projects/dongtan/dongtan-ordinance-board-report.pdf" target="_blank" rel="noopener">과제 보고서 PDF</a>
-          </div>
+      <div class="pv-copy">
+        <p class="pv-eyebrow">Project 02 · 스마트도시계획 · 팀 LUOGO</p>
+        <h3>화성시 동탄구<br><span>조례 지표</span></h3>
+        <p class="desc">조례가 땅에 허락하는 밀도를 한 화면에. 「화성시 도시계획 조례」의 용도지역 21종 건폐율·용적률을 조문 출처와 함께 표와 지도로 보여 주는 조례 지표판.</p>
+        <dl class="meta">
+          <div><dt>Year</dt><dd>2026</dd></div>
+          <div><dt>Team</dt><dd>LUOGO · 캡스톤디자인</dd></div>
+          <div><dt>Stack</dt><dd>HTML · SVG · 법령 API</dd></div>
+          <div><dt>Data</dt><dd>화성시 조례 · 브이월드</dd></div>
+        </dl>
+        <div class="panel-links">
+          <a class="pv-cta" href="https://cupcakegroundused.vercel.app" target="_blank" rel="noopener"><span>대시보드 열기</span><span class="arr">↗</span></a>
+          <a class="pv-link" href="#dongtan">자세히 보기</a>
+          <a class="pv-link" href="assets/projects/dongtan/dongtan-ordinance-board-report.pdf" target="_blank" rel="noopener">과제 보고서 PDF</a>
         </div>
+      </div>
+      <div class="pv-art" aria-hidden="true">
+        <div class="dt-card">
+          <div class="dt-card-h"><span>용적률 · 대상지 용도지역</span><span class="dt-pill">조회 완료</span></div>
+          <p class="dt-num">400<small>퍼센트 이하</small><em>준주거지역</em></p>
+          <dl class="dt-kv">
+            <div><dt>출처</dt><dd>「화성시 도시계획 조례」 제57조제1항제6호</dd></div>
+            <div><dt>시행</dt><dd>2026-03-10</dd></div>
+            <div><dt>조회일</dt><dd>2026-09-21 · korean-law-mcp</dd></div>
+          </dl>
+        </div>
+        <ul class="dt-zones">
+          <li style="--c:#f0cf63">주거</li><li style="--c:#ec8a86">상업</li><li style="--c:#b39ad6">공업</li><li style="--c:#8cc783">녹지</li><li style="--c:#cdbb86">관리·농림</li>
+        </ul>
       </div>
     </div>
   </article>
 
-  <div class="tabs" role="tablist" aria-label="프로젝트 선택">
+  <!-- 03 · 프로필: 먹갈색 첫 화면, Bodoni 세리프와 손글씨, 크림색 지면의 초상 -->
+  <article class="panel panel--profile" data-proj="profile" data-tone="dark">
+    <div class="panel-in">
+      <div class="pv-copy">
+        <p class="pv-script">Urban X Data X Space</p>
+        <h3>A city is read<br>one block at a time.</h3>
+        <p class="desc">이력을 한 권의 편집물처럼 엮은 프로필 페이지. 학력·복무·자격·현장 경험을 크림색 지면과 세로 괘선 위에 정리했습니다.</p>
+        <dl class="meta">
+          <div><dt>Name</dt><dd>전세진 · Jeon Se Jin</dd></div>
+          <div><dt>Study</dt><dd>그린스마트시티학과</dd></div>
+          <div><dt>Based</dt><dd>Incheon</dd></div>
+          <div><dt>Type</dt><dd>편집 디자인 페이지</dd></div>
+        </dl>
+        <div class="panel-links">
+          <a class="pv-cta" href="profile/"><span>프로필 열기</span><span class="arr"><svg viewBox="0 0 20 20" width="14" height="14" fill="none" aria-hidden="true"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
+          <a class="pv-link" href="#about">이력 요약</a>
+          <a class="pv-link" href="assets/resume-jeon-se-jin.pdf" download>이력서 PDF</a>
+        </div>
+      </div>
+      <div class="pv-art">
+        <figure class="pf-sheet">
+          <img src="profile/img/portrait.png" alt="" width="476" height="476" loading="lazy">
+          <figcaption><b>JEON SE JIN</b><span>A person is a composition.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </article>
+
+  <div class="tabs" role="tablist" aria-label="보기 선택">
     <button role="tab" aria-selected="true" data-target="cbd">01 · CBD Finder</button>
-    <button role="tab" aria-selected="false" data-target="dongtan">02 · Dongtan Ordinance</button>
+    <button role="tab" aria-selected="false" data-target="dongtan">02 · Dongtan</button>
+    <button role="tab" aria-selected="false" data-target="profile">Profile</button>
   </div>
 </section>
 
