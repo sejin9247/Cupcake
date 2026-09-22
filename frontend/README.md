@@ -42,9 +42,9 @@ powershell -ExecutionPolicy Bypass -File cbd-dashboard/serve.ps1
 
 ## ☁️ 배포 (Vercel)
 
-저장소: <https://github.com/sejin9247/Cupcake> · 이 사이트는 `portfolio/` 하위에 있습니다
+저장소: <https://github.com/sejin9247/Cupcake> · 이 사이트는 `frontend/` 하위에 있습니다
 
-저장소 루트의 `vercel.json`이 배포 디렉터리를 `portfolio`로 지정하므로,
+저장소 루트의 `vercel.json`이 배포 디렉터리를 `frontend`로 지정하므로,
 Vercel에서 Import 후 Deploy만 누르면 됩니다.
 
 

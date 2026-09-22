@@ -249,6 +249,15 @@ section.slab{padding:clamp(80px,11vw,150px) 0;position:relative;background:var(-
 .spec dt{flex:0 0 92px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-top:3px;margin:0}
 .spec dd{margin:0;color:var(--ink-soft)}
 
+/* 관리자 화면에서 공개한 프로젝트 (assets/js/projects.js) */
+.rail a[hidden]{display:none}
+.pcard + .pcard{margin-top:clamp(56px,7vw,96px);padding-top:clamp(56px,7vw,96px);border-top:1px solid var(--line)}
+.pcard-head{margin-bottom:clamp(20px,3vw,34px)}
+.pcard-head .no{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--accent);margin-bottom:12px}
+.pcard .spec{margin-top:0}
+.pcard .block:last-child{margin-bottom:0}
+.pcard .pp{white-space:pre-line}
+
 /* 개요(aside) 아래로 내려온 본문은 폭을 전부 쓰는 2단으로 — 한쪽으로 몰리지 않게 */
 .proj-cols{
   display:grid;grid-template-columns:minmax(0,1fr);

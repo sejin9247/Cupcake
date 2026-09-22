@@ -3,12 +3,8 @@
 /* ============================================================
    constants & helpers
    ============================================================ */
-const SGIS_BASE = 'https://sgisapi.mods.go.kr/OpenAPI3';
-/* 2026-09 측정: overpass-api.de는 슬롯이 비어도 요청의 절반가량을 7~12초 뒤 504로 거절하고,
-   kumi.systems·private.coffee는 응답이 없었다. maps.mail.ru는 같은 데이터 시각에 3~4초로 안정적이라 기본으로 쓴다. */
-const OVERPASS_ENDPOINTS = ['https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass-api.de/api/interpreter'];
+const OVERPASS_ENDPOINTS = APP_CONFIG.external.overpass;   // 외부 API 주소는 config.js, 호출은 api/
 const BBOX_FILL = 0.75;   // 건물 외곽 사각형 면적 중 실제 바닥면적 비율(추정)
-const NOMINATIM = 'https://nominatim.openstreetmap.org/';
 const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const MAX_AREA_KM2 = 2500;
@@ -101,10 +97,10 @@ function reprojectGeom(g) {
   return { type: g.type, coordinates: f(g.coordinates) };
 }
 
-/* Nominatim 이용 정책(초당 1회)을 지키려고 부가 요청은 줄 세워 보낸다 */
+/* Nominatim 이용 정책(초당 1회)을 지키려고 부가 요청은 줄 세워 보낸다 (백엔드 모드에서는 서버가 간격을 지킨다) */
 let nominatimChain = Promise.resolve();
 function nominatimLater(fn) {
-  const p = nominatimChain.then(() => sleep(1100)).then(fn);
+  const p = nominatimChain.then(() => (DataAPI.mode === 'direct' ? sleep(1100) : null)).then(fn);
   nominatimChain = p.catch(() => {});
   return p;
 }
@@ -119,7 +115,10 @@ if (!settings.overpassV2 || !OVERPASS_ENDPOINTS.includes(settings.overpass)) {
   settings.overpass = OVERPASS_ENDPOINTS[0];
   settings.overpassV2 = true;
 }
-const hasSgisKey = () => !!(settings.sgisKey && settings.sgisSecret);
+const hasOwnSgisKey = () => !!(settings.sgisKey && settings.sgisSecret);
+// 백엔드 .env에 키가 있으면 브라우저에 키를 넣지 않아도 된다
+const hasSgisKey = () => hasOwnSgisKey() || DataAPI.serverHasSgisKey;
+DataAPI.setCredentials(() => ({ key: settings.sgisKey, secret: settings.sgisSecret }));
 
 function updateBadge() {
   const b = $('#sgisBadge');
@@ -296,41 +295,32 @@ const state = {
 };
 
 /* ============================================================
-   data sources
+   data sources — 요청은 DataAPI(api/)가 보내고, 여기서는 질의를 만들고 응답을 가공한다
    ============================================================ */
 async function nominatimSearch(q, signal) {
-  const u = new URL(NOMINATIM + 'search');
-  u.search = new URLSearchParams({
+  const js = await DataAPI.nominatim('search', {
     q, format: 'jsonv2', countrycodes: 'kr', polygon_geojson: '1', polygon_threshold: '0.0002',
     addressdetails: '1', limit: '8', 'accept-language': 'ko',
-  });
-  const r = await fetch(u, { signal });
-  if (!r.ok) throw new Error(`Nominatim HTTP ${r.status}`);
-  const js = await r.json();
+  }, signal);
   return js
     .filter(x => x.geojson && /Polygon/.test(x.geojson.type))
     .sort((a, b) => (b.category === 'boundary') - (a.category === 'boundary'));
 }
 
 async function nominatimReverseArea(latlng, zoom, signal) {
-  const u = new URL(NOMINATIM + 'reverse');
-  u.search = new URLSearchParams({
+  const js = await DataAPI.nominatim('reverse', {
     lat: latlng.lat.toFixed(6), lon: latlng.lng.toFixed(6), zoom, format: 'jsonv2',
     polygon_geojson: '1', polygon_threshold: '0.0002', 'accept-language': 'ko',
-  });
-  const r = await fetch(u, { signal });
-  if (!r.ok) throw new Error(`Nominatim HTTP ${r.status}`);
-  const js = await r.json();
+  }, signal);
   return js?.geojson && /Polygon/.test(js.geojson.type) ? js : null;
 }
 
 async function nominatimReverseName(lat, lon, forLang) {
   const key = `${forLang}|${lat.toFixed(3)},${lon.toFixed(3)}`;
   if (state.names.has(key)) return state.names.get(key);
-  const u = new URL(NOMINATIM + 'reverse');
-  u.search = new URLSearchParams({ lat, lon, format: 'jsonv2', zoom: '15', 'accept-language': forLang });
   try {
-    const r = await fetch(u); const js = await r.json(); const a = js.address || {};
+    const js = await DataAPI.nominatim('reverse', { lat, lon, format: 'jsonv2', zoom: '15', 'accept-language': forLang });
+    const a = js.address || {};
     const name = a.quarter || a.suburb || a.neighbourhood || a.village || a.town || a.city_district || a.borough || js.name || null;
     state.names.set(key, name);
     return name;
@@ -349,27 +339,8 @@ async function fetchApartments(region, signal, onRetry) {
   return overpassQuery(q, signal, onRetry);
 }
 
-/* overpass-api.de는 IP당 슬롯 2개이고, 쿼리가 끝난 뒤에도 슬롯이 1분가량 묶여
-   연달아 보낸 요청은 504로 거절된다. /api/status를 읽어 슬롯이 모두 풀릴 때까지 기다린다. */
-async function overpassSlotWait(ep, signal, onRetry) {
-  if (!/overpass-api\.de/.test(ep)) { await sleep(5000); return; }
-  const statusUrl = ep.replace(/interpreter$/, 'status');
-  for (let k = 0; k < 6; k++) {
-    let txt;
-    try { txt = await (await fetch(statusUrl, { signal })).text(); }
-    catch (e) { if (signal.aborted) throw e; await sleep(5000); return; }
-    const limit = +(txt.match(/Rate limit: (\d+)/)?.[1] ?? 0);
-    const free = +(txt.match(/(\d+) slots? available now/)?.[1] ?? 0);
-    if (limit && free >= limit) return;
-    const waits = [...txt.matchAll(/in (\d+) seconds/g)].map(m => +m[1]);
-    const w = clamp(waits.length ? Math.max(...waits) + 1 : 10, 2, 60);
-    onRetry?.(i18nErr('op.slotWait', { s: w }));
-    await sleep(w * 1000);
-    if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
-  }
-}
-
-/* 같은 지역을 다시 분석할 때(후보 재선택, 설정 변경 등) 공용 서버에 다시 요청하지 않도록 최근 결과를 보관 */
+/* 같은 지역을 다시 분석할 때(후보 재선택, 설정 변경 등) 서버에 다시 요청하지 않도록 최근 결과를 보관.
+   서버 순환·재시도는 DataAPI 쪽(api/direct.js 또는 백엔드)이 맡는다. */
 const overpassCache = new Map();
 const OVERPASS_CACHE_MAX = 6;
 
@@ -379,46 +350,10 @@ async function overpassQuery(q, signal, onRetry) {
     overpassCache.delete(q); overpassCache.set(q, hit);
     return hit;
   }
-  const servers = [settings.overpass, ...OVERPASS_ENDPOINTS.filter(x => x !== settings.overpass)];
-  // 한 바퀴 모두 실패하면 overpass-api.de 슬롯이 풀리길 기다렸다가 한 바퀴 더 돈다
-  const endpoints = [...servers, ...servers];
-  const slotServer = servers.find(s => /overpass-api\.de/.test(s)) ?? servers[0];
-  let lastErr;
-  for (const [i, ep] of endpoints.entries()) {
-    if (i === servers.length) await overpassSlotWait(slotServer, signal, onRetry);
-    const host = new URL(ep).host;
-    const timeout = new AbortController();
-    const timer = setTimeout(() => timeout.abort(), 65000);   // 정상 응답은 수 초 — 멈춘 서버에 오래 묶이지 않게
-    const onAbort = () => timeout.abort();
-    signal.addEventListener('abort', onAbort, { once: true });
-    try {
-      const r = await fetch(ep, {
-        method: 'POST', signal: timeout.signal,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-        body: 'data=' + encodeURIComponent(q),
-      });
-      if (!r.ok) {
-        throw i18nErr('op.http', {
-          host, status: r.status,
-          why: r.status === 429 ? tk('op.why429') : r.status === 504 ? tk('op.why504') : '',
-        });
-      }
-      const js = await r.json();
-      if (js.remark && /error|timed out/i.test(js.remark)) throw new Error(`${host}: ${js.remark}`);
-      const els = js.elements || [];
-      overpassCache.set(q, els);
-      if (overpassCache.size > OVERPASS_CACHE_MAX) overpassCache.delete(overpassCache.keys().next().value);
-      return els;
-    } catch (err) {
-      if (signal.aborted) throw err;
-      lastErr = err.name === 'AbortError' ? i18nErr('op.timeout', { host }) : err;
-      onRetry?.(lastErr, host);
-    } finally {
-      clearTimeout(timer);
-      signal.removeEventListener('abort', onAbort);
-    }
-  }
-  throw lastErr;
+  const els = await DataAPI.overpass(q, { signal, onRetry, preferred: settings.overpass });
+  overpassCache.set(q, els);
+  if (overpassCache.size > OVERPASS_CACHE_MAX) overpassCache.delete(overpassCache.keys().next().value);
+  return els;
 }
 
 function parseApartments(elements, region) {
@@ -487,34 +422,8 @@ function summarizeBuildings(elements, center, radiusKm) {
   return { center, radiusKm, counts, pts, total: pts.length };
 }
 
-/* ----- SGIS ----- */
-let sgisToken = null;
-async function sgisRaw(path, params, signal) {
-  const u = new URL(SGIS_BASE + path);
-  u.search = new URLSearchParams(params);
-  const r = await fetch(u, { signal });
-  if (!r.ok) throw new Error(`SGIS ${path} HTTP ${r.status}`);
-  const js = await r.json();
-  const cd = Number(js.errCd ?? 0);
-  if (cd !== 0) { const e = new Error(`${js.errMsg || t('sgis.error')} (${js.errCd})`); e.code = cd; throw e; }
-  return js;
-}
-async function sgisAuth(signal, key = settings.sgisKey, secret = settings.sgisSecret) {
-  if (sgisToken && sgisToken.key === key && Date.now() - sgisToken.t < 3.5 * 3600e3) return sgisToken.v;
-  const js = await sgisRaw('/auth/authentication.json', { consumer_key: key, consumer_secret: secret }, signal);
-  sgisToken = { v: js.result.accessToken, t: Date.now(), key };
-  return sgisToken.v;
-}
-async function sgis(path, params, signal) {
-  const tok = await sgisAuth(signal);
-  try {
-    return await sgisRaw(path, { accessToken: tok, ...params }, signal);
-  } catch (e) {
-    if (e.code !== -401) throw e;
-    sgisToken = null;
-    return sgisRaw(path, { accessToken: await sgisAuth(signal), ...params }, signal);
-  }
-}
+/* ----- SGIS ----- (토큰 발급·갱신은 DataAPI가 맡는다) */
+const sgis = (path, params, signal) => DataAPI.sgis(path, params, signal);
 function sidoKey(name) {
   const n = norm(name).replace(/(특별자치도|특별자치시|특별시|광역시|도)$/, '');
   const alias = { 전라북: '전북', 전라남: '전남', 경상북: '경북', 경상남: '경남', 충청북: '충북', 충청남: '충남' };
@@ -524,14 +433,14 @@ function sidoKey(name) {
 async function loadSgis(region, signal, onProgress) {
   const parts = region.parts;
   const year = settings.year;
-  const sidos = (await sgis('/addr/stage.json', {}, signal)).result || [];
+  const sidos = (await sgis('addr/stage.json', {}, signal)).result || [];
   let sido = null;
   for (const p of [...parts].reverse()) {
     sido = sidos.find(s => sidoKey(s.addr_name) === sidoKey(p));
     if (sido) break;
   }
   if (!sido) throw i18nErr('sgis.noSido');
-  const sggs = (await sgis('/addr/stage.json', { cd: sido.cd }, signal)).result || [];
+  const sggs = (await sgis('addr/stage.json', { cd: sido.cd }, signal)).result || [];
   const own = norm(parts[0]);
   let codes, level;
   if (sidoKey(parts[0]) === sidoKey(sido.addr_name)) {
@@ -554,9 +463,9 @@ async function loadSgis(region, signal, onProgress) {
   await pool(codes, 3, async cd => {
     const soft = p => p.catch(e => { if (e.name === 'AbortError') throw e; warnings.push(e); return { result: [] }; });
     const [geo, apt, tot] = await Promise.all([
-      sgis('/boundary/hadmarea.geojson', { year, adm_cd: cd, low_search: 1 }, signal),
-      soft(sgis('/stats/house.json', { year, adm_cd: cd, low_search: 1, house_type: settings.aptType }, signal)),
-      soft(sgis('/stats/house.json', { year, adm_cd: cd, low_search: 1 }, signal)),
+      sgis('boundary/hadmarea.geojson', { year, adm_cd: cd, low_search: 1 }, signal),
+      soft(sgis('stats/house.json', { year, adm_cd: cd, low_search: 1, house_type: settings.aptType }, signal)),
+      soft(sgis('stats/house.json', { year, adm_cd: cd, low_search: 1 }, signal)),
     ]);
     for (const f of geo.features || []) {
       if (!f.geometry) continue;
@@ -611,12 +520,8 @@ async function ensureEnglishNames(regions) {
   need.forEach(r => { r.enPending = true; });
   try {
     const ids = need.map(r => `${r.osmType[0].toUpperCase()}${r.osmId}`).join(',');
-    const js = await nominatimLater(async () => {
-      const u = new URL(NOMINATIM + 'lookup');
-      u.search = new URLSearchParams({ osm_ids: ids, format: 'jsonv2', 'accept-language': 'en' });
-      const r = await fetch(u);
-      return r.ok ? r.json() : [];
-    });
+    const js = await nominatimLater(() =>
+      DataAPI.nominatim('lookup', { osm_ids: ids, format: 'jsonv2', 'accept-language': 'en' }));
     for (const x of js || []) {
       const r = need.find(v => String(v.osmId) === String(x.osm_id) && v.osmType === x.osm_type);
       if (!r) continue;
@@ -1974,14 +1879,14 @@ $('#clearKeys').addEventListener('click', () => { form.elements.sgisKey.value = 
 $('#testSgis').addEventListener('click', async () => {
   const msg = $('#sgisTestMsg');
   const key = form.elements.sgisKey.value.trim(), secret = form.elements.sgisSecret.value.trim();
-  if (!key || !secret) { msg.style.color = 'var(--crit)'; msg.textContent = t('dlg.needBoth'); return; }
+  // 둘 다 비어 있으면 백엔드 .env 키를 확인한다 (백엔드 모드에서 키가 있을 때만)
+  const useServerKey = !key && !secret && DataAPI.serverHasSgisKey;
+  if ((!key || !secret) && !useServerKey) { msg.style.color = 'var(--crit)'; msg.textContent = t('dlg.needBoth'); return; }
   msg.style.color = 'var(--ink2)'; msg.textContent = t('dlg.testing');
   try {
-    sgisToken = null;
-    await sgisAuth(undefined, key, secret);
+    await DataAPI.sgisTest(key, secret);
     msg.style.color = 'var(--good)'; msg.textContent = t('dlg.ok');
   } catch (e) {
-    sgisToken = null;
     msg.style.color = 'var(--crit)'; msg.textContent = t('dlg.fail', { msg: errText(e) });
   }
 });
@@ -1994,7 +1899,7 @@ dlg.addEventListener('close', () => {
     floors: clamp(+form.elements.floors.value || 15, 1, 80), overpass: form.elements.overpass.value, overpassV2: true,
   };
   if (JSON.stringify(settings) === prev) return;
-  sgisToken = null;
+  DataAPI.sgisReset();
   writeJSON(SETTINGS_KEY, settings);
   updateBadge();
   if (state.lastRegion) runRegion(state.lastRegion, { keepCandidates: true });
@@ -2008,3 +1913,5 @@ new ResizeObserver(() => map.invalidateSize()).observe($('.map-wrap'));
 $$('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
 applyLang();
 route();
+// 백엔드 확인이 끝나면(서버 SGIS 키 여부) 배지와 빈 패널 문구를 다시 그린다
+DataAPI.ready.then(() => { updateBadge(); renderEmptyPanels(); });

@@ -9,8 +9,12 @@
 |---|---|
 | `index.html` | 표지·분석 화면 마크업 |
 | `styles.css` | 전체 스타일 (표지, 대시보드, 팝오버, 다크 모드) |
+| `config.js` | 백엔드 주소(`apiBase`)와 외부 API 주소 |
 | `i18n.js` | 한국어·English 문구 사전, 번역 도우미, 행정동 로마자 변환 |
-| `app.js` | 표지 그래픽·화면 전환·지도·분석·차트 |
+| `api/index.js` | 데이터 계층 진입점 `DataAPI` — 백엔드가 켜져 있으면 백엔드, 아니면 직접 호출 |
+| `api/backend.js` | 백엔드(`backend/`) 호출 |
+| `api/direct.js` | 외부 API 직접 호출 (Overpass 재시도, SGIS 토큰 포함) |
+| `app.js` | 표지 그래픽·화면 전환·지도·분석·차트 (질의 작성과 응답 가공, 요청은 `DataAPI`로) |
 | `serve.ps1` | 로컬 정적 서버 (PowerShell) |
 
 ## 🚀 실행
@@ -74,6 +78,9 @@ CBD 중심에서 반경 1·2·3·5 km 안의 **모든 OSM 건물**을 받아 용
 
 ## 🔌 사용 API
 
+브라우저가 직접 부르거나(직접 모드), [백엔드](../../backend/README.md)를 거쳐 부릅니다(백엔드 모드).
+`config.js`의 `apiBase`가 있고 `/api/health`가 응답하면 백엔드 모드입니다. 로컬에서는 `backend`에서 `npm run dev` 후 <http://localhost:4000/cbd-dashboard/>로 열면 됩니다.
+
 | API | 용도 | 키 |
 |---|---|---|
 | OpenStreetMap 타일 (`tile.openstreetmap.org`) | 배경 지도 | 불필요 |
@@ -85,6 +92,7 @@ CBD 중심에서 반경 1·2·3·5 km 안의 **모든 OSM 건물**을 받아 용
 
 1. [SGIS 개발지원센터](https://sgis.mods.go.kr/developer/)에서 서비스 ID(consumer_key)와 보안 Key(consumer_secret)를 발급받습니다.
 2. 오른쪽 위 **⚙ SGIS 설정**에 입력하고 **연결 테스트**로 확인합니다. 키는 브라우저 localStorage에만 저장됩니다.
+   백엔드 모드에서는 `backend/.env`의 `SGIS_KEY` · `SGIS_SECRET`에 넣어 두면 브라우저에 입력하지 않아도 됩니다.
 3. 키를 설정하면 행정동별 지역대비 밀도 차트와 표, 행정동 밀도 지도 레이어가 추가됩니다.
 
 SGIS 호출 경로:

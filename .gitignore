@@ -9,3 +9,10 @@ Thumbs.db
 
 # Claude Code 로컬 설정
 .claude/
+
+# 백엔드
+node_modules/
+.env
+
+# 관리자 화면에서 저장한 프로젝트 (DB 연결 전 임시 저장소)
+backend/data/

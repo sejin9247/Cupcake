@@ -44,6 +44,7 @@
   <a href="#stage" class="on"><span>Intro</span><i></i></a>
   <a href="#work"><span>Work</span><i></i></a>
   <a href="#cbd"><span>CBD Finder</span><i></i></a>
+  <a href="#projects" hidden><span>Projects</span><i></i></a>
   <a href="#about"><span>About</span><i></i></a>
   <a href="#contact"><span>Contact</span><i></i></a>
 </nav>
@@ -116,7 +117,7 @@
           <div class="panel-links">
             <a class="plink solid" href="cbd-dashboard/index.html">데모 열기 →</a>
             <a class="plink" href="#cbd">자세히 보기</a>
-            <a class="plink" href="https://github.com/sejin9247/Cupcake/tree/main/portfolio/cbd-dashboard" target="_blank" rel="noopener">GitHub</a>
+            <a class="plink" href="https://github.com/sejin9247/Cupcake/tree/main/frontend/cbd-dashboard" target="_blank" rel="noopener">GitHub</a>
           </div>
         </div>
       </div>
@@ -259,6 +260,18 @@
     </figure>
   </div>
 </section>
+
+<!-- ===================== 관리자 화면에서 공개한 프로젝트 (assets/js/projects.js가 채움) ===================== -->
+<section class="slab proj" id="projects" aria-label="프로젝트 목록" hidden>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="no">Projects</span>
+      <h2>More<br>Projects</h2>
+      <p>그 밖에 참여한 프로젝트입니다.</p>
+    </div>
+    <div class="plist" id="projectList"></div>
+  </div>
+</section>
 <!-- ===================== 소개 ===================== -->
 <section class="slab" id="about">
   <div class="wrap">
@@ -364,7 +377,7 @@
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" aria-hidden="true"><path d="M10 3v10m0 0 4-4m-4 4-4-4M4 16h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         이력서 PDF
       </a>
-      <a class="plink" href="https://github.com/sejin9247/Cupcake/tree/main/portfolio" target="_blank" rel="noopener">
+      <a class="plink" href="https://github.com/sejin9247/Cupcake/tree/main/frontend" target="_blank" rel="noopener">
         <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.51-1.08-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0z"/></svg>
         github.com/sejin9247
       </a>
@@ -383,7 +396,7 @@
   <div class="wrap">
     <span class="mono">© <span id="yr">2026</span> JEON SE JIN</span>
     <span class="mono">
-      <a href="https://github.com/sejin9247/Cupcake/tree/main/portfolio" target="_blank" rel="noopener" class="foot-link">GitHub</a>
+      <a href="https://github.com/sejin9247/Cupcake/tree/main/frontend" target="_blank" rel="noopener" class="foot-link">GitHub</a>
       · Built with vanilla JS · Deployed on Vercel
     </span>
   </div>
@@ -391,5 +404,6 @@
 
 <script src="assets/js/voyage.js"></script>
 <script src="assets/js/site.js"></script>
+<script src="assets/js/projects.js"></script>
 </body>
 </html>

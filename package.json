@@ -1,0 +1,13 @@
+{
+  "name": "cupcake",
+  "private": true,
+  "description": "Vercel 배포용 — api/index.js(백엔드 함수)가 쓰는 의존성. 로컬 개발은 backend/ 폴더에서 합니다.",
+  "type": "module",
+  "engines": {
+    "node": "22.x || 24.x"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}

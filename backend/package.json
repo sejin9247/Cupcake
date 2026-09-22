@@ -1,0 +1,21 @@
+{
+  "name": "cupcake-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CBD 탐색기 API 서버 — 외부 API(Nominatim·Overpass·SGIS) 중계, 이후 DB 연결 지점",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "test": "node --test",
+    "set-password": "node scripts/set-admin-password.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}

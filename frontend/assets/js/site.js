@@ -87,7 +87,8 @@
       /* 우측 레일 */
       const mid = window.scrollY + window.innerHeight * 0.4;
       let active = null;
-      railTargets.forEach(t => { if (t.el && t.el.offsetTop <= mid) active = t; });
+      // 숨겨진 섹션(공개 프로젝트가 없을 때의 #projects)은 offsetTop이 0이라 건너뛴다
+      railTargets.forEach(t => { if (t.el && !t.el.hidden && t.el.offsetTop <= mid) active = t; });
       railTargets.forEach(t => t.link.classList.toggle('on', t === active));
     });
   }
