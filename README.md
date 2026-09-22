@@ -10,6 +10,8 @@
 |---|---|
 | [`frontend/`](frontend/) | **프론트엔드** — 포트폴리오 사이트 (정적 HTML/CSS/JS, Vercel 배포 대상). 자세한 내용은 [frontend/README.md](frontend/README.md) |
 | └ `frontend/cbd-dashboard/` | 프로젝트 01 — 아파트 밀도 CBD 탐색기 |
+| └ 프로젝트 02 | 화성시 동탄구 조례 지표판 — 별도 배포(<https://cupcakegroundused.vercel.app>), 과정물은 `frontend/assets/projects/dongtan/` |
+| └ `frontend/profile/` | 프로필 페이지 |
 | └ `frontend/admin/` | 관리자 화면 — 프로젝트 추가 · 수정 (백엔드 필요) |
 | [`backend/`](backend/) | **백엔드** — Node.js API 서버. 외부 API 중계, 이후 DB 연결 지점. 자세한 내용은 [backend/README.md](backend/README.md) |
 

@@ -202,6 +202,7 @@ section.slab{padding:clamp(80px,11vw,150px) 0;position:relative;background:var(-
 }
 .panel[data-proj="cbd"]{background:linear-gradient(168deg,#1d4f86 0%,#123253 42%,#080d14 100%)}
 .panel[data-proj="mc"]{background:linear-gradient(168deg,#c2661f 0%,#8c3d16 45%,#180d06 100%)}
+.panel[data-proj="dongtan"]{background:linear-gradient(168deg,#3c7a5c 0%,#1f4a3a 44%,#08120e 100%)}
 .panel-in{max-width:var(--maxw);margin:0 auto;width:100%}
 .panel-top{display:flex;gap:40px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
 .panel h3{
@@ -287,6 +288,13 @@ section.slab{padding:clamp(80px,11vw,150px) 0;position:relative;background:var(-
 }
 .steps li b{display:block;color:var(--ink)}
 .steps li span{color:var(--muted);font-size:14px}
+
+/* 과정물·결과물 링크 목록 */
+.files{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.files a{display:flex;flex-direction:column;gap:2px;padding:13px 2px;border-bottom:1px solid var(--line);text-decoration:none;transition:padding .25s,background .25s}
+.files a:hover{background:var(--paper-2);padding-left:12px}
+.files b{font-weight:600;font-size:15px;color:var(--ink)}
+.files span{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 
 .figure{margin:0 0 30px;border:1px solid var(--line);background:var(--paper-2)}
 .figure img{width:100%}
@@ -410,7 +418,13 @@ footer.foot .foot-link:hover{color:var(--accent)}
   .showcase{height:auto;min-height:0}
   .panel{position:relative;opacity:1;visibility:visible;pointer-events:auto;padding-bottom:40px}
   .panel:not(.on){display:none}
-  .tabs{position:sticky;bottom:18px}
+  .tabs{position:sticky;bottom:18px;left:auto;transform:none;margin:0 auto;width:fit-content;max-width:calc(100% - 32px)}
+  .tabs button{padding:11px 12px;letter-spacing:.06em}
+}
+@media (max-width:520px){
+  .logo{font-size:13px;letter-spacing:.2em;white-space:nowrap}
+  .head-nav{gap:11px}
+  .head-nav a{letter-spacing:.06em}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}

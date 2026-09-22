@@ -7,6 +7,7 @@
   const section = document.getElementById('projects');
   const list = document.getElementById('projectList');
   if (!section || !list) return;
+  const START = Number(section.dataset.start) || 2;   // 페이지에 직접 쓴 프로젝트 다음 번호부터
 
   // 배포(Vercel)와 로컬 백엔드(4000)는 같은 주소의 /api, 다른 로컬 정적 서버(8765 등)는 4000번 백엔드
   const API_BASE = (() => {
@@ -28,7 +29,7 @@
   function card(p, i) {
     const art = el('article', 'pcard');
     const head = el('div', 'pcard-head');
-    head.append(el('span', 'no', 'Project ' + String(i + 2).padStart(2, '0')), el('h3', null, p.title));
+    head.append(el('span', 'no', 'Project ' + String(i + START).padStart(2, '0')), el('h3', null, p.title));
 
     const grid = el('div', 'proj-grid');
     const aside = el('aside');
