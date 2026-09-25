@@ -116,24 +116,29 @@
   const SEA_DEEP = ['#2a2f37', '#20303f', '#12283a', '#03070c'];
 
   /* ============================================================
-     나룻배 모델 — 평평한 바닥, 양끝이 들린 뱃전, 네모난 이물·고물,
-     가로 널판(멍에), 대나무 뜸, 삿갓 쓴 사공, 고물의 노, 이물의 등불
+     범선(슬루프) 모델 — 긴 오버행의 날씬한 선체, 흰 갑판과 낮은 선실,
+     앞으로 기운 마스트에 걸린 메인세일과 집세일, 바우스프릿과 삭구
      ============================================================ */
-  const WOOD = {
-    hull: hex('#6a4a31'), keel: hex('#4a3322'), inner: hex('#a07a54'), floor: hex('#8e6a47'),
-    rim: hex('#3a281b'), seat: hex('#b08a60'), plank: hex('#3b2a1c'),
-    straw: hex('#b99a62'), strawIn: hex('#5c4a31'), rib: hex('#4d3d27'),
-    cloth: hex('#d8d0bf'), skin: hex('#a47a58'), hat: hex('#c4a46b'), lamp: hex('#f5c67c'),
+  const SHIP = {
+    hull: hex('#5d7183'), topside: hex('#8fa3b3'), boot: hex('#f2efe6'), bottom: hex('#3c4b58'),
+    deck: hex('#ddd6c6'), deckLine: hex('#b9b0a0'), coach: hex('#e8e2d4'), coachSide: hex('#cdc5b4'),
+    rim: hex('#3b4954'), well: hex('#c9c1b1'), spar: hex('#7a5533'), sparDark: hex('#4e3721'),
+    sail: hex('#f6f2e8'), sailBack: hex('#ded7c8'), sailSeam: hex('#d8d0c0'), rope: hex('#4a4740'),
   };
 
-  const Z0 = -3.0, LEN = 6.2;     // 고물(뒤) z, 배 길이
-  /* t: 0(고물) → 1(이물) 위치에서의 단면 */
+  const Z0 = -1.55, LEN = 6.5;      // 고물(뒤) z, 선체 길이 — 조타석이 z≈1.2에 오도록 잡았다
+  const MAST_Z = 3.05, MAST_H = 5.7, BOW_SPRIT = .95;
+  const WELL0 = .30, WELL1 = .52;  // 조타석(콕핏)이 차지하는 t 구간
+
+  /* t: 0(고물) → 1(이물) 위치에서의 단면.
+     나룻배와 달리 바닥이 V자로 떨어지고, 양끝이 길게 빠진다 */
   function station(t) {
     const z = Z0 + t * LEN;
-    const b = t < .42 ? .85 * (1 - .27 * ((t - .42) / .42) ** 2) : .85 * (1 - .62 * ((t - .42) / .58) ** 2);
-    const y0 = -.22 + .34 * Math.max(0, (t - .55) / .45) ** 2 + .12 * Math.max(0, (.25 - t) / .25) ** 2;   // 바닥 — 양끝이 들린다
-    const ys = .42 + .55 * Math.max(0, (t - .5) / .5) ** 2.2 + .18 * Math.max(0, (.3 - t) / .3) ** 2;     // 뱃전 — 이물이 높다
-    return { t, z, b, bc: b * .72, y0, ys };
+    const e = Math.sin(Math.PI * Math.min(1, Math.max(0, (t - .04) / .92))) ** .72;   // 끝으로 갈수록 0
+    const b = .04 + 1.02 * e * (1 - .28 * Math.max(0, (t - .62) / .38) ** 2);         // 반폭 — 최대폭이 약간 뒤쪽
+    const y0 = -.62 * e * (1 - .55 * Math.max(0, (t - .7) / .3) ** 2) + .02;          // 배밑 — 가운데가 깊다
+    const ys = .40 + .34 * Math.max(0, (t - .58) / .42) ** 2.1 + .10 * Math.max(0, (.22 - t) / .22) ** 2;  // 뱃전 — 이물이 솟는다
+    return { t, z, b, bc: b * .55, y0, ys };
   }
   const ring = s => [[-s.b, s.ys, s.z], [-s.bc, s.y0, s.z], [s.bc, s.y0, s.z], [s.b, s.ys, s.z]];
 
@@ -145,96 +150,124 @@
     const c = pts.reduce((s, q) => [s[0] + q[0] / pts.length, s[1] + q[1] / pts.length, s[2] + q[2] / pts.length], [0, 0, 0]);
     return dot(n, sub(c, from)) < 0 ? n.map(v => -v) : n;
   }
-  /* 앞뒤 두 면 (뜸·노 날처럼 얇은 판) */
+  /* 앞뒤 두 면 (돛처럼 얇은 천) */
   function twoSided(prims, pts, from, cOut, cIn, extra) {
     const n = outward(pts, from);
     prims.push(face(pts, cOut, n, extra), face(pts, cIn, n.map(v => -v), extra));
   }
 
+  /* 돛 — 세 꼭짓점을 잡고 격자로 나눈 뒤 가운데를 부풀린다(바람을 먹은 배꼴) */
+  function sail(prims, head, tack, clew, belly, seams) {
+    const M = 5, N = 4;
+    const at = (u, v) => {
+      /* u: 앞변(head→tack) 비율, v: 그 높이에서 뒤쪽(leech)으로 가는 비율 */
+      const a = lerp3(head, tack, u);
+      const b = lerp3(head, clew, u);
+      const q = lerp3(a, b, v);
+      const bulge = Math.sin(Math.PI * v) * Math.sin(Math.PI * Math.min(1, u * 1.15)) * belly;
+      return [q[0] + bulge, q[1], q[2] + bulge * .35];
+    };
+    const mid = [(head[0] + tack[0] + clew[0]) / 3, (head[1] + tack[1] + clew[1]) / 3, (head[2] + tack[2] + clew[2]) / 3];
+    for (let i = 0; i < M; i++) {
+      for (let j = 0; j < N; j++) {
+        const u0 = i / M, u1 = (i + 1) / M, v0 = j / N, v1 = (j + 1) / N;
+        const quad = [at(u0, v0), at(u1, v0), at(u1, v1), at(u0, v1)];
+        /* 꼭짓점 쪽은 삼각형으로 찌그러지므로 중복점을 걸러 낸다 */
+        const pts = quad.filter((q, k) => k === 0 || Math.hypot(...sub(q, quad[k - 1])) > 1e-4);
+        if (pts.length < 3) continue;
+        const extra = seams && j === N - 1 ? undefined : undefined;
+        twoSided(prims, pts, [mid[0] - belly * 3, mid[1], mid[2]], SHIP.sail, SHIP.sailBack, extra);
+      }
+    }
+    /* 돛의 세 변 — 천이 끝나는 자리를 또렷하게 */
+    prims.push(line(head, tack, SHIP.sailSeam, .05), line(tack, clew, SHIP.sailSeam, .05), line(clew, head, SHIP.sailSeam, .05));
+  }
+
   function buildBoat() {
-    const prims = [], N = 13;
+    const prims = [], N = 17;
     const st = Array.from({ length: N }, (_, i) => station(i / (N - 1)));
 
-    /* 선체 — 바깥면·안쪽면을 따로 두고 법선으로 보이는 쪽만 그린다 */
+    /* ---- 선체 ---- */
     for (let i = 0; i < N - 1; i++) {
       const A = ring(st[i]), B = ring(st[i + 1]);
+      const cz = (st[i].z + st[i + 1].z) / 2;
       for (let e = 0; e < 3; e++) {
         const q = [A[e], A[e + 1], B[e + 1], B[e]];
-        const cz = (st[i].z + st[i + 1].z) / 2;
-        const n = outward(q, [0, .3, cz]);
-        const sideLines = [], floorLines = [];
+        const n = outward(q, [0, .1, cz]);
+        const outCol = e === 1 ? SHIP.bottom : SHIP.hull;
+        /* 뱃전 바로 아래 흰 띠(부트톱) — 옆판 위쪽 1/5 */
+        const lines = [];
         if (e !== 1) {
-          // 옆판 이음선 (널빤지 두 줄)
           const lo = e === 0 ? 1 : 2, hi = e === 0 ? 0 : 3;
-          for (const f of [.34, .67]) sideLines.push([lerp3(A[lo], A[hi], f), lerp3(B[lo], B[hi], f)]);
-        } else {
-          for (const f of [.2, .4, .6, .8]) floorLines.push([lerp3(A[1], A[2], f), lerp3(B[1], B[2], f)]);
+          lines.push([lerp3(A[lo], A[hi], .82), lerp3(B[lo], B[hi], .82)]);
         }
-        prims.push(face(q, e === 1 ? WOOD.keel : WOOD.hull, n, { lines: sideLines, lc: WOOD.plank }));
-        prims.push(face(q, e === 1 ? WOOD.floor : WOOD.inner, n.map(v => -v), { lines: floorLines, lc: WOOD.plank, inside: true }));
+        prims.push(face(q, outCol, n, lines.length ? { lines, lc: SHIP.boot } : undefined));
+        prims.push(face(q, SHIP.well, n.map(v => -v), { inside: true }));
       }
-      // 뱃전 테두리
-      prims.push(line(A[0], B[0], WOOD.rim, .075), line(A[3], B[3], WOOD.rim, .075));
+      /* 갑판 — 뱃전 사이를 덮는다. 조타석 구간만 비워 둔다 */
+      const inWell = st[i].t >= WELL0 && st[i + 1].t <= WELL1;
+      if (!inWell) {
+        prims.push(face([A[0], B[0], B[3], A[3]], SHIP.deck, [0, 1, 0],
+          { lines: [[lerp3(A[0], A[3], .5), lerp3(B[0], B[3], .5)]], lc: SHIP.deckLine }));
+      }
+      prims.push(line(A[0], B[0], SHIP.rim, .05), line(A[3], B[3], SHIP.rim, .05));
     }
-    /* 이물·고물 판 (네모난 끝) */
+
+    /* 이물·고물 마감 */
     const S = ring(st[0]), E = ring(st[N - 1]);
-    prims.push(face(S, WOOD.hull, [0, 0, -1], { lines: [[lerp3(S[1], S[0], .5), lerp3(S[2], S[3], .5)]], lc: WOOD.plank }), face(S, WOOD.inner, [0, 0, 1]));
-    prims.push(face(E, WOOD.hull, [0, 0, 1], { lines: [[lerp3(E[1], E[0], .5), lerp3(E[2], E[3], .5)]], lc: WOOD.plank }), face(E, WOOD.inner, [0, 0, -1]));
-    prims.push(line(S[0], S[3], WOOD.rim, .08), line(E[0], E[3], WOOD.rim, .08));
+    prims.push(face(S, SHIP.hull, [0, 0, -1]), face(S, SHIP.well, [0, 0, 1], { inside: true }));
+    prims.push(line(S[0], S[3], SHIP.rim, .055));
 
-    /* 가로 널판 (앉는 자리) */
-    for (const t of [.2, .56, .74, .88]) {
-      const s = station(t), y = s.ys - .09, hw = s.b * .97, d = .12;
-      prims.push(face([[-hw, y, s.z - d], [hw, y, s.z - d], [hw, y, s.z + d], [-hw, y, s.z + d]], WOOD.seat, [0, 1, 0]));
-      prims.push(face([[-hw, y, s.z + d], [hw, y, s.z + d], [hw, y - .06, s.z + d], [-hw, y - .06, s.z + d]], WOOD.rim, [0, 0, 1]));
-      prims.push(face([[-hw, y, s.z - d], [-hw, y - .06, s.z - d], [hw, y - .06, s.z - d], [hw, y, s.z - d]], WOOD.rim, [0, 0, -1]));
+    /* ---- 조타석 ---- */
+    const w0 = station(WELL0), w1 = station(WELL1), wy = .06;
+    const wb = t => station(t).b * .60;
+    const c0 = [[-wb(WELL0), w0.ys, w0.z], [wb(WELL0), w0.ys, w0.z]];
+    const c1 = [[-wb(WELL1), w1.ys, w1.z], [wb(WELL1), w1.ys, w1.z]];
+    prims.push(face([[c0[0][0], wy, w0.z], [c0[1][0], wy, w0.z], [c1[1][0], wy, w1.z], [c1[0][0], wy, w1.z]], SHIP.well, [0, 1, 0]));
+    for (const sgn of [-1, 1]) {
+      const a = [sgn * wb(WELL0), w0.ys, w0.z], b = [sgn * wb(WELL1), w1.ys, w1.z];
+      prims.push(face([a, b, [b[0], wy, b[2]], [a[0], wy, a[2]]], SHIP.coachSide, [sgn, 0, 0]));
+      /* 갑판과 조타석 사이의 좁은 옆길 */
+      prims.push(face([[sgn * station(WELL0).b, w0.ys, w0.z], [sgn * station(WELL1).b, w1.ys, w1.z], b, a], SHIP.deck, [0, 1, 0]));
+    }
+    prims.push(face([c0[0], c0[1], [c0[1][0], wy, w0.z], [c0[0][0], wy, w0.z]], SHIP.coachSide, [0, 0, -1]));
+
+    /* ---- 선실 — 조타석 앞의 낮은 지붕 ---- */
+    const r0 = station(WELL1), r1 = station(.70), rh = .30;
+    const rb = t => station(t).b * .62;
+    const roof = [[-rb(WELL1), r0.ys + rh, r0.z], [rb(WELL1), r0.ys + rh, r0.z], [rb(.70), r1.ys + rh * .8, r1.z], [-rb(.70), r1.ys + rh * .8, r1.z]];
+    prims.push(face(roof, SHIP.coach, [0, 1, 0], { lines: [[lerp3(roof[0], roof[1], .5), lerp3(roof[3], roof[2], .5)]], lc: SHIP.deckLine }));
+    for (const sgn of [-1, 1]) {
+      const a = [sgn * rb(WELL1), r0.ys, r0.z], b = [sgn * rb(.70), r1.ys, r1.z];
+      prims.push(face([a, b, [b[0], b[1] + rh * .8, b[2]], [a[0], a[1] + rh, a[2]]], SHIP.coachSide, [sgn, 0, 0]));
+    }
+    prims.push(face([roof[0], roof[1], [rb(WELL1), r0.ys, r0.z], [-rb(WELL1), r0.ys, r0.z]], SHIP.coachSide, [0, 0, -1]));
+
+    /* ---- 마스트 · 붐 · 바우스프릿 ---- */
+    const ms = station((MAST_Z - Z0) / LEN);
+    const foot = [0, ms.ys, MAST_Z], headPt = [0, MAST_H, MAST_Z - .55];      // 살짝 뒤로 기운다
+    prims.push(line(foot, headPt, SHIP.spar, .085));
+    const boomY = ms.ys + 1.58, boomEnd = [0, boomY - .08, MAST_Z - 1.60];   // 앉은 눈높이(1.36)보다 위 — 시선이 붐 아래로 지나간다
+    prims.push(line([0, boomY, MAST_Z - .1], boomEnd, SHIP.spar, .06));
+
+    const bowS = station(1), sprit = [0, bowS.ys + .06, bowS.z + BOW_SPRIT];
+    prims.push(line([0, bowS.ys, bowS.z - .25], sprit, SHIP.spar, .05));
+
+    /* ---- 돛 ---- */
+    /* 메인세일 — 마스트와 붐 사이 */
+    sail(prims, lerp3(foot, headPt, .985), lerp3(foot, headPt, .075), boomEnd, .10);
+    /* 집세일 — 마스트 꼭대기에서 바우스프릿 끝으로 */
+    sail(prims, lerp3(foot, headPt, .93), sprit, [.30, boomY + .25, MAST_Z - .35], .08);
+
+    /* ---- 삭구 ---- */
+    prims.push(line(headPt, sprit, SHIP.rope, .022));                          // 앞 스테이
+    prims.push(line(headPt, [0, station(.02).ys, station(.02).z], SHIP.rope, .022));   // 뒤 스테이
+    for (const sgn of [-1, 1]) {
+      const sh = station(.42);
+      prims.push(line(lerp3(foot, headPt, .82), [sgn * sh.b * .92, sh.ys, sh.z], SHIP.rope, .018));
     }
 
-    /* 뜸 — 배 가운데 뒤쪽을 덮는 대나무·짚 지붕 */
-    const c0 = station(.2), c1 = station(.42), R = 10, rise = .78;
-    const arch = s => Array.from({ length: R + 1 }, (_, j) => {
-      const a = Math.PI * (1 - j / R);
-      return [Math.cos(a) * s.b * .96, s.ys + Math.sin(a) * rise, s.z];
-    });
-    const a0 = arch(c0), a1 = arch(c1);
-    for (let j = 0; j < R; j++) {
-      const q = [a0[j], a0[j + 1], a1[j + 1], a1[j]];
-      twoSided(prims, q, [0, (c0.ys + c1.ys) / 2, (c0.z + c1.z) / 2], WOOD.straw, WOOD.strawIn,
-        { lines: [[lerp3(a0[j], a1[j], .5), lerp3(a0[j + 1], a1[j + 1], .5)]], lc: WOOD.rib });
-    }
-    for (const a of [a0, a1]) for (let j = 0; j < R; j++) prims.push(line(a[j], a[j + 1], WOOD.rib, .045));
-
-    /* 사공 — 고물에 서서 노를 젓는다 */
-    const sm = station(.06), base = sm.y0 + .05, bx = .12, bz = sm.z + .05;
-    const hand = [.42, base + .82, bz - .3];
-    prims.push(line([bx, base, bz], [bx, base + 1.12, bz], WOOD.cloth, .3));
-    prims.push(line([bx, base + 1.02, bz], hand, WOOD.cloth, .1));
-    prims.push({ k: 'd', p: [[bx, base + 1.3, bz]], r: .12, c: WOOD.skin });
-    // 삿갓 — 넓은 원뿔
-    const hatY = base + 1.37, hatR = .38, apex = [bx, hatY + .22, bz], H8 = 12;
-    const brim = Array.from({ length: H8 }, (_, j) => {
-      const a = j / H8 * Math.PI * 2;
-      return [bx + Math.cos(a) * hatR, hatY, bz + Math.sin(a) * hatR];
-    });
-    for (let j = 0; j < H8; j++) {
-      const tri = [apex, brim[j], brim[(j + 1) % H8]];
-      prims.push(face(tri, WOOD.hat, outward(tri, [bx, hatY - .1, bz])));
-    }
-    prims.push(face(brim.slice().reverse(), WOOD.strawIn, [0, -1, 0]));
-
-    /* 노 — 손잡이 → 고물 노좆(받침) → 물속 날 */
-    const pivot = [.46, S[0][1] + .04, Z0 - .05], tip = [.85, -.5, Z0 - 2.7];
-    prims.push(line(hand, pivot, WOOD.rim, .06), line(pivot, tip, WOOD.rim, .06));
-    prims.push(line([.46, S[0][1] - .1, Z0 + .02], pivot, WOOD.rim, .07));
-    const b0 = lerp3(pivot, tip, .62), bl = [.11, 0, 0];
-    twoSided(prims, [sub(b0, bl), [b0[0] + bl[0], b0[1], b0[2]], [tip[0] + bl[0], tip[1], tip[2]], sub(tip, bl)], [0, 5, 0], WOOD.hull, WOOD.inner);
-
-    /* 이물 기둥과 등불 */
-    const e = station(1), post = [0, e.ys + .42, e.z - .18];
-    prims.push(line([0, e.ys - .05, e.z - .18], post, WOOD.rim, .045));
-    prims.push({ k: 'd', p: [[0, post[1] - .04, post[2]]], r: .055, c: WOOD.lamp, lamp: true });
-
-    /* 물 닿는 선 (흰 물거품) — 바닥이 물 위로 뜬 이물 쪽은 없음 */
+    /* ---- 물 닿는 선 ---- */
     const foam = [];
     for (const s of st) {
       if (s.y0 >= -.01) continue;
