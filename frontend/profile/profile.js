@@ -28,6 +28,25 @@
     img.addEventListener('error', drop, { once: true });
   });
 
+  /* ---------- 로딩 띠 ----------
+     strip-01.jpg부터 차례로 걸고, 없는 번호는 톤 견본으로 바꾼다.
+     사진을 추가하려면 img/ 안에 다음 번호로 넣기만 하면 된다. */
+  const strip = $('#strip');
+  if (strip) {
+    const count = Number(strip.dataset.count) || 15;
+    for (let i = 1; i <= count; i++) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = 'img/strip-' + String(i).padStart(2, '0') + '.jpg';
+      img.addEventListener('error', () => {
+        const sw = document.createElement('i');
+        sw.className = 't' + (i % 5 + 1);       // 빠진 칸은 색으로 채워 띠가 끊기지 않게
+        img.replaceWith(sw);
+      }, { once: true });
+      strip.appendChild(img);
+    }
+  }
+
   /* ---------- 인트로 ---------- */
   const intro = $('#intro'), bar = $('.bar'), heroCopy = $('.hero-copy');
   const timers = [];

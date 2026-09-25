@@ -25,12 +25,9 @@
     <span class="script">Urban ✗ Data ✗ Space</span>
   </div>
 
-  <!-- 사진이 준비되기 전까지는 톤 견본 띠로 둔다 -->
-  <div class="strip" aria-hidden="true">
-    <i class="t1"></i><i class="t2"></i><i class="t3"></i><i class="t4"></i><i class="t5"></i>
-    <i class="t2"></i><i class="t4"></i><i class="t1"></i><i class="t3"></i><i class="t5"></i>
-    <i class="t4"></i><i class="t1"></i><i class="t5"></i><i class="t2"></i><i class="t3"></i>
-  </div>
+  <!-- 로딩 띠 — img/strip-01.jpg … strip-15.jpg를 한 칸씩 쓴다.
+       없는 번호는 톤 견본으로 대체되므로 파일만 넣으면 채워진다. -->
+  <div class="strip" id="strip" aria-hidden="true" data-count="15"></div>
 
   <div class="grow"><img src="img/hero.jpg" alt="" data-optional></div>
 
