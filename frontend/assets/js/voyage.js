@@ -279,12 +279,9 @@
 
   const BOAT = buildBoat();
 
-  /* 이끄는 배 + 동행 배 셋 (배끼리의 위치는 고정, 모두 같은 방향으로 나아간다) */
+  /* 내가 타는 배 한 척 */
   const FLEET = [
     { x: 0, z: 0, s: 1, ph: 0, lead: true },
-    { x: 11, z: -5.5, s: .92, ph: 1.7 },
-    { x: -14, z: 9, s: .95, ph: 3.1 },
-    { x: -5, z: 46, s: .9, ph: 4.4 },
   ];
 
   /* ---------- 카메라 경로 — [p, 위치 xyz, 시선 xyz] ---------- */
@@ -575,7 +572,10 @@
   }
 
   function drawItems(list, alpha) {
-    list.sort((a, b) => b.z - a.z);
+    /* 깊이가 거의 같은 면들이 프레임마다 앞뒤로 뒤집히지 않도록,
+       차이가 미세하면 모델에 담긴 순서를 그대로 따른다 */
+    list.forEach((it, i) => { it.i = i; });
+    list.sort((a, b) => (Math.abs(a.z - b.z) < 1e-3 ? a.i - b.i : b.z - a.z));
     for (const it of list) {
       if (it.s) {
         ctx.globalAlpha = alpha;
@@ -649,7 +649,11 @@
     const c = makeCamera(p, lead.bob);
     /* 배에 타 있을 때는 카메라가 배와 함께 기울어 수평선이 흔들린다 */
     const tilt = lead.roll * c.ob;
+    /* 배에 올라타 있는 동안에는 배를 카메라에 대해 완전히 고정한다.
+       배만 흔들리면 면들의 깊이가 매 프레임 엇갈려 앞뒤 순서가 뒤집힌다(깜빡임).
+       흔들림은 수평선 기울기(tilt)와 카메라 상하(bob)로만 표현한다. */
     lead.roll *= 1 - c.ob;
+    lead.pitch *= 1 - c.ob;
 
     ctx.clearRect(0, 0, W, H);
     ctx.save();
