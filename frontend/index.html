@@ -151,7 +151,7 @@
       </div>
       <div class="pv-art" aria-hidden="true">
         <div class="dt-card">
-          <div class="dt-card-h"><span>용적률 · 대상지 용도지역</span><span class="dt-pill">조회 완료</span></div>
+          <div class="dt-card-h"><span>용적률 · 대상지 용도지역</span><span class="dt-pill">예 · 동탄구</span></div>
           <p class="dt-num">400<small>퍼센트 이하</small><em>준주거지역</em></p>
           <dl class="dt-kv">
             <div><dt>출처</dt><dd>「화성시 도시계획 조례」 제57조제1항제6호</dd></div>
@@ -387,14 +387,14 @@
     <div class="proj-grid">
       <aside class="reveal">
         <span class="mono">Overview</span>
-        <p class="sum">스마트도시계획(캡스톤디자인) 3주차 비교과 과제. 「화성시 도시계획 조례」의 용도지역 21종 건폐율·용적률을 법령 원문과 대조해 표로 만들고, 동탄구 용도지역 지도와 대상지(준주거지역) 용적률 카드를 붙였습니다.</p>
+        <p class="sum">스마트도시계획(캡스톤디자인) 3주차 비교과 과제로 시작해, 지금은 전국 시·군·구를 검색할 수 있습니다. 아래 과정과 수치는 처음 만든 <b>화성시 동탄구를 예로 든 것</b>입니다 — 용도지역 21종 건폐율·용적률을 법령 원문과 대조해 표로 만들고, 용도지역 지도와 대상지(준주거지역) 용적률 카드를 붙였습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd>2026.09 · 3주차 과제</dd></div>
           <div><dt>구분</dt><dd>팀 프로젝트 · 팀 LUOGO</dd></div>
           <div><dt>역할</dt><dd>조례 데이터 수집·검증, 대시보드 제작·배포</dd></div>
           <div><dt>기술</dt><dd>HTML · CSS · SVG (라이브러리 없음), korean-law-mcp, Vercel</dd></div>
-          <div><dt>데이터</dt><dd>화성시 도시계획 조례 제52·57조, 국토계획법 시행령 제84·85조, 브이월드 2D 데이터 API</dd></div>
-          <div><dt>규모</dt><dd>용도지역 21종 · 조문 값 42개 전수 대조</dd></div>
+          <div><dt>데이터</dt><dd>전국 시·군·구 도시계획 조례(예: 화성시 제52·57조), 국토계획법 시행령 제84·85조, 브이월드 2D 데이터 API</dd></div>
+          <div><dt>규모</dt><dd>용도지역 21종 · 조문 값 전수 대조</dd></div>
         </dl>
       </aside>
 
@@ -409,9 +409,9 @@
           <ol class="steps">
             <li><span><b>사전 조사</b>천안시 조례의 2003년 판과 현행 판을 조문 단위로 비교하며 용도지역·지구·구역 체계를 정리</span></li>
             <li><span><b>조문 수집</b>korean-law-mcp로 「화성시 도시계획 조례」 제52조(건폐율)·제57조(용적률)를 받음</span></li>
-            <li><span><b>원문 대조</b>국가법령정보 Open API(law.go.kr) 원문과 42개 값을 전부 대조해 일치 확인</span></li>
+            <li><span><b>원문 대조</b>국가법령정보 Open API(law.go.kr) 원문과 값을 전부 대조해 일치 확인</span></li>
             <li><span><b>데이터 정리</b>용도지역 21종 CSV — 값·단위·출처 조문·시행일·조회일·단서 조항</span></li>
-            <li><span><b>지도</b>브이월드 용도지역 도형을 동탄구 경계로 자르고, 다른 시 경계 조각·미세분 관리지역은 집계에서 제외</span></li>
+            <li><span><b>지도</b>브이월드 용도지역 도형을 조회한 지역 경계로 자르고, 다른 시 경계 조각·미세분 관리지역은 집계에서 제외</span></li>
             <li><span><b>배포·점검</b>Vercel 자동 배포, 커밋 이력 전체에서 인증키 포함 여부 점검(0건)</span></li>
           </ol>
         </div>
@@ -432,7 +432,7 @@
         <div class="block reveal">
           <h4>Engineering</h4>
           <ul>
-            <li><b>값의 근거를 끝까지</b> — 조문을 MCP 도구로 받은 뒤 law.go.kr 원문과 다시 맞대어, 조례 값 42개가 모두 일치하는 것을 확인했습니다.</li>
+            <li><b>값의 근거를 끝까지</b> — 조문을 MCP 도구로 받은 뒤 law.go.kr 원문과 다시 맞대어, 조례 값이 모두 일치하는 것을 확인했습니다.</li>
             <li><b>실행 중 API 호출 없음</b> — 값과 도형을 미리 받아 페이지에 담아, 인증키 없이 열리고 외부 서비스가 멈춰도 화면이 유지됩니다.</li>
             <li><b>키 관리</b> — 법령·브이월드 인증키는 운영체제 환경 변수에만 두고, 전체 커밋 이력을 검사해 키가 없음을 기록으로 남겼습니다.</li>
             <li><b>도형 정리</b> — 도형 합집합이 구 면적의 99.7%가 되도록 경계 밖 조각과 세분되지 않은 도형을 걸러 냈습니다.</li>
@@ -440,14 +440,14 @@
         </div>
 
         <div class="block reveal wide">
-          <h4>Result — 대상지 준주거지역</h4>
+          <h4>Result — 예시: 동탄구 준주거지역</h4>
           <dl class="stats">
             <div class="hi"><dt>용적률 · 조례</dt><dd>400<span>%</span></dd></div>
             <div><dt>건폐율 · 조례</dt><dd>70<span>%</span></dd></div>
-            <div><dt>동탄구 내 지정 면적</dt><dd>3.50<span>km²</span></dd></div>
+            <div><dt>구 내 지정 면적</dt><dd>3.50<span>km²</span></dd></div>
             <div><dt>구 면적 대비</dt><dd>6.3<span>%</span></dd></div>
             <div><dt>용도지역</dt><dd>21<span>종</span></dd></div>
-            <div><dt>대조한 조문 값</dt><dd>42<span>개 · 일치</span></dd></div>
+            <div><dt>대조한 조문 값</dt><dd>전수<span>· 일치</span></dd></div>
             <div><dt>도형 합집합 / 구 면적</dt><dd>99.7<span>%</span></dd></div>
             <div><dt>조례 시행 · 조회</dt><dd>03.10<span>· 09.21</span></dd></div>
           </dl>
