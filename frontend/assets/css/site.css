@@ -492,3 +492,13 @@ footer.foot .foot-link:hover{color:var(--accent)}
   html{scroll-behavior:auto}
   .reveal{opacity:1;transform:none;transition:none}
 }
+
+/* 03 · 근거노트 — 조례 근거값을 쌓는 대시보드. 파란 잉크의 자료 화면 톤 */
+.panel--evidence{--pv-bg:#eef2f8;--pv-bg-solid:#ffffff;--pv-ink:#1d2330;--pv-ink2:#52596a;--pv-muted:#7a8292;--pv-line:#d5deea;
+  font-family:"IBM Plex Sans KR",var(--sans)}
+.panel--evidence h3{font-family:"IBM Plex Sans KR",var(--sans);font-weight:700;letter-spacing:-.035em;line-height:1.02;font-size:clamp(46px,6.6vw,104px)}
+.panel--evidence h3 span{color:#7a8292;font-weight:400}
+.panel--evidence .pv-eyebrow{font-family:var(--mono);font-weight:500;letter-spacing:.06em}
+.panel--evidence .pv-cta{height:46px;padding-inline:20px;border-radius:8px;font-weight:700;font-size:15px;background:#1c3d6e}
+.panel--evidence .pv-cta:hover{background:#2a78d6}
+.panel--evidence .pv-art{flex-direction:column;align-items:stretch;gap:16px;max-width:460px;width:100%;justify-self:center}
