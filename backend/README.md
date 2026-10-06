@@ -33,6 +33,9 @@ npm run set-password   # 관리자 비밀번호 설정 (처음 한 번, 바꿀 �
 | `DATA_DIR` | 프로젝트 저장 폴더 (로컬) | `backend/data` |
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis (배포). Vercel Storage에서 연결하면 자동으로 들어갑니다 | 없음 (로컬 파일) |
 | `ENABLE_PROXY` | 외부 API 중계 라우트 사용 여부 | 로컬 `true`, Vercel `false` |
+| `RESEND_API_KEY` | 방문 예약 알림 메일을 보낼 [Resend](https://resend.com) 키. 없으면 메일을 보내지 않고 예약만 저장합니다 | 없음 |
+| `BOOKING_MAIL_TO` | 예약 알림을 받을 주소 | 없음 (메일 안 보냄) |
+| `BOOKING_MAIL_FROM` | 보내는 주소. 도메인 인증 전에는 기본값을 그대로 둡니다 | `Booking <onboarding@resend.dev>` |
 
 `.env`는 git에 올라가지 않습니다. 새 변수는 `.env.example`과 `src/config/index.js`에 함께 추가하세요.
 
@@ -51,8 +54,9 @@ src/
     sgis.routes.js            GET  /api/sgis/*, POST /api/sgis/test
     projects.routes.js        GET  /api/projects (공개 프로젝트)
     admin.routes.js           /api/admin/* (로그인 · 프로젝트 관리)
-  services/                 외부 API 호출 · 재시도 · 요청 간격 · 토큰
-  repositories/             데이터 저장소 (메모리 캐시, 프로젝트)
+    bookings.routes.js        POST /api/bookings (접수), GET (목록 · 관리자)
+  services/                 외부 API 호출 · 재시도 · 요청 간격 · 토큰 · 알림 메일
+  repositories/             데이터 저장소 (메모리 캐시, 프로젝트, 방문 예약)
   store/index.js            키-값 저장소 — 로컬 파일/메모리 또는 Upstash Redis
   db/index.js               DB 연결 자리
   middleware/               요청 취소 신호, 404 · 오류 응답
@@ -77,6 +81,8 @@ test/                       node:test 테스트
 | `POST /api/admin/login` · `logout` | 관리자 로그인(`{ token }` 반환) · 로그아웃 |
 | `GET · POST /api/admin/projects`, `PUT · DELETE /api/admin/projects/:id` | 프로젝트 관리 (초안 포함, `Authorization: Bearer <token>` 필요) |
 | `POST /api/admin/projects/:id/merge` | 중복 통합 (`{ ...입력값, removeId }`) |
+| `POST /api/bookings` | 방문 예약 접수 (공개). 받으면 `BOOKING_MAIL_TO`로 알림 메일을 보냅니다 |
+| `GET /api/bookings` | 받은 예약 목록 (`Authorization: Bearer <token>` 필요) |
 
 SGIS 키는 `X-SGIS-Key` · `X-SGIS-Secret` 헤더(브라우저 설정 창의 키)가 우선이고, 없으면 `.env` 키를 씁니다.
 

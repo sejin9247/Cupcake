@@ -32,6 +32,15 @@ export function create(data) {
   });
 }
 
+/* 알림 메일 결과를 예약에 적어 둔다 — 나중에 '메일이 안 간 예약'을 찾을 수 있게 */
+export function markNotified(id, result) {
+  return mutate(items => {
+    const item = items.find(b => b.id === id);
+    if (item) item.notified = result;
+    return item ?? null;
+  });
+}
+
 /* 같은 날짜·시간에 이미 받은 예약이 있는지 */
 export async function takenAt(date, time) {
   return (await readAll()).some(b => b.date === date && b.time === time);

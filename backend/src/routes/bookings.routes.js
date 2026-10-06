@@ -2,7 +2,8 @@
    POST는 방문자가 쓰므로 공개. GET은 받은 예약을 보는 용도라 관리자 토큰이 필요하다. */
 import { Router } from 'express';
 import { requireAdmin } from '../middleware/requireAdmin.js';
-import { create, list, takenAt } from '../repositories/booking.repository.js';
+import { create, list, markNotified, takenAt } from '../repositories/booking.repository.js';
+import { sendBookingMail } from '../services/mail.service.js';
 import { HttpError } from '../utils/httpError.js';
 
 export const bookingsRouter = Router();
@@ -54,6 +55,15 @@ bookingsRouter.post('/', async (req, res) => {
   if (await takenAt(date, time)) throw new HttpError(409, '이미 예약된 시간입니다. 다른 시간을 골라 주세요.');
 
   const saved = await create({ name, email, purpose, date, time, consent: true });
+
+  /* 저장이 끝난 뒤에 알린다. 메일이 실패해도 예약은 남는다 —
+     보내기를 기다리는 이유는 서버리스 함수가 응답 직후 멈춰서 보내는 중이던 요청이 사라지기 때문이다. */
+  const notified = await sendBookingMail(saved);
+  if (!notified.sent && notified.error !== '메일 설정 없음') {
+    console.error(`[bookings] 알림 메일 실패 (${saved.id}): ${notified.error}`);
+  }
+  await markNotified(saved.id, { ...notified, at: new Date().toISOString() });
+
   res.status(201).json({ booking: { id: saved.id, date: saved.date, time: saved.time } });
 });
 
