@@ -50,9 +50,10 @@ src/
     overpass.routes.js        POST /api/overpass
     sgis.routes.js            GET  /api/sgis/*, POST /api/sgis/test
     projects.routes.js        GET  /api/projects (공개 프로젝트)
-    admin.routes.js           /api/admin/* (로그인 · 프로젝트 관리)
+    admin.routes.js           /api/admin/* (로그인 · 프로젝트 · 예약 관리)
+    bookings.routes.js        POST /api/bookings (방문 예약 접수)
   services/                 외부 API 호출 · 재시도 · 요청 간격 · 토큰
-  repositories/             데이터 저장소 (메모리 캐시, 프로젝트)
+  repositories/             데이터 저장소 (메모리 캐시, 프로젝트, 방문 예약)
   store/index.js            키-값 저장소 — 로컬 파일/메모리 또는 Upstash Redis
   db/index.js               DB 연결 자리
   middleware/               요청 취소 신호, 404 · 오류 응답
@@ -77,6 +78,9 @@ test/                       node:test 테스트
 | `POST /api/admin/login` · `logout` | 관리자 로그인(`{ token }` 반환) · 로그아웃 |
 | `GET · POST /api/admin/projects`, `PUT · DELETE /api/admin/projects/:id` | 프로젝트 관리 (초안 포함, `Authorization: Bearer <token>` 필요) |
 | `POST /api/admin/projects/:id/merge` | 중복 통합 (`{ ...입력값, removeId }`) |
+| `POST /api/bookings` | 방문 예약 접수 (공개). 알림 메일은 예약 페이지가 Formspree로 직접 보냅니다 |
+| `GET /api/admin/bookings` | 받은 예약 목록 (방문 희망 시간이 이른 것부터) |
+| `PATCH /api/admin/bookings/:id` | 처리 상태 바꾸기 (`{ status }` — received · confirmed · reschedule · cancelled) |
 
 SGIS 키는 `X-SGIS-Key` · `X-SGIS-Secret` 헤더(브라우저 설정 창의 키)가 우선이고, 없으면 `.env` 키를 씁니다.
 

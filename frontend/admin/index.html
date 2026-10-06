@@ -18,6 +18,12 @@
   <a class="logo" href="../">JEON SE JIN</a>
   <span class="mono crumb">Admin</span>
   <div class="bar-actions" id="barActions" hidden>
+    <nav class="tabs" aria-label="관리 화면">
+      <button class="tab" id="tabProjects" type="button" aria-current="true">프로젝트</button>
+      <button class="tab" id="tabBookings" type="button" aria-current="false">
+        예약 관리 <span class="tab-n" id="tabBookingsN" hidden></span>
+      </button>
+    </nav>
     <a class="btn ghost" href="../#projects" target="_blank" rel="noopener">사이트 보기 ↗</a>
     <button class="btn ghost" id="logoutBtn" type="button">로그아웃</button>
   </div>
@@ -137,6 +143,39 @@
       </div>
     </form>
   </section>
+</main>
+
+<!-- 방문 예약 관리 -->
+<main class="bookings" id="bookingsView" hidden>
+  <div class="bk-head">
+    <div>
+      <span class="mono accent">Bookings</span>
+      <h1>방문 예약 관리</h1>
+      <p class="muted" id="bkSummary">받은 예약을 방문 희망 시간이 이른 것부터 보여 줍니다.</p>
+    </div>
+    <button class="btn ghost sm" id="bkReload" type="button">새로 읽기</button>
+  </div>
+
+  <p class="msg" id="bkMsg" role="status" aria-live="polite"></p>
+
+  <div class="table-wrap">
+    <table class="bk-table">
+      <caption class="sr-only">받은 방문 예약 목록과 처리 상태</caption>
+      <thead>
+        <tr>
+          <th scope="col">예약 번호</th>
+          <th scope="col">신청자/이메일</th>
+          <th scope="col">방문 희망 시간</th>
+          <th scope="col">방문 목적</th>
+          <th scope="col">처리 상태</th>
+          <th scope="col">관리</th>
+        </tr>
+      </thead>
+      <tbody id="bkBody"></tbody>
+    </table>
+  </div>
+
+  <p class="muted empty" id="bkEmpty" hidden>아직 받은 예약이 없습니다.<br>예약 페이지에서 신청이 들어오면 여기에 나타납니다.</p>
 </main>
 
 <!-- 중복 확인 -->

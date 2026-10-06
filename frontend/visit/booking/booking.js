@@ -233,6 +233,24 @@
       const js = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(errorText(js, r.status));
 
+      /* 메일은 Formspree가 보냈다. 관리자 화면이 쓸 기록은 우리 서버에도 남긴다.
+         여기서 실패해도 방문자에게는 접수된 것이 맞다 — 메일은 이미 갔다. */
+      try {
+        const rec = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(10000),
+          body: JSON.stringify({
+            date: picked, time: timeSel.value,
+            name: nameEl.value.trim(), email: emailEl.value.trim(),
+            purpose: purposeEl.value.trim(), consent: true,
+          }),
+        });
+        if (!rec.ok) console.warn('[예약] 기록 실패:', rec.status, await rec.text().catch(() => ''));
+      } catch (e) {
+        console.warn('[예약] 기록 실패:', e.message);
+      }
+
       dlg.close();
       $('#doneText').textContent = pickedLabel() + ' ' + timeSel.value + ' 로 접수되었습니다. '
         + '확인 후 ' + emailEl.value.trim() + ' 으로 답장 드리겠습니다.';

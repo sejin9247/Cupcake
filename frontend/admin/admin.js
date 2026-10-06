@@ -13,13 +13,18 @@
   const REQUIRED = ['title', 'role', 'description', 'date', 'members'];   // 공개할 때 필수 (참고사항 제외)
 
   const $ = (s, r = document) => r.querySelector(s);
-  const views = { login: $('#loginView'), offline: $('#offlineView'), admin: $('#adminView') };
+  const views = {
+    login: $('#loginView'), offline: $('#offlineView'),
+    admin: $('#adminView'), bookings: $('#bookingsView'),
+  };
+  const LOGGED_IN = ['admin', 'bookings'];   // 상단 버튼이 보이는 화면
   const form = $('#projectForm');
   const saveBtn = $('#saveBtn');
   const deleteBtn = $('#deleteBtn');
 
   let token = null;         // 로그인 토큰 — 메모리에만
   let projects = [];
+  let bookings = [];
   let currentId = null;     // null = 새 프로젝트
   let snapshot = '';        // 마지막으로 불러오거나 저장한 입력값 (저장 안 한 변경 감지용)
 
@@ -48,14 +53,18 @@
 
   function show(name) {
     for (const [k, el] of Object.entries(views)) el.hidden = k !== name;
-    $('#barActions').hidden = name !== 'admin';
+    $('#barActions').hidden = !LOGGED_IN.includes(name);
+    $('#tabProjects').setAttribute('aria-current', String(name === 'admin'));
+    $('#tabBookings').setAttribute('aria-current', String(name === 'bookings'));
   }
 
   /* 화면에 남은 관리 정보를 모두 지운다 (토큰, 목록, 입력값) */
   function signOutLocally() {
     token = null;
     projects = [];
+    bookings = [];
     currentId = null;
+    renderBookings();
     renderList();
     fillForm(null);
     renderEditor();
@@ -361,11 +370,156 @@
     }
   });
 
+  /* ============================================================
+     방문 예약 관리 — 받은 예약을 표로 보고 처리 상태만 바꾼다.
+     신청자가 적은 내용은 고치지 않는다 (서버도 상태 외에는 받지 않는다).
+     ============================================================ */
+  const BK_STATES = [
+    { key: 'received', label: '접수', hint: '신청이 들어온 그대로' },
+    { key: 'confirmed', label: '확정', hint: '이 날짜·시간에 만나기로 승인' },
+    { key: 'reschedule', label: '변경 요청', hint: '만나고 싶지만 다른 시간으로' },
+    { key: 'cancelled', label: '취소', hint: '이 방문은 받지 않음' },
+  ];
+  const bkLabel = s => BK_STATES.find(x => x.key === s)?.label ?? s;
+
+  const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+  /* '2026-10-08' + '15:00' → '2026년 10월 8일 (목) 15:00' */
+  function fmtVisit(date, time) {
+    const [y, m, d] = date.split('-').map(Number);
+    return `${y}년 ${m}월 ${d}일 (${DOW[new Date(y, m - 1, d).getDay()]}) ${time}`;
+  }
+
+  function bkSetMsg(text, kind = '') {
+    const m = $('#bkMsg');
+    m.textContent = text;
+    m.className = 'msg' + (kind ? ' ' + kind : '');
+  }
+
+  /* 한 줄 = 예약 하나. 열 순서는 표 머리글과 같다. */
+  function bookingRow(b) {
+    const tr = el('tr');
+    tr.dataset.id = b.id;
+
+    tr.append(el('td', 'bk-no mono', b.no));
+
+    const who = el('td', 'bk-who');
+    who.append(el('span', 'bk-name', b.name), el('span', 'bk-mail', b.email));
+    tr.append(who);
+
+    tr.append(el('td', 'bk-when', fmtVisit(b.date, b.time)));
+    tr.append(el('td', 'bk-purpose', b.purpose));
+
+    const st = el('td', 'bk-state');
+    st.append(el('span', `badge bk-${b.status}`, bkLabel(b.status)));
+    if (b.statusAt) st.append(el('span', 'bk-at', fmtDate(b.statusAt)));
+    tr.append(st);
+
+    const act = el('td', 'bk-act');
+    const group = el('div', 'bk-btns');
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', `${b.no} 처리 상태 바꾸기`);
+    for (const s of BK_STATES) {
+      const btn = el('button', `bk-pick bk-${s.key}`, s.label);
+      btn.type = 'button';
+      btn.dataset.status = s.key;
+      btn.title = s.hint;
+      const current = s.key === b.status;
+      btn.setAttribute('aria-pressed', String(current));
+      btn.disabled = current;             // 이미 그 상태면 누를 필요가 없다
+      group.append(btn);
+    }
+    act.append(group);
+    tr.append(act);
+    return tr;
+  }
+
+  function renderBookings() {
+    $('#bkBody').replaceChildren(...bookings.map(bookingRow));
+    $('#bkEmpty').hidden = bookings.length > 0 || !token;
+    $('.table-wrap').hidden = !bookings.length;
+
+    const waiting = bookings.filter(b => b.status === 'received').length;
+    const n = $('#tabBookingsN');
+    n.hidden = !waiting;
+    n.textContent = String(waiting);
+    $('#bkSummary').textContent = bookings.length
+      ? `받은 예약 ${bookings.length}건 · 아직 접수 상태 ${waiting}건. 방문 희망 시간이 이른 것부터 보여 줍니다.`
+      : '받은 예약을 방문 희망 시간이 이른 것부터 보여 줍니다.';
+  }
+
+  /* 늦게 도착한 목록이 방금 바꾼 상태를 덮어쓰지 않게 한다.
+     목록 읽기와 상태 바꾸기가 겹치면(탭을 누른 직후 버튼을 누르는 경우) 오래된 응답은 버린다. */
+  let bkSeq = 0;
+
+  async function loadBookings() {
+    const seq = ++bkSeq;
+    const { bookings: list } = await api('/bookings');
+    if (seq !== bkSeq) return;        // 그 사이 더 새로운 일이 있었다
+    bookings = list;
+    renderBookings();
+  }
+
+  /* 상태 버튼 — 어느 줄에서 눌렀는지는 행의 data-id로 안다 */
+  $('#bkBody').addEventListener('click', async e => {
+    const btn = e.target.closest('button[data-status]');
+    if (!btn || btn.disabled) return;
+    const tr = btn.closest('tr');
+    const b = bookings.find(x => x.id === tr.dataset.id);
+    if (!b) return;
+
+    const next = btn.dataset.status;
+    if (next === 'cancelled' && !confirm(`${b.no} (${b.name}) 예약을 '취소'로 바꿀까요?`)) return;
+
+    const group = btn.closest('.bk-btns');
+    for (const x of group.children) x.disabled = true;
+    bkSetMsg('바꾸는 중…');
+    try {
+      const { booking } = await api(`/bookings/${b.id}`, { method: 'PATCH', body: { status: next } });
+      bkSeq++;                            // 진행 중인 목록 읽기보다 이 결과가 새것이다
+      /* 기다리는 동안 목록이 새로 읽혔을 수 있다 — 그때의 b는 버려진 객체이므로 지금 목록을 id로 찾아 고친다 */
+      const i = bookings.findIndex(x => x.id === booking.id);
+      if (i >= 0) bookings[i] = booking; else bookings.push(booking);
+      renderBookings();
+      bkSetMsg(`${booking.no} → ${bkLabel(booking.status)}로 바꿨습니다.`, 'ok');
+    } catch (err) {
+      renderBookings();                   // 실패했으니 버튼을 원래대로 돌린다
+      if (err.status !== 401) bkSetMsg(err.message, 'err');
+    }
+  });
+
+  $('#bkReload').addEventListener('click', async () => {
+    bkSetMsg('읽는 중…');
+    try {
+      await loadBookings();
+      bkSetMsg(`새로 읽었습니다. (${bookings.length}건)`, 'ok');
+    } catch (err) {
+      if (err.status !== 401) bkSetMsg(err.message, 'err');
+    }
+  });
+
+  /* ---------- 탭 ---------- */
+  $('#tabProjects').addEventListener('click', () => show('admin'));
+
+  $('#tabBookings').addEventListener('click', async () => {
+    if (!confirmDiscard()) return;        // 프로젝트 양식에 저장 안 한 내용이 있으면 먼저 묻는다
+    show('bookings');
+    bkSetMsg('읽는 중…');
+    try {
+      await loadBookings();
+      bkSetMsg('');
+    } catch (err) {
+      if (err.status !== 401) bkSetMsg(err.message, 'err');
+    }
+  });
+
   /* ---------- 시작: 항상 로그인 화면부터 ---------- */
   async function enterAdmin() {
     await loadProjects();
     show('admin');
     openProject(null);
+    /* 예약도 미리 읽어 둔다 — 탭에 기다리는 건수를 띄우고, 눌렀을 때 바로 보이게.
+       실패해도 로그인을 막지 않는다 (탭을 누르면 그때 이유를 보여 준다) */
+    loadBookings().catch(() => {});
   }
 
   (async () => {
