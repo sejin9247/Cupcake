@@ -19,3 +19,7 @@ backend/data/
 
 # 작업 원본 폴더 (다른 저장소·인증키 포함 — 필요한 결과물만 frontend/로 옮겨 씀)
 새 폴더/
+
+.vercel
+.env*
+!.env.example
