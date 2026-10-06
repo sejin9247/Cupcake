@@ -99,6 +99,13 @@
         </section>
       </div>
 
+      <!-- 스팸 덫: 화면에 보이지 않으므로 사람은 비워 두고, 자동 프로그램은 채운다.
+           채워져 오면 Formspree가 메일을 보내지 않고 버린다. -->
+      <div class="catcher" aria-hidden="true">
+        <label for="catcher">이 칸은 비워 두세요</label>
+        <input id="catcher" name="_gotcha" type="text" tabindex="-1" autocomplete="off">
+      </div>
+
       <!-- 동의 + 제출 -->
       <div class="submit">
         <label class="consent" for="consent">

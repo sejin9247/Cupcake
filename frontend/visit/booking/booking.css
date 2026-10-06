@@ -68,6 +68,9 @@
 .err{display:block;margin-top:7px;font-size:12.5px;color:#c1121f}
 .count{display:block;margin-top:7px;font-family:var(--mono);font-size:10px;color:var(--muted);text-align:right}
 
+/* 스팸 덫 — 사람 눈에도, 화면 낭독기에도 닿지 않게 완전히 숨긴다 */
+.catcher{display:none}
+
 /* ---------- 동의 · 제출 ---------- */
 .submit{margin-top:clamp(26px,4vw,40px);text-align:center}
 .consent{

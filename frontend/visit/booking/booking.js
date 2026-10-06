@@ -187,23 +187,52 @@
 
   $('#dlgCancel').addEventListener('click', () => dlg.close());
 
+  /* Formspree로 보낸다 — 받는 메일 주소는 Formspree 쪽에 설정돼 있어서 여기에 적지 않는다.
+     밑줄로 시작하는 칸은 메일에 표시되지 않는 Formspree 전용 값이다. */
+  const FORM_ENDPOINT = 'https://formspree.io/f/meaeooaj';
+
+  /* Formspree가 돌려주는 오류를 읽을 수 있는 한 문장으로 */
+  function errorText(js, status) {
+    if (Array.isArray(js.errors) && js.errors.length) {
+      return js.errors.map(e => (e.field ? e.field + ': ' : '') + (e.message || '')).join(' · ');
+    }
+    if (js.error) return js.error;
+    return '접수에 실패했습니다 (' + status + '). 잠시 뒤 다시 시도해 주세요.';
+  }
+
   $('#dlgOk').addEventListener('click', async () => {
     const btn = $('#dlgOk');
     btn.disabled = true;
     btn.textContent = '보내는 중…';
     dlgErr.hidden = true;
     try {
-      const r = await fetch(apiBase() + '/bookings', {
+      const send = () => fetch(FORM_ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        signal: AbortSignal.timeout(15000),
         body: JSON.stringify({
-          date: picked, time: timeSel.value,
-          name: nameEl.value.trim(), email: emailEl.value.trim(),
-          purpose: purposeEl.value.trim(), consent: true,
+          '방문 날짜': pickedLabel(),
+          '희망 시간': timeSel.value,
+          '이름': nameEl.value.trim(),
+          'email': emailEl.value.trim(),          // Formspree가 답장 주소로 쓴다
+          '방문 목적': purposeEl.value.trim(),
+          '정보 전달 동의': '동의함',
+          '접수 시각': stamp(),
+          _subject: '[방문 예약] ' + pickedLabel() + ' ' + timeSel.value + ' · ' + nameEl.value.trim(),
+          _gotcha: $('#catcher').value,           // 사람이면 비어 있다 — 채워져 있으면 Formspree가 조용히 버린다
         }),
       });
+
+      /* 못 보낸 것과 거절당한 것은 다른 일이라 메시지를 나눈다 */
+      let r;
+      try {
+        r = await send();
+      } catch {
+        throw new Error('보내지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.');
+      }
       const js = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(js.error || js.message || ('접수에 실패했습니다 (' + r.status + ')'));
+      if (!r.ok) throw new Error(errorText(js, r.status));
+
       dlg.close();
       $('#doneText').textContent = pickedLabel() + ' ' + timeSel.value + ' 로 접수되었습니다. '
         + '확인 후 ' + emailEl.value.trim() + ' 으로 답장 드리겠습니다.';
@@ -223,11 +252,11 @@
 
   $('#doneOk').addEventListener('click', () => doneDlg.close());
 
-  /* 배포에서는 같은 주소의 /api, 로컬 정적 서버에서는 4000번 백엔드 */
-  function apiBase() {
-    const { hostname, port } = location;
-    const local = hostname === 'localhost' || hostname === '127.0.0.1';
-    return local && port !== '4000' ? 'http://localhost:4000/api' : '/api';
+  /* 접수 시각 — 보는 사람이 한국에 있으므로 한국 시간으로 적는다 */
+  function stamp() {
+    return new Intl.DateTimeFormat('ko-KR', {
+      timeZone: KST, dateStyle: 'medium', timeStyle: 'short',
+    }).format(new Date()) + ' (KST)';
   }
 
   /* ---------- 시작 ---------- */
