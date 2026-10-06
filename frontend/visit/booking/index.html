@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>방문 예약 · 전세진</title>
-<meta name="description" content="상명대학교 천안캠퍼스 B306 방문 예약 페이지.">
+<meta name="description" content="상명대학교 천안캠퍼스 B306 방문 예약. 평일 13:00–18:00.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' fill='%2311141a'/><path d='M20 8l10 6v12l-10 6-10-6V14z' fill='none' stroke='%23c2542a' stroke-width='2.4'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif&family=Noto+Serif+KR:wght@300;400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="../visit.css">
+<link rel="stylesheet" href="booking.css">
 </head>
 <body>
 
@@ -23,22 +24,127 @@
   </nav>
 </header>
 
-<!-- 내용은 다음 단계에서 채운다 (예약 폼 · 가능 시간 · 확인 메일) -->
-<main class="soon">
+<section class="hero">
   <div class="wrap">
-    <span class="no mono" style="color:var(--accent)">Booking</span>
+    <span class="no">Booking</span>
     <h1>방문 예약</h1>
-    <p>예약 기능은 준비 중입니다. 급한 일정은 아래 메일로 알려 주시면 직접 잡아 드리겠습니다.</p>
-    <p style="margin-top:10px"><a href="mailto:jsjsundo@naver.com">jsjsundo@naver.com</a></p>
-    <a class="back" href="../">← 찾아오는 길로</a>
+    <p>상명대학교 천안캠퍼스 B306으로 찾아오실 날짜와 시간을 골라 주세요.
+       평일 13:00–18:00, 30분 단위로 예약할 수 있습니다.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <form id="bk" class="bk" novalidate>
+      <div class="bk-cols">
+
+        <!-- 왼쪽: 달력 + 시간 -->
+        <section class="card">
+          <h2>날짜 · 시간</h2>
+
+          <div class="cal">
+            <div class="cal-head">
+              <button type="button" class="cal-nav" id="prevM" aria-label="이전 달">‹</button>
+              <strong id="calLabel">—</strong>
+              <button type="button" class="cal-nav" id="nextM" aria-label="다음 달">›</button>
+            </div>
+            <div class="cal-dow" aria-hidden="true">
+              <span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span>
+            </div>
+            <div class="cal-grid" id="calGrid" role="grid" aria-label="방문 날짜 선택"></div>
+            <p class="cal-note">주말과 공휴일, 지난 날짜는 고를 수 없습니다.</p>
+          </div>
+
+          <div class="body">
+            <div class="picked">
+              <span class="k">선택한 날짜</span>
+              <strong id="pickedDate">아직 고르지 않았습니다</strong>
+            </div>
+
+            <label class="field" for="time">
+              <span class="lab">희망 시간 <i>필수</i></span>
+              <select id="time" name="time" required>
+                <option value="">시간을 선택하세요</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <!-- 오른쪽: 방문자 정보 -->
+        <section class="card">
+          <h2>방문자 정보</h2>
+          <div class="body">
+            <label class="field" for="name">
+              <span class="lab">이름 <i>필수</i></span>
+              <input id="name" name="name" type="text" maxlength="60" autocomplete="name" required
+                     placeholder="예: 전세진">
+              <span class="err" id="nameErr" hidden>이름을 입력해 주세요.</span>
+            </label>
+
+            <label class="field" for="email">
+              <span class="lab">답장받을 이메일 <i>필수</i></span>
+              <input id="email" name="email" type="email" maxlength="120" autocomplete="email" required
+                     placeholder="예: name@example.com" aria-describedby="emailErr">
+              <span class="err" id="emailErr" hidden>이메일 형식이 올바르지 않습니다. @와 도메인을 포함해 주세요.</span>
+            </label>
+
+            <label class="field" for="purpose">
+              <span class="lab">방문 목적 <i>필수</i></span>
+              <textarea id="purpose" name="purpose" rows="7" maxlength="1000" required
+                        placeholder="어떤 일로 오시는지 적어 주세요. 길게 쓰셔도 됩니다."></textarea>
+              <span class="count"><span id="purposeCount">0</span> / 1,000자</span>
+              <span class="err" id="purposeErr" hidden>방문 목적을 입력해 주세요.</span>
+            </label>
+          </div>
+        </section>
+      </div>
+
+      <!-- 동의 + 제출 -->
+      <div class="submit">
+        <label class="consent" for="consent">
+          <input id="consent" type="checkbox" required>
+          <span>입력 정보를 예약 상담 목적으로 운영자에게 전달하는 것에 동의합니다.</span>
+        </label>
+        <p class="need" id="need">날짜 · 시간 · 이름 · 이메일 · 방문 목적 · 동의를 모두 채우면 예약할 수 있습니다.</p>
+        <button class="cta" id="submitBtn" type="submit" disabled>
+          예약하기
+          <span class="arr" aria-hidden="true">
+            <svg viewBox="0 0 20 20" width="14" height="14" fill="none"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </button>
+      </div>
+    </form>
   </div>
 </main>
+
+<!-- 마지막 확인 -->
+<dialog id="confirmDlg" class="dlg" aria-labelledby="dlgTitle">
+  <h2 id="dlgTitle">이대로 예약할까요?</h2>
+  <p class="dlg-sub">보내기 전에 한 번만 확인해 주세요.</p>
+  <dl class="review" id="review"></dl>
+  <p class="dlg-err" id="dlgErr" hidden></p>
+  <div class="dlg-row">
+    <button type="button" class="btn" id="dlgCancel">다시 고치기</button>
+    <button type="button" class="btn solid" id="dlgOk">예약하기</button>
+  </div>
+</dialog>
+
+<!-- 접수 완료 -->
+<dialog id="doneDlg" class="dlg" aria-labelledby="doneTitle">
+  <h2 id="doneTitle">예약이 접수되었습니다</h2>
+  <p class="dlg-sub" id="doneText">—</p>
+  <div class="dlg-row">
+    <a class="btn" href="../">찾아오는 길로</a>
+    <button type="button" class="btn solid" id="doneOk">닫기</button>
+  </div>
+</dialog>
 
 <footer class="foot">
   <span>© <span id="yr">2026</span> Jeon Se Jin</span>
   <a href="../../index.html">← 포트폴리오로</a>
 </footer>
 
-<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+<script src="holidays.js"></script>
+<script src="booking.js"></script>
 </body>
 </html>

@@ -1,0 +1,109 @@
+/* ============================================================
+   방문 예약 — 달력 · 입력 · 확인 팝업. 색과 서체는 visit.css를 따른다.
+   ============================================================ */
+
+.bk-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(22px,3vw,34px);align-items:start}
+@media (min-width:920px){.bk-cols{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}}
+
+/* ---------- 달력 ---------- */
+.cal{padding:18px 20px 0}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.cal-head strong{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.cal-nav{
+  width:34px;height:34px;border:1px solid var(--line);background:var(--paper);
+  font-size:17px;line-height:1;border-radius:0;transition:.2s;
+}
+.cal-nav:hover:not(:disabled){background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.cal-nav:disabled{opacity:.3;cursor:not-allowed}
+
+.cal-dow,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{margin-bottom:6px}
+.cal-dow span{
+  text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+  color:var(--muted);padding:4px 0;
+}
+.cal-dow .sun,.cal-dow .sat{color:#b08276}
+
+.cal-grid button{
+  aspect-ratio:1;border:1px solid transparent;background:var(--paper);
+  font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink);
+  display:grid;place-items:center;position:relative;transition:.15s;
+}
+.cal-grid button:hover:not(:disabled){border-color:var(--ink)}
+.cal-grid button:disabled{color:var(--muted);opacity:.38;cursor:not-allowed;background:transparent}
+.cal-grid button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:600}
+.cal-grid button.today::after{
+  content:"";position:absolute;bottom:6px;width:4px;height:4px;border-radius:50%;background:var(--accent);
+}
+.cal-grid button[aria-pressed="true"].today::after{background:var(--paper)}
+.cal-grid .blank{aspect-ratio:1}
+.cal-note{margin:12px 0 18px;font-size:12px;color:var(--muted)}
+
+/* ---------- 선택 결과 ---------- */
+.picked{
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  border:1px solid var(--line);background:var(--paper);padding:14px 16px;margin-bottom:18px;
+}
+.picked .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.picked strong{font-size:17px;font-weight:600}
+.picked.on{border-color:var(--ink)}
+
+/* ---------- 입력 ---------- */
+.field{display:block;margin-bottom:20px}
+.field:last-child{margin-bottom:0}
+.lab{
+  display:block;margin-bottom:8px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+}
+.lab i{font-style:normal;color:var(--accent);margin-left:4px}
+.field input,.field select,.field textarea{
+  width:100%;font:inherit;font-size:15px;color:var(--ink);
+  background:var(--paper);border:1px solid var(--line);padding:12px 14px;border-radius:0;
+  transition:border-color .2s,background .2s;
+}
+.field textarea{resize:vertical;min-height:150px;line-height:1.7}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ink)}
+.field input.bad,.field textarea.bad{border-color:#c1121f;background:#fdf1f1}
+.field input.bad:focus,.field textarea.bad:focus{border-color:#c1121f}
+.err{display:block;margin-top:7px;font-size:12.5px;color:#c1121f}
+.count{display:block;margin-top:7px;font-family:var(--mono);font-size:10px;color:var(--muted);text-align:right}
+
+/* ---------- 동의 · 제출 ---------- */
+.submit{margin-top:clamp(26px,4vw,40px);text-align:center}
+.consent{
+  display:inline-flex;align-items:flex-start;gap:10px;text-align:left;
+  max-width:52ch;font-size:14px;color:var(--ink-soft);cursor:pointer;
+}
+.consent input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent);flex:none}
+.need{margin:14px 0 18px;font-size:12.5px;color:var(--muted)}
+.need.ok{color:var(--ink-soft)}
+.submit .cta:disabled{background:var(--paper-2);color:var(--muted);cursor:not-allowed}
+.submit .cta:disabled .arr{background:var(--line);color:var(--muted)}
+.submit .cta:disabled:hover{background:var(--paper-2)}
+.submit .cta:disabled:hover .arr{transform:none;background:var(--line)}
+
+/* ---------- 팝업 ---------- */
+.dlg{
+  border:1px solid var(--ink);background:var(--paper);color:var(--ink);
+  padding:0;max-width:min(460px,92vw);width:100%;
+}
+.dlg::backdrop{background:rgba(17,20,26,.45)}
+.dlg h2{margin:0;padding:22px 24px 6px;font-family:var(--serif);font-weight:400;font-size:26px}
+.dlg-sub{margin:0;padding:0 24px 16px;color:var(--muted);font-size:13.5px}
+.review{margin:0;padding:0 24px;border-top:1px solid var(--line)}
+.review div{display:grid;grid-template-columns:86px 1fr;gap:14px;padding:11px 0;border-bottom:1px solid var(--line)}
+.review dt{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.review dd{margin:0;font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+.dlg-err{margin:14px 24px 0;padding:10px 12px;background:#fdf1f1;border:1px solid #c1121f;color:#c1121f;font-size:13px}
+.dlg-row{display:flex;gap:10px;justify-content:flex-end;padding:18px 24px 22px}
+.btn{
+  font:inherit;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  padding:12px 18px;border:1px solid var(--line);background:var(--paper);color:var(--ink);
+  cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;transition:.25s;
+}
+.btn:hover{border-color:var(--ink)}
+.btn.solid{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.solid:hover{background:var(--accent);border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
