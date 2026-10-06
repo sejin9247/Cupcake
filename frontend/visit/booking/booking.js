@@ -21,13 +21,25 @@
   const TODAY = todayKST();
   const LIMIT = new Date(TODAY.getFullYear(), TODAY.getMonth() + 3, 0);   // 석 달 뒤 말일까지
 
+  /* 고를 수 있는 시간 — 13:00 ~ 18:00, 30분 단위 */
+  const TIMES = [];
+  for (let t = 13 * 60; t <= 18 * 60; t += 30) TIMES.push(pad(Math.floor(t / 60)) + ':' + pad(t % 60));
+
+  /* 이미 찬 자리 — 'YYYY-MM-DD HH:MM' 모음. 서버에서 받아 온다.
+     못 받아 오면 비워 둔다: 화면에서 막지 못해도 서버가 마지막에 거른다(막아서 아무것도 못 고르게 하는 것보다 낫다). */
+  let taken = new Set();
+  const isTaken = (date, time) => taken.has(date + ' ' + time);
+  const dayFull = date => TIMES.every(t => isTaken(date, t));
+
   function blocked(d) {
     const day = d.getDay();
     if (day === 0 || day === 6) return '주말';
     if (d < TODAY) return '지난 날짜';
     if (d > LIMIT) return '예약 가능 기간이 아님';
     const h = holidayName(ymd(d));
-    return h ? h : null;
+    if (h) return h;
+    if (dayFull(ymd(d))) return '예약이 모두 찼음';
+    return null;
   }
 
   /* ---------- 달력 ---------- */
@@ -72,8 +84,11 @@
     const btn = e.target.closest('button[data-date]');
     if (!btn || btn.disabled) return;
     picked = btn.dataset.date;
+    showAlert('');          // 새로 고르는 중이므로 지난 안내는 지운다
     renderCal();
     showPicked();
+    renderTimes();          // 날짜마다 찬 시간이 다르므로 다시 그린다
+    showLeft();
     validate();
   });
   prevBtn.addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCal(); });
@@ -91,13 +106,48 @@
     box.classList.toggle('on', !!picked);
   }
 
-  /* ---------- 시간 — 13:00 ~ 18:00, 30분 단위 ---------- */
+  /* ---------- 시간 ----------
+     고른 날짜에 따라 다시 그린다. 이미 찬 시간은 목록에 남겨 두되 (완료)를 붙이고 고르지 못하게 한다 —
+     아예 지우면 몇 시가 찼는지 알 수 없어서 오히려 답답하다. */
   const timeSel = $('#time');
-  for (let t = 13 * 60; t <= 18 * 60; t += 30) {
-    const v = pad(Math.floor(t / 60)) + ':' + pad(t % 60);
-    const o = document.createElement('option');
-    o.value = v; o.textContent = v;
-    timeSel.appendChild(o);
+
+  function renderTimes() {
+    const keep = timeSel.value;
+    timeSel.textContent = '';
+
+    const first = document.createElement('option');
+    first.value = '';
+    first.textContent = picked ? '시간을 선택하세요' : '날짜를 먼저 고르세요';
+    timeSel.appendChild(first);
+
+    for (const v of TIMES) {
+      const o = document.createElement('option');
+      o.value = v;
+      const full = picked && isTaken(picked, v);
+      o.textContent = full ? v + ' (완료)' : v;
+      o.disabled = !!full;
+      timeSel.appendChild(o);
+    }
+    timeSel.disabled = !picked;
+
+    /* 고른 시간이 그 사이 차 버렸으면 선택을 비운다 */
+    timeSel.value = keep && (!picked || !isTaken(picked, keep)) ? keep : '';
+  }
+
+  /* 양식 위 알림 — 팝업이 닫힌 뒤에도 남아야 하는 안내를 띄운다 */
+  function showAlert(text) {
+    const a = $('#alert');
+    a.textContent = text;
+    a.hidden = !text;
+  }
+
+  /* 남은 자리 안내 — 날짜를 고르면 몇 자리 남았는지 알려 준다 */
+  function showLeft() {
+    const note = $('#timeNote');
+    if (!picked) { note.textContent = ''; return; }
+    const left = TIMES.filter(t => !isTaken(picked, t)).length;
+    note.textContent = left ? `이 날은 ${TIMES.length}개 중 ${left}개가 남았습니다.` : '이 날은 남은 시간이 없습니다.';
+    note.classList.toggle('none', left === 0);
   }
 
   /* ---------- 입력 검사 ---------- */
@@ -107,6 +157,8 @@
 
   const filled = el => el.value.trim().length > 0;
   const emailOk = () => EMAIL_RE.test(emailEl.value.trim());
+  /* 고른 시간이 그 사이 차 버렸을 수도 있다 — 값이 있다고 바로 통과시키지 않는다 */
+  const timeOk = () => !!timeSel.value && !isTaken(picked, timeSel.value);
 
   /* 잘못 적었을 때만 빨갛게 — 아직 손대지 않은 칸은 건드리지 않는다 */
   function mark(el, errEl, bad, touched) {
@@ -124,7 +176,7 @@
 
     const missing = [];
     if (!picked) missing.push('날짜');
-    if (!timeSel.value) missing.push('시간');
+    if (!timeOk()) missing.push('시간');
     if (!filled(nameEl)) missing.push('이름');
     if (!emailOk()) missing.push('이메일');
     if (!filled(purposeEl)) missing.push('방문 목적');
@@ -146,12 +198,12 @@
     });
     el.addEventListener('blur', () => { touched[key] = true; validate(); });
   });
-  timeSel.addEventListener('change', validate);
+  timeSel.addEventListener('change', () => { showAlert(''); validate(); });
   consentEl.addEventListener('change', validate);
 
   /* 아직 blur 전이라도 버튼 상태는 따라가야 한다 */
   function submitBtnState() {
-    const ok = picked && timeSel.value && filled(nameEl) && emailOk() && filled(purposeEl) && consentEl.checked;
+    const ok = picked && timeOk() && filled(nameEl) && emailOk() && filled(purposeEl) && consentEl.checked;
     submitBtn.disabled = !ok;
     need.classList.toggle('ok', !!ok);
     if (ok) need.textContent = '모두 채우셨습니다. 예약하기를 누르면 확인 창이 열립니다.';
@@ -191,6 +243,48 @@
      밑줄로 시작하는 칸은 메일에 표시되지 않는 Formspree 전용 값이다. */
   const FORM_ENDPOINT = 'https://formspree.io/f/meaeooaj';
 
+  /* 우리 서버에 자리를 잡는다 (관리자 화면에 뜨는 기록이기도 하다).
+     - 그 시간이 이미 찼거나(409) 입력이 잘못됐으면(400) 여기서 멈춘다. 메일은 보내지 않는다.
+     - 서버가 아예 응답하지 않거나 저장소가 없으면 멈추지 않는다. 기록은 못 남겨도
+       메일은 가야 방문자의 신청이 사라지지 않는다. */
+  async function reserve() {
+    let r;
+    try {
+      r = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(10000),
+        body: JSON.stringify({
+          date: picked, time: timeSel.value,
+          name: nameEl.value.trim(), email: emailEl.value.trim(),
+          purpose: purposeEl.value.trim(), consent: true,
+        }),
+      });
+    } catch (e) {
+      console.warn('[예약] 기록 실패 — 메일만 보냅니다:', e.message);
+      return;
+    }
+    if (r.ok) return;
+
+    const js = await r.json().catch(() => ({}));
+    const msg = js.error?.message;
+
+    if (r.status === 409) {
+      /* 그 사이 누가 가져갔다 — 목록을 새로 읽어 화면을 맞추고, 다시 고르게 한다.
+         팝업을 닫으므로 안내는 양식 위 알림 자리에 띄운다 (팝업 안에 쓰면 같이 사라진다) */
+      if (await loadTaken()) syncAfterTaken();
+      showAlert(msg || '방금 다른 분이 그 시간을 예약했습니다. 다른 시간을 골라 주세요.');
+      dlg.close();
+      timeSel.focus();
+      const e = new Error('slot_taken');
+      e.handled = true;
+      throw e;
+    }
+    if (r.status === 400) throw new Error(msg || '입력한 내용을 다시 확인해 주세요.');
+
+    console.warn('[예약] 기록 실패 — 메일만 보냅니다:', r.status, msg ?? '');
+  }
+
   /* Formspree가 돌려주는 오류를 읽을 수 있는 한 문장으로 */
   function errorText(js, status) {
     if (Array.isArray(js.errors) && js.errors.length) {
@@ -206,6 +300,10 @@
     btn.textContent = '보내는 중…';
     dlgErr.hidden = true;
     try {
+      /* 자리부터 잡는다. 메일을 먼저 보내면, 그 사이 찬 자리였을 때
+         방문자는 접수됐다는 메일을 보내 놓고 화면에서는 거절당하는 꼴이 된다. */
+      await reserve();
+
       const send = () => fetch(FORM_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -233,24 +331,6 @@
       const js = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(errorText(js, r.status));
 
-      /* 메일은 Formspree가 보냈다. 관리자 화면이 쓸 기록은 우리 서버에도 남긴다.
-         여기서 실패해도 방문자에게는 접수된 것이 맞다 — 메일은 이미 갔다. */
-      try {
-        const rec = await fetch('/api/bookings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(10000),
-          body: JSON.stringify({
-            date: picked, time: timeSel.value,
-            name: nameEl.value.trim(), email: emailEl.value.trim(),
-            purpose: purposeEl.value.trim(), consent: true,
-          }),
-        });
-        if (!rec.ok) console.warn('[예약] 기록 실패:', rec.status, await rec.text().catch(() => ''));
-      } catch (e) {
-        console.warn('[예약] 기록 실패:', e.message);
-      }
-
       dlg.close();
       $('#doneText').textContent = pickedLabel() + ' ' + timeSel.value + ' 로 접수되었습니다. '
         + '확인 후 ' + emailEl.value.trim() + ' 으로 답장 드리겠습니다.';
@@ -260,8 +340,10 @@
       $('#purposeCount').textContent = '0';
       validate();
     } catch (err) {
-      dlgErr.textContent = err.message;
-      dlgErr.hidden = false;
+      if (!err.handled) {          // 이미 양식 위에 알린 경우에는 팝업에 또 쓰지 않는다
+        dlgErr.textContent = err.message;
+        dlgErr.hidden = false;
+      }
     } finally {
       btn.disabled = false;
       btn.textContent = '예약하기';
@@ -277,9 +359,36 @@
     }).format(new Date()) + ' (KST)';
   }
 
+  /* ---------- 찬 자리 읽기 ----------
+     실패하면 아무것도 막지 않는다. 서버가 접수 때 다시 거르므로 겹쳐 들어가지는 않는다. */
+  async function loadTaken() {
+    try {
+      const r = await fetch('/api/bookings/taken', { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const js = await r.json();
+      taken = new Set((js.taken ?? []).map(s => s.date + ' ' + s.time));
+      return true;
+    } catch (e) {
+      console.warn('[예약] 찬 자리를 읽지 못했습니다:', e.message);
+      return false;
+    }
+  }
+
+  /* 새로 읽은 뒤 화면을 맞춘다. 고른 날짜가 꽉 찼으면 선택을 풀어 준다. */
+  function syncAfterTaken() {
+    if (picked && dayFull(picked)) picked = null;
+    renderCal();
+    showPicked();
+    renderTimes();
+    showLeft();
+    validate();
+  }
+
   /* ---------- 시작 ---------- */
   renderCal();
   showPicked();
+  renderTimes();
   validate();
   $('#yr').textContent = String(new Date().getFullYear());
+  loadTaken().then(ok => { if (ok) syncAfterTaken(); });
 })();

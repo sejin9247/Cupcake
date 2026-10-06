@@ -63,7 +63,14 @@ test('예약을 받으면 번호를 붙이고 접수 상태로 저장한다', as
 test('같은 사람이 같은 시간을 다시 신청하면 거절한다', async () => {
   const r = await post(OK);
   assert.equal(r.status, 409);
-  assert.match(r.json.error.message, /이미 접수/);
+  assert.equal(r.json.error.code, 'slot_taken');
+});
+
+test('다른 사람이라도 이미 찬 시간은 거절한다', async () => {
+  const r = await post({ ...OK, name: '김철수', email: 'other@example.test' });
+  assert.equal(r.status, 409);
+  assert.equal(r.json.error.code, 'slot_taken');
+  assert.equal((await admin('/bookings')).json.bookings.length, 1, '거절된 예약은 저장되지 않아야 한다');
 });
 
 test('같은 사람이 다른 시간이면 번호가 다르고 따로 받는다', async () => {
@@ -76,11 +83,75 @@ test('같은 사람이 다른 시간이면 번호가 다르고 따로 받는다'
   assert.equal((await admin('/bookings')).json.bookings.length, 2);
 });
 
-test('다른 사람이 같은 시간을 신청하는 것은 막지 않는다 (겹침 관리는 나중 일)', async () => {
-  const r = await post({ ...OK, name: '김철수', email: 'other@example.test' });
-  assert.equal(r.status, 201);
-  assert.notEqual(r.json.booking.no.slice(-4), undefined);
-  assert.equal((await admin('/bookings')).json.bookings.length, 3);
+test('동시에 같은 자리로 열 건이 들어와도 한 건만 저장된다', async () => {
+  const slot = { ...OK, date: '2026-10-14', time: '14:00' };
+  const results = await Promise.all(
+    Array.from({ length: 10 }, (_, i) =>
+      post({ ...slot, name: `동시${i}`, email: `race${i}@example.test` })),
+  );
+  const made = results.filter(r => r.status === 201);
+  const refused = results.filter(r => r.status === 409);
+  assert.equal(made.length, 1, `201은 한 건이어야 함 (받은 값 ${made.length})`);
+  assert.equal(refused.length, 9);
+
+  const atSlot = (await admin('/bookings')).json.bookings
+    .filter(b => b.date === slot.date && b.time === slot.time);
+  assert.equal(atSlot.length, 1, '저장소에도 한 건만 남아야 한다');
+});
+
+test('취소하면 그 자리를 다시 예약할 수 있다', async () => {
+  const slot = { ...OK, date: '2026-10-15', time: '17:30', name: '먼저', email: 'first@example.test' };
+  assert.equal((await post(slot)).status, 201);
+  assert.equal((await post({ ...slot, name: '나중', email: 'second@example.test' })).status, 409);
+
+  const mine = (await admin('/bookings')).json.bookings.find(b => b.date === slot.date && b.time === slot.time);
+  await admin(`/bookings/${mine.id}`, { method: 'PATCH', body: { status: 'cancelled' } });
+
+  const again = await post({ ...slot, name: '나중', email: 'second@example.test' });
+  assert.equal(again.status, 201, '취소된 자리는 다시 받아야 한다');
+});
+
+test("'변경 요청'은 자리를 계속 잡고 있다", async () => {
+  const slot = { ...OK, date: '2026-10-16', time: '13:00', name: '변경', email: 'resched@example.test' };
+  assert.equal((await post(slot)).status, 201);
+  const mine = (await admin('/bookings')).json.bookings.find(b => b.date === slot.date && b.time === slot.time);
+  await admin(`/bookings/${mine.id}`, { method: 'PATCH', body: { status: 'reschedule' } });
+
+  const other = await post({ ...slot, name: '다른사람', email: 'other2@example.test' });
+  assert.equal(other.status, 409);
+});
+
+test('찬 자리 목록은 날짜와 시간만 알려 준다', async () => {
+  const r = await fetch(`${base}/bookings/taken`);
+  assert.equal(r.status, 200);
+  const { taken } = await r.json();
+  assert.ok(Array.isArray(taken) && taken.length > 0);
+  /* 누가 예약했는지는 새어 나가면 안 된다 */
+  for (const slot of taken) {
+    assert.deepEqual(Object.keys(slot).sort(), ['date', 'time']);
+  }
+  const body = JSON.stringify(taken);
+  for (const leak of ['홍길동', 'guest@example.test', '졸업 작품 상담', '먼저', 'received']) {
+    assert.ok(!body.includes(leak), `찬 자리 목록에 '${leak}'이(가) 들어 있으면 안 된다`);
+  }
+});
+
+test('취소한 자리는 찬 자리 목록에서 빠진다', async () => {
+  const slot = { ...OK, date: '2026-10-19', time: '18:00', name: '뺄것', email: 'drop@example.test' };
+  assert.equal((await post(slot)).status, 201);
+
+  const listed = async () => (await (await fetch(`${base}/bookings/taken`)).json())
+    .taken.some(s => s.date === slot.date && s.time === slot.time);
+  assert.equal(await listed(), true);
+
+  const mine = (await admin('/bookings')).json.bookings.find(b => b.date === slot.date && b.time === slot.time);
+  await admin(`/bookings/${mine.id}`, { method: 'PATCH', body: { status: 'cancelled' } });
+  assert.equal(await listed(), false);
+});
+
+test('찬 자리 목록은 로그인 없이 볼 수 있다', async () => {
+  const r = await fetch(`${base}/bookings/taken`, { headers: { Authorization: 'Bearer nonsense' } });
+  assert.equal(r.status, 200);
 });
 
 test('방문 희망 시간이 이른 것부터 돌려준다', async () => {

@@ -18,6 +18,8 @@
 }
 
 *{box-sizing:border-box}
+/* hidden 속성이 확실히 먹게 한다 — .err처럼 display를 지정한 요소는 기본 규칙만으로는 숨겨지지 않는다 */
+[hidden]{display:none !important}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
   margin:0;background:var(--paper);color:var(--ink);

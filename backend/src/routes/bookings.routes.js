@@ -2,7 +2,7 @@
    메일 알림은 예약 페이지가 Formspree로 직접 보낸다. 이 라우트는 관리자 화면이 쓸 기록만 남긴다.
    받은 예약을 보고 처리 상태를 바꾸는 일은 /api/admin/bookings 에 있다. */
 import { Router } from 'express';
-import { bookingNo, create, findByNo } from '../repositories/booking.repository.js';
+import { createIfFree, takenSlots } from '../repositories/booking.repository.js';
 import { HttpError } from '../utils/httpError.js';
 
 export const bookingsRouter = Router();
@@ -28,6 +28,13 @@ bookingsRouter.use((req, res, next) => {
   next();
 });
 
+/* GET /api/bookings/taken — 이미 찬 자리 (공개).
+   예약 페이지가 드롭다운에 (완료)를 붙이는 데 쓴다. 날짜와 시간만 나가고 신청자 정보는 나가지 않는다. */
+bookingsRouter.get('/taken', async (req, res) => {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+  res.json({ taken: await takenSlots(today) });
+});
+
 /* POST /api/bookings — 방문 예약 접수 */
 bookingsRouter.post('/', async (req, res) => {
   const b = req.body ?? {};
@@ -51,11 +58,11 @@ bookingsRouter.post('/', async (req, res) => {
   /* 화면에서 체크하지만 서버에서도 확인한다 — 동의 없이 저장하지 않는다 */
   if (b.consent !== true) throw new HttpError(400, '정보 전달 동의가 필요합니다.');
 
-  /* 같은 사람이 같은 시간을 두 번 신청하면 번호가 같다 — 두 번 받지 않는다.
-     다른 사람이 같은 시간을 신청하는 것은 여기서 막지 않는다 (겹침 관리는 관리자 화면에서 할 일) */
-  const no = bookingNo({ name, email, date, time });
-  if (await findByNo(no)) throw new HttpError(409, '같은 시간으로 이미 접수된 예약이 있습니다.');
-
-  const saved = await create({ name, email, purpose, date, time, consent: true });
+  /* 한 자리에는 한 예약만. 화면에서도 (완료)로 막지만, 두 사람이 거의 동시에 보내면 화면만으로는 막히지 않는다.
+     마지막으로 거르는 곳은 여기이고, 확인과 저장이 한 묶음이라 둘 다 통과하는 일이 없다. */
+  const saved = await createIfFree({ name, email, purpose, date, time, consent: true });
+  if (!saved) {
+    throw new HttpError(409, '방금 다른 분이 그 시간을 예약했습니다. 다른 시간을 골라 주세요.', { code: 'slot_taken' });
+  }
   res.status(201).json({ booking: { id: saved.id, no: saved.no, date: saved.date, time: saved.time } });
 });

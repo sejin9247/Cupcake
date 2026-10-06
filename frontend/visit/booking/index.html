@@ -52,7 +52,7 @@
               <span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span>
             </div>
             <div class="cal-grid" id="calGrid" role="grid" aria-label="방문 날짜 선택"></div>
-            <p class="cal-note">주말과 공휴일, 지난 날짜는 고를 수 없습니다.</p>
+            <p class="cal-note">주말과 공휴일, 지난 날짜는 고를 수 없습니다.<br>예약이 모두 찬 날도 함께 흐리게 표시됩니다.</p>
           </div>
 
           <div class="body">
@@ -63,9 +63,10 @@
 
             <label class="field" for="time">
               <span class="lab">희망 시간 <i>필수</i></span>
-              <select id="time" name="time" required>
-                <option value="">시간을 선택하세요</option>
+              <select id="time" name="time" required aria-describedby="timeNote">
+                <option value="">날짜를 먼저 고르세요</option>
               </select>
+              <span class="left" id="timeNote"></span>
             </label>
           </div>
         </section>
@@ -108,6 +109,7 @@
 
       <!-- 동의 + 제출 -->
       <div class="submit">
+        <p class="alert" id="alert" role="alert" hidden></p>
         <label class="consent" for="consent">
           <input id="consent" type="checkbox" required>
           <span>입력 정보를 예약 상담 목적으로 운영자에게 전달하는 것에 동의합니다.</span>
