@@ -1,0 +1,136 @@
+/* ============================================================
+   찾아오는 길 · 방문 예약 — 허브와 같은 종이빛 바탕, 같은 서체
+   ============================================================ */
+
+:root{
+  --paper:#f2f0ed;
+  --paper-2:#e7e4df;
+  --ink:#11141a;
+  --ink-soft:#3b424b;
+  --muted:#767d85;
+  --line:rgba(17,20,26,.13);
+  --accent:#c2542a;
+  --maxw:1100px;
+  --pad:clamp(20px,5vw,72px);
+  --serif:'Instrument Serif','Noto Serif KR',Georgia,serif;
+  --sans:'Pretendard Variable',Pretendard,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  word-break:keep-all;overflow-wrap:break-word;
+}
+img{max-width:100%;display:block}
+a{color:inherit}
+::selection{background:var(--accent);color:#fff}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad)}
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+
+/* ---------- 머리 ---------- */
+.top{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding:22px var(--pad);border-bottom:1px solid var(--line);flex-wrap:wrap;
+}
+.top .logo{
+  font-family:var(--mono);font-weight:500;font-size:14px;
+  letter-spacing:.3em;text-decoration:none;text-transform:uppercase;
+}
+.top nav{display:flex;gap:22px}
+.top nav a{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;text-decoration:none;opacity:.75;transition:opacity .25s;
+}
+.top nav a:hover{opacity:1}
+
+.hero{padding:clamp(54px,9vw,104px) 0 clamp(30px,5vw,54px)}
+.hero .no{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--accent)}
+.hero h1{
+  margin:14px 0 0;font-family:var(--serif);font-weight:400;
+  font-size:clamp(34px,6vw,70px);line-height:1.08;letter-spacing:-.02em;
+}
+.hero p{margin:18px 0 0;color:var(--muted);max-width:52ch}
+
+/* ---------- 본문 ---------- */
+main{padding-bottom:clamp(60px,9vw,120px)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(26px,4vw,44px);align-items:start}
+@media (min-width:900px){.cols{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+
+.card{border:1px solid var(--line);background:var(--paper-2)}
+.card h2{
+  margin:0;padding:16px 20px;border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent);font-weight:400;
+}
+.card .body{padding:20px}
+
+/* 지도 */
+.map{aspect-ratio:16/10;border:0;width:100%;display:block;background:var(--paper-2)}
+.addr{margin:0;padding:18px 20px;border-top:1px solid var(--line);background:var(--paper)}
+.addr .road{font-size:clamp(17px,2vw,21px);font-weight:600}
+.addr .room{display:inline-block;margin-left:8px;padding:3px 9px;background:var(--ink);color:var(--paper);
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;vertical-align:2px}
+.addr .sub{margin:6px 0 0;color:var(--muted);font-size:14px}
+.addr .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.addr .links a{
+  display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+  border:1px solid var(--line);padding:9px 14px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  transition:.25s;
+}
+.addr .links a:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* 날씨 */
+.wx{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.wx div{background:var(--paper);padding:18px 20px}
+.wx dt{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.wx dd{margin:0;font-family:var(--serif);font-size:clamp(30px,4.4vw,44px);line-height:1}
+.wx dd span{font-family:var(--sans);font-size:15px;color:var(--muted);margin-left:3px}
+.wx-now{padding:16px 20px;font-size:14px;color:var(--ink-soft);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.wx-now .t{color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.1em}
+
+/* 출처 */
+.src{margin:18px 0 0;font-size:11.5px;color:var(--muted);line-height:1.7}
+.src a{color:var(--muted)}
+.src a:hover{color:var(--ink)}
+
+/* 예약 버튼 */
+.cta-wrap{margin-top:clamp(34px,5vw,56px);text-align:center}
+.cta{
+  display:inline-flex;align-items:center;gap:16px;
+  padding:16px 16px 16px 30px;border:0;cursor:pointer;text-decoration:none;
+  background:var(--ink);color:var(--paper);
+  font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  transition:.3s;
+}
+.cta .arr{width:32px;height:32px;display:grid;place-items:center;background:var(--accent);color:#fff;transition:transform .3s}
+.cta:hover{background:var(--accent)}
+.cta:hover .arr{transform:translateX(4px);background:var(--ink)}
+.cta-wrap .note{margin:14px 0 0;font-size:13px;color:var(--muted)}
+
+/* ---------- 바닥 ---------- */
+.foot{
+  border-top:1px solid var(--line);padding:26px var(--pad) 40px;
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+}
+.foot a{text-decoration:none}
+.foot a:hover{color:var(--ink)}
+
+/* 준비 중 안내 (예약 페이지) */
+.soon{padding:clamp(60px,12vw,140px) 0;text-align:center}
+.soon h1{margin:0;font-family:var(--serif);font-weight:400;font-size:clamp(32px,5.5vw,62px);line-height:1.1}
+.soon p{margin:20px auto 0;color:var(--muted);max-width:44ch}
+.soon .back{
+  display:inline-flex;align-items:center;gap:10px;margin-top:34px;text-decoration:none;
+  border:1px solid var(--line);padding:12px 18px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;transition:.25s;
+}
+.soon .back:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}

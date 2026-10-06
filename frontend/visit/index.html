@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>찾아오는 길 · 전세진</title>
+<meta name="description" content="상명대학교 천안캠퍼스 B306 찾아오는 길과 현재 날씨, 방문 예약 안내.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' fill='%2311141a'/><path d='M20 8l10 6v12l-10 6-10-6V14z' fill='none' stroke='%23c2542a' stroke-width='2.4'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif&family=Noto+Serif+KR:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="visit.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="logo" href="../index.html">Jeon Se Jin</a>
+  <nav>
+    <a href="../index.html#work">Work</a>
+    <a href="../index.html#contact">Contact</a>
+    <a href="booking/">예약</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="no">Visit</span>
+    <h1>찾아오는 길</h1>
+    <p>상명대학교 천안캠퍼스 B306입니다. 오시기 전에 현재 날씨를 함께 확인하시고,
+       아래에서 방문 시간을 예약해 주세요.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="cols">
+
+      <!-- 지도 + 주소 -->
+      <section class="card">
+        <h2>Location</h2>
+        <iframe
+          class="map"
+          title="상명대학교 천안캠퍼스 위치 지도"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.openstreetmap.org/export/embed.html?bbox=127.1690%2C36.8270%2C127.1890%2C36.8390&amp;layer=mapnik&amp;marker=36.8330%2C127.1790"></iframe>
+        <div class="addr">
+          <p class="road">충남 천안시 동남구 상명대길 31<span class="room">B306</span></p>
+          <p class="sub">상명대학교 천안캠퍼스 · 안서동</p>
+          <div class="links">
+            <a href="https://www.openstreetmap.org/?mlat=36.8330&amp;mlon=127.1790#map=16/36.8330/127.1790" target="_blank" rel="noopener">큰 지도로 보기</a>
+            <a href="https://map.kakao.com/?q=상명대학교 천안캠퍼스" target="_blank" rel="noopener">카카오맵에서 길찾기</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- 날씨 -->
+      <section class="card">
+        <h2>Weather</h2>
+        <dl class="wx">
+          <div>
+            <dt>기온</dt>
+            <dd id="wxTemp">—<span>℃</span></dd>
+          </div>
+          <div>
+            <dt>습도</dt>
+            <dd id="wxHum">—<span>%</span></dd>
+          </div>
+        </dl>
+        <p class="wx-now">
+          <span id="wxNote">불러오는 중…</span>
+          <span class="t" id="wxTime">상명대길 31 기준</span>
+        </p>
+        <div class="body" style="padding-top:0">
+          <p class="src">
+            지도 · 주소 — <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap 기여자</a><br>
+            날씨 — <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (무료 공개 API)
+          </p>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 예약 -->
+    <div class="cta-wrap">
+      <a class="cta" href="booking/">
+        방문 예약하기
+        <span class="arr" aria-hidden="true">
+          <svg viewBox="0 0 20 20" width="14" height="14" fill="none"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </a>
+      <p class="note">예약 페이지는 준비 중입니다.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <span>© <span id="yr">2026</span> Jeon Se Jin</span>
+  <a href="../index.html">← 포트폴리오로</a>
+</footer>
+
+<script src="visit.js"></script>
+</body>
+</html>
