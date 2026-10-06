@@ -33,16 +33,6 @@ export const config = {
     url: process.env.DATABASE_URL || '',
   },
 
-  /* 방문 예약 알림 메일 (Resend)
-     키나 받는 주소가 없으면 메일을 보내지 않는다 — 예약은 그대로 저장된다.
-     from은 도메인을 인증하기 전까지 Resend가 주는 onboarding@resend.dev를 쓴다.
-     (그 상태에서는 Resend 계정 주인의 주소로만 보낼 수 있다 — 지금은 받는 곳이 한 곳이라 문제없다) */
-  mail: {
-    resendKey: process.env.RESEND_API_KEY || '',
-    to: process.env.BOOKING_MAIL_TO || '',
-    from: process.env.BOOKING_MAIL_FROM || 'Booking <onboarding@resend.dev>',
-  },
-
   admin: {
     /* 비밀번호 원문은 어디에도 두지 않는다. npm run set-password가 만든 scrypt 해시만 .env(배포: Vercel 환경 변수)에 저장 */
     passwordHash: process.env.ADMIN_PASSWORD_HASH || '',

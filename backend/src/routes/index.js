@@ -2,7 +2,6 @@
 import { Router } from 'express';
 import { config } from '../config/index.js';
 import { adminRouter } from './admin.routes.js';
-import { bookingsRouter } from './bookings.routes.js';
 import { geoRouter } from './geo.routes.js';
 import { healthRouter } from './health.routes.js';
 import { overpassRouter } from './overpass.routes.js';
@@ -13,7 +12,6 @@ export const apiRouter = Router();
 
 apiRouter.use('/health', healthRouter);
 apiRouter.use('/projects', projectsRouter);
-apiRouter.use('/bookings', bookingsRouter);
 apiRouter.use('/admin', adminRouter);
 
 // 외부 API 중계 — 로컬 개발용 (배포에서는 config.enableProxy가 false)
