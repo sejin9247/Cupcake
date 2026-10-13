@@ -1,24 +1,31 @@
 /* ============================================================
-   찾아오는 길 · 방문 예약 — 허브와 같은 종이빛 바탕, 같은 서체
+   오시는 길 · 방문 예약 — 흑백 편집 디자인
+   색은 쓰지 않는다. 유일하게 색을 가진 것은 위성사진뿐이고,
+   그래서 사진이 페이지에서 가장 먼저 눈에 들어온다.
    ============================================================ */
 
 :root{
-  --paper:#f2f0ed;
-  --paper-2:#e7e4df;
-  --ink:#11141a;
-  --ink-soft:#3b424b;
-  --muted:#767d85;
-  --line:rgba(17,20,26,.13);
-  --accent:#c2542a;
-  --maxw:1100px;
-  --pad:clamp(20px,5vw,72px);
-  --serif:'Instrument Serif','Noto Serif KR',Georgia,serif;
+  --paper:#f6f5f3;          /* 거의 흰 종이 */
+  --paper-2:#eceae6;        /* 한 칸 어두운 면 */
+  --ink:#0a0a0a;            /* 거의 순수한 검정 */
+  --ink-soft:#43454a;
+  --muted:#8b8d92;
+  --line:rgba(10,10,10,.16);
+  --line-soft:rgba(10,10,10,.09);
+
+  --rail:38px;              /* 양 끝 검은 띠의 폭 */
+  --maxw:1240px;
+  --pad:clamp(20px,4vw,56px);
+
+  /* 제목용 디도네. 한글은 이 서체에 없으므로 본문 명조로 넘어간다 */
+  --display:'Bodoni Moda','Noto Serif KR',Georgia,serif;
+  --kr:'Noto Serif KR',Georgia,serif;
   --sans:'Pretendard Variable',Pretendard,-apple-system,'Segoe UI',sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
 }
 
 *{box-sizing:border-box}
-/* hidden 속성이 확실히 먹게 한다 — .err처럼 display를 지정한 요소는 기본 규칙만으로는 숨겨지지 않는다 */
+/* hidden 속성이 확실히 먹게 한다 — display를 지정한 요소는 기본 규칙만으로는 숨겨지지 않는다 */
 [hidden]{display:none !important}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
@@ -26,113 +33,213 @@ body{
   font-family:var(--sans);font-size:16px;line-height:1.7;
   -webkit-font-smoothing:antialiased;
   word-break:keep-all;overflow-wrap:break-word;
+  padding:0 var(--rail);               /* 양 끝 레일이 덮는 만큼 비워 둔다 */
 }
 img{max-width:100%;display:block}
 a{color:inherit}
-::selection{background:var(--accent);color:#fff}
+::selection{background:var(--ink);color:var(--paper)}
 
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad)}
-.mono{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+
+/* 작은 라벨 — 번호, 눈썹글, 표 머리에 두루 쓴다 */
+.mono,.eyebrow,.lab-s{
+  font-family:var(--mono);font-size:10px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--muted);
+}
+
+/* ---------- 양 끝 세로 레일 ---------- */
+.rail{
+  position:fixed;top:0;bottom:0;width:var(--rail);z-index:60;
+  background:var(--ink);color:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:18px 0;
+}
+.rail span,.rail a{
+  writing-mode:vertical-rl;white-space:nowrap;text-decoration:none;
+  font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+}
+.rail a{opacity:.72;transition:opacity .25s}
+.rail a:hover,.rail a:focus-visible{opacity:1}
+.rail-l{left:0}
+.rail-l span,.rail-l a{transform:rotate(180deg)}   /* 왼쪽은 아래에서 위로 읽는다 */
+.rail-r{right:0}
 
 /* ---------- 머리 ---------- */
 .top{
   display:flex;align-items:center;justify-content:space-between;gap:20px;
-  padding:22px var(--pad);border-bottom:1px solid var(--line);flex-wrap:wrap;
+  padding:20px var(--pad);border-bottom:1px solid var(--line-soft);flex-wrap:wrap;
 }
 .top .logo{
-  font-family:var(--mono);font-weight:500;font-size:14px;
+  font-family:var(--mono);font-weight:500;font-size:13px;
   letter-spacing:.3em;text-decoration:none;text-transform:uppercase;
 }
 .top nav{display:flex;gap:22px}
 .top nav a{
-  font-family:var(--mono);font-size:11px;letter-spacing:.14em;
-  text-transform:uppercase;text-decoration:none;opacity:.75;transition:opacity .25s;
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;text-decoration:none;color:var(--ink-soft);transition:color .25s;
 }
-.top nav a:hover{opacity:1}
+.top nav a:hover{color:var(--ink)}
 
-.hero{padding:clamp(54px,9vw,104px) 0 clamp(30px,5vw,54px)}
-.hero .no{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--accent)}
-.hero h1{
-  margin:14px 0 0;font-family:var(--serif);font-weight:400;
-  font-size:clamp(34px,6vw,70px);line-height:1.08;letter-spacing:-.02em;
+/* ---------- 가운데 ---------- */
+main{padding:clamp(40px,7vw,86px) 0 clamp(56px,8vw,110px)}
+
+/* 사진(왼쪽) · 글(오른쪽) */
+.duo{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(30px,4vw,56px);align-items:center}
+@media (min-width:920px){
+  .duo{grid-template-columns:minmax(0,.86fr) minmax(0,1fr);gap:clamp(44px,5vw,78px)}
 }
-.hero p{margin:18px 0 0;color:var(--muted);max-width:52ch}
 
-/* ---------- 본문 ---------- */
-main{padding-bottom:clamp(60px,9vw,120px)}
-.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(26px,4vw,44px);align-items:start}
-@media (min-width:900px){.cols{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
-
-.card{border:1px solid var(--line);background:var(--paper-2)}
-.card h2{
-  margin:0;padding:16px 20px;border-bottom:1px solid var(--line);
-  font-family:var(--mono);font-size:11px;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--accent);font-weight:400;
+/* 위성사진 판 — 유일하게 색이 있는 자리 */
+.plate{margin:0}
+.plate .shot{
+  position:relative;width:100%;aspect-ratio:16/11;
+  border:1px solid var(--ink);background:var(--paper-2);
 }
-.card .body{padding:20px}
+@media (min-width:920px){.plate .shot{aspect-ratio:4/5}}
+.plate figcaption{
+  display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+  margin-top:10px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);
+}
 
-/* 지도 */
-.map{aspect-ratio:16/10;border:0;width:100%;display:block;background:var(--paper-2)}
-.addr{margin:0;padding:18px 20px;border-top:1px solid var(--line);background:var(--paper)}
-.addr .road{font-size:clamp(17px,2vw,21px);font-weight:600}
-.addr .room{display:inline-block;margin-left:8px;padding:3px 9px;background:var(--ink);color:var(--paper);
-  font-family:var(--mono);font-size:11px;letter-spacing:.08em;vertical-align:2px}
-.addr .sub{margin:6px 0 0;color:var(--muted);font-size:14px}
-.addr .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.addr .links a{
-  display:inline-flex;align-items:center;gap:8px;text-decoration:none;
-  border:1px solid var(--line);padding:9px 14px;
-  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+/* 지도를 못 불러왔을 때 */
+.shot-off{
+  display:grid;place-items:center;padding:24px;text-align:center;
+  font-size:13px;color:var(--muted);line-height:1.8;
+}
+
+/* Leaflet 기본 모양은 파란 테두리에 둥근 버튼이라 여기 결과 맞지 않는다 — 각지고 검게 */
+.leaflet-container{background:var(--paper-2);font-family:var(--sans)}
+.leaflet-container:focus,.leaflet-container:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.leaflet-touch .leaflet-bar,.leaflet-bar{border:0;box-shadow:none}
+.leaflet-bar a,.leaflet-touch .leaflet-bar a{
+  width:28px;height:28px;line-height:28px;border-radius:0;
+  background:var(--paper);color:var(--ink);border:1px solid var(--ink);
+  font-family:var(--mono);font-size:15px;
+}
+.leaflet-bar a + a{border-top:0}
+.leaflet-bar a:hover,.leaflet-touch .leaflet-bar a:hover{background:var(--ink);color:var(--paper)}
+.leaflet-control-attribution{
+  background:rgba(246,245,243,.86);border-radius:0;
+  font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--ink-soft);
+}
+.leaflet-control-attribution a{color:var(--ink-soft)}
+
+/* 위치 표시 — 흰 테를 두른 검은 점 */
+.pin i{
+  display:block;width:14px;height:14px;margin:2px;border-radius:50%;
+  background:var(--ink);box-shadow:0 0 0 3px rgba(246,245,243,.95),0 1px 6px rgba(0,0,0,.45);
+}
+
+/* 글 쪽 */
+.lede{min-width:0}
+.eyebrow{display:block;margin:0 0 clamp(16px,2.4vw,26px)}
+.display{
+  margin:0;font-family:var(--display);font-weight:400;font-style:normal;
+  font-size:clamp(52px,8.6vw,124px);line-height:.86;letter-spacing:-.025em;
+}
+.kr-line{
+  margin:clamp(20px,2.6vw,30px) 0 0;font-family:var(--kr);font-weight:300;
+  font-size:clamp(15px,1.5vw,18px);line-height:1.8;color:var(--ink-soft);
+}
+.kr-line b{font-weight:400}
+
+/* 주소·날씨를 한 줄짜리 표로 */
+.facts{margin:clamp(26px,3.4vw,40px) 0 0;border-top:1px solid var(--line)}
+.facts div{
+  display:grid;grid-template-columns:76px minmax(0,1fr);gap:16px;align-items:baseline;
+  padding:13px 0;border-bottom:1px solid var(--line-soft);
+}
+/* 한글 라벨이라 자간을 영문만큼 벌리지 않는다 */
+.facts dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted)}
+.facts dd{margin:0;font-size:15px}
+.facts .num{font-family:var(--display);font-size:clamp(26px,3vw,36px);line-height:1;letter-spacing:-.01em}
+.facts .num span{font-family:var(--sans);font-size:13px;color:var(--muted);margin-left:4px;letter-spacing:0}
+.facts .wx-pair{display:flex;gap:28px;align-items:baseline;flex-wrap:wrap}
+.facts .room{
+  display:inline-block;margin-left:8px;padding:2px 8px;background:var(--ink);color:var(--paper);
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;vertical-align:2px;
+}
+/* 덧붙이는 한 줄은 한글이 섞이므로 고정폭을 쓰지 않는다 — 자간이 벌어져 읽기 나빠진다 */
+.facts .t{display:block;margin-top:5px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+
+/* 바로가기 줄 */
+.jump{display:flex;gap:10px;flex-wrap:wrap;margin-top:clamp(22px,3vw,32px)}
+.jump a{
+  display:inline-flex;align-items:center;text-decoration:none;
+  border:1px solid var(--line);padding:10px 15px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
   transition:.25s;
 }
-.addr .links a:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.jump a:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-/* 날씨 */
-.wx{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
-.wx div{background:var(--paper);padding:18px 20px}
-.wx dt{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
-.wx dd{margin:0;font-family:var(--serif);font-size:clamp(30px,4.4vw,44px);line-height:1}
-.wx dd span{font-family:var(--sans);font-size:15px;color:var(--muted);margin-left:3px}
-.wx-now{padding:16px 20px;font-size:14px;color:var(--ink-soft);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.wx-now .t{color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.1em}
+/* 예약 버튼 — 색이 없으니 검정 면과 화살표 움직임으로 눈에 띄게 한다 */
+.cta{
+  display:inline-flex;align-items:center;gap:18px;margin-top:clamp(26px,3.4vw,38px);
+  padding:15px 15px 15px 28px;border:1px solid var(--ink);cursor:pointer;text-decoration:none;
+  background:var(--ink);color:var(--paper);
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  transition:background .3s,color .3s;
+}
+.cta .arr{width:30px;height:30px;display:grid;place-items:center;border:1px solid currentColor;transition:transform .3s}
+.cta:hover{background:var(--paper);color:var(--ink)}
+.cta:hover .arr{transform:translateX(5px)}
+.cta:disabled,.cta[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
 
 /* 출처 */
-.src{margin:18px 0 0;font-size:11.5px;color:var(--muted);line-height:1.7}
+.src{
+  margin:clamp(44px,6vw,76px) 0 0;padding-top:16px;border-top:1px solid var(--line-soft);
+  font-size:11px;line-height:1.9;color:var(--muted);
+}
 .src a{color:var(--muted)}
 .src a:hover{color:var(--ink)}
 
-/* 예약 버튼 */
-.cta-wrap{margin-top:clamp(34px,5vw,56px);text-align:center}
-.cta{
-  display:inline-flex;align-items:center;gap:16px;
-  padding:16px 16px 16px 30px;border:0;cursor:pointer;text-decoration:none;
-  background:var(--ink);color:var(--paper);
-  font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
-  transition:.3s;
-}
-.cta .arr{width:32px;height:32px;display:grid;place-items:center;background:var(--accent);color:#fff;transition:transform .3s}
-.cta:hover{background:var(--accent)}
-.cta:hover .arr{transform:translateX(4px);background:var(--ink)}
-.cta-wrap .note{margin:14px 0 0;font-size:13px;color:var(--muted)}
-
 /* ---------- 바닥 ---------- */
 .foot{
-  border-top:1px solid var(--line);padding:26px var(--pad) 40px;
+  border-top:1px solid var(--line-soft);padding:24px var(--pad) 36px;
   display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
-  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
 }
 .foot a{text-decoration:none}
 .foot a:hover{color:var(--ink)}
 
-/* 준비 중 안내 (예약 페이지) */
-.soon{padding:clamp(60px,12vw,140px) 0;text-align:center}
-.soon h1{margin:0;font-family:var(--serif);font-weight:400;font-size:clamp(32px,5.5vw,62px);line-height:1.1}
-.soon p{margin:20px auto 0;color:var(--muted);max-width:44ch}
-.soon .back{
-  display:inline-flex;align-items:center;gap:10px;margin-top:34px;text-decoration:none;
-  border:1px solid var(--line);padding:12px 18px;
-  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;transition:.25s;
+/* ---------- 예약 페이지가 함께 쓰는 조각 ---------- */
+.hero{padding:clamp(40px,6.5vw,80px) 0 clamp(26px,3.4vw,40px)}
+.hero .no{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.hero h1{
+  margin:clamp(14px,2vw,22px) 0 0;font-family:var(--display);font-weight:400;
+  font-size:clamp(46px,7.6vw,104px);line-height:.88;letter-spacing:-.025em;
 }
-.soon .back:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.hero p{margin:18px 0 0;font-family:var(--kr);font-weight:300;color:var(--ink-soft);max-width:54ch}
 
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.card{border:1px solid var(--line)}
+.card h2{
+  margin:0;padding:14px 18px;border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted);font-weight:400;
+}
+.card .body{padding:18px}
+
+/* ---------- 좁은 화면 ---------- */
+@media (max-width:900px){
+  body{padding:0}
+  .rail{display:none}
+}
+
+/* 휴대폰 — 한 줄에 억지로 욱여넣지 않는다. 밀려나면 글이 화면 밖으로 잘린다 */
+@media (max-width:560px){
+  .top{flex-direction:column;align-items:flex-start;gap:12px}
+  .top nav{gap:16px;flex-wrap:wrap}
+  .plate figcaption{flex-wrap:wrap;gap:4px}
+  .plate figcaption span:last-child{flex-basis:100%}
+  .facts div{grid-template-columns:minmax(0,1fr);gap:4px}
+  .facts dt{letter-spacing:.14em}
+  .jump a{flex:1 1 auto;justify-content:center}
+  .cta{width:100%;justify-content:space-between;padding-left:22px}
+  .foot{flex-direction:column;align-items:flex-start;gap:10px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{transition:none !important}
+}

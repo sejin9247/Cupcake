@@ -43,6 +43,43 @@
       timeEl.textContent = '잠시 후 새로고침해 주세요';
     });
 
+  /* ---------- 위성 지도 ----------
+     Esri World Imagery — 키가 필요 없고 저작권 표기만 하면 된다.
+     페이지에서 색을 가진 유일한 자리라 흑백 처리를 하지 않는다. */
+  const box = $('#map');
+  if (box && window.L) {
+    const map = L.map(box, {
+      center: [LAT, LON],
+      zoom: 17,
+      minZoom: 13,
+      maxZoom: 19,
+      zoomControl: true,
+      /* 휠로 확대하면 페이지 스크롤이 지도에 먹혀 답답하다 — 지도를 한 번 누른 뒤에만 켠다 */
+      scrollWheelZoom: false,
+    });
+
+    /* Leaflet이 기본으로 붙이는 'Leaflet' 링크와 국기 표식을 뗀다 — 출처 표기만 남긴다 */
+    map.attributionControl.setPrefix('');
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Imagery © <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics',
+    }).addTo(map);
+
+    /* 표시는 검정 점 하나 — 사진 위에서 가장 조용하게 읽힌다 */
+    L.marker([LAT, LON], {
+      icon: L.divIcon({ className: 'pin', html: '<i></i>', iconSize: [18, 18], iconAnchor: [9, 9] }),
+      keyboard: false,
+      title: '상명대학교 천안캠퍼스 B306',
+    }).addTo(map);
+
+    map.once('click', () => map.scrollWheelZoom.enable());
+  } else if (box) {
+    /* 지도 라이브러리가 열리지 않아도 빈 상자만 남기지 않는다 */
+    box.classList.add('shot-off');
+    box.textContent = '지도를 불러오지 못했습니다. 아래 ‘카카오맵에서 길찾기’로 확인해 주세요.';
+  }
+
   const y = $('#yr');
   if (y) y.textContent = String(new Date().getFullYear());
 })();
