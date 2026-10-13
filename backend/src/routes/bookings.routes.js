@@ -3,6 +3,7 @@
    받은 예약을 보고 처리 상태를 바꾸는 일은 /api/admin/bookings 에 있다. */
 import { Router } from 'express';
 import { createIfFree, takenSlots } from '../repositories/booking.repository.js';
+import { list as listHolidays } from '../repositories/holiday.repository.js';
 import { HttpError } from '../utils/httpError.js';
 
 export const bookingsRouter = Router();
@@ -26,6 +27,13 @@ bookingsRouter.use((req, res, next) => {
     throw new HttpError(415, 'Content-Type은 application/json이어야 합니다.');
   }
   next();
+});
+
+/* GET /api/bookings/holidays — 예약을 받지 않는 날 (공개).
+   예약 페이지가 달력에서 막을 날을 여기서 받아 간다.
+   받지 못하면 화면은 페이지에 딸린 holidays.js로 돌아간다 — 공휴일이 뚫리면 안 되기 때문이다. */
+bookingsRouter.get('/holidays', async (req, res) => {
+  res.json({ holidays: await listHolidays() });
 });
 
 /* GET /api/bookings/taken — 이미 찬 자리 (공개).

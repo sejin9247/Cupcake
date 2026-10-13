@@ -16,7 +16,13 @@
     const g = t => p.find(x => x.type === t).value;
     return new Date(Number(g('year')), Number(g('month')) - 1, Number(g('day')));
   }
-  const holidayName = key => (window.HOLIDAYS?.[key.slice(0, 4)] || {})[key] || null;
+  /* 공휴일은 서버(데이터베이스)에서 받아 온다. 새 해가 와도 코드를 고치지 않아도 되게.
+     못 받으면 이 페이지에 딸린 holidays.js로 돌아간다 — 공휴일이 뚫리는 것보다 낫다. */
+  let holidays = null;                      // { 'YYYY-MM-DD': '이름' }
+  function holidayName(key) {
+    if (holidays) return holidays[key] || null;
+    return (window.HOLIDAYS?.[key.slice(0, 4)] || {})[key] || null;
+  }
 
   const TODAY = todayKST();
   const LIMIT = new Date(TODAY.getFullYear(), TODAY.getMonth() + 3, 0);   // 석 달 뒤 말일까지
@@ -359,6 +365,23 @@
     }).format(new Date()) + ' (KST)';
   }
 
+  /* ---------- 공휴일 읽기 ----------
+     실패하면 holidays 를 비워 둔다 — holidayName 이 페이지에 딸린 목록으로 돌아간다. */
+  async function loadHolidays() {
+    try {
+      const r = await fetch('/api/bookings/holidays', { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const js = await r.json();
+      const list = js.holidays ?? [];
+      if (!list.length) throw new Error('빈 목록');
+      holidays = Object.fromEntries(list.map(h => [h.date, h.name]));
+      return true;
+    } catch (e) {
+      console.warn('[예약] 공휴일을 서버에서 받지 못해 페이지에 딸린 목록을 씁니다:', e.message);
+      return false;
+    }
+  }
+
   /* ---------- 찬 자리 읽기 ----------
      실패하면 아무것도 막지 않는다. 서버가 접수 때 다시 거르므로 겹쳐 들어가지는 않는다. */
   async function loadTaken() {
@@ -390,5 +413,6 @@
   renderTimes();
   validate();
   $('#yr').textContent = String(new Date().getFullYear());
-  loadTaken().then(ok => { if (ok) syncAfterTaken(); });
+  /* 공휴일과 찬 자리를 함께 받아 온 뒤 화면을 한 번만 다시 그린다 */
+  Promise.all([loadHolidays(), loadTaken()]).then(([h, t]) => { if (h || t) syncAfterTaken(); });
 })();
