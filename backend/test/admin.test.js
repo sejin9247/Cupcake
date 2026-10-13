@@ -7,6 +7,11 @@ import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import { hashPassword } from '../src/utils/password.js';
 
+/* 이 시험은 로컬 저장소를 전제한다. 환경에 Supabase 열쇠가 있으면 진짜 데이터베이스로 가 버리므로
+   먼저 지운다. 진짜 Supabase 경로는 bookings.supabase.test.js 가 따로 맡는다. */
+delete process.env.SUPABASE_URL;
+delete process.env.SUPABASE_SECRET_KEY;
+
 const PASSWORD = 'correct horse battery';
 const dataDir = await mkdtemp(join(tmpdir(), 'cupcake-admin-'));
 process.env.DATA_DIR = dataDir;

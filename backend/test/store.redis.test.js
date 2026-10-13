@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { after, before, test } from 'node:test';
 
+/* 이 시험은 로컬 저장소를 전제한다. 환경에 Supabase 열쇠가 있으면 진짜 데이터베이스로 가 버리므로
+   먼저 지운다. 진짜 Supabase 경로는 bookings.supabase.test.js 가 따로 맡는다. */
+delete process.env.SUPABASE_URL;
+delete process.env.SUPABASE_SECRET_KEY;
+
 const TOKEN = 'test-token';
 const data = new Map();   // key → { v, exp }
 const seen = [];
