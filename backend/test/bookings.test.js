@@ -223,6 +223,26 @@ test('빠진 값과 잘못된 값은 거절한다', async () => {
   }
 });
 
+test('받는 시간 규칙은 기본값으로 돌아간다 (DB 없이)', async () => {
+  const r = await fetch(`${base}/bookings/rules`);
+  assert.equal(r.status, 200, '로그인 없이 볼 수 있어야 한다');
+  const js = await r.json();
+  assert.equal(js.openFrom, '13:00');
+  assert.equal(js.openTo, '18:00');
+  assert.equal(js.slotMinutes, 30);
+  assert.equal(js.weekdaysOnly, true);
+  assert.equal(js.times.length, 11, '13:00~18:00 을 30분으로 나누면 11개');
+  assert.equal(js.times[0], '13:00');
+  assert.equal(js.times.at(-1), '18:00');
+});
+
+test('규칙 밖 시간은 몇 시부터 몇 시까지인지 알려 주며 거절한다', async () => {
+  const r = await post({ ...OK, time: '12:00' });
+  assert.equal(r.status, 400);
+  assert.match(r.json.error.message, /13:00–18:00/);
+  assert.match(r.json.error.message, /30분/);
+});
+
 test('JSON이 아닌 요청은 415', async () => {
   const r = await fetch(`${base}/bookings`, {
     method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: 'name=홍길동',

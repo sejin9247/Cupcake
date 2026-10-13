@@ -27,9 +27,11 @@
   const TODAY = todayKST();
   const LIMIT = new Date(TODAY.getFullYear(), TODAY.getMonth() + 3, 0);   // 석 달 뒤 말일까지
 
-  /* 고를 수 있는 시간 — 13:00 ~ 18:00, 30분 단위 */
-  const TIMES = [];
+  /* 고를 수 있는 시간. 서버(데이터베이스)에서 받아 오고, 못 받으면 아래 값을 쓴다.
+     서버도 같은 규칙으로 검사하므로, 영업시간을 바꿀 때 한 곳만 고치면 된다. */
+  let TIMES = [];
   for (let t = 13 * 60; t <= 18 * 60; t += 30) TIMES.push(pad(Math.floor(t / 60)) + ':' + pad(t % 60));
+  let weekdaysOnly = true;
 
   /* 이미 찬 자리 — 'YYYY-MM-DD HH:MM' 모음. 서버에서 받아 온다.
      못 받아 오면 비워 둔다: 화면에서 막지 못해도 서버가 마지막에 거른다(막아서 아무것도 못 고르게 하는 것보다 낫다). */
@@ -39,7 +41,7 @@
 
   function blocked(d) {
     const day = d.getDay();
-    if (day === 0 || day === 6) return '주말';
+    if (weekdaysOnly && (day === 0 || day === 6)) return '주말';
     if (d < TODAY) return '지난 날짜';
     if (d > LIMIT) return '예약 가능 기간이 아님';
     const h = holidayName(ymd(d));
@@ -365,19 +367,30 @@
     }).format(new Date()) + ' (KST)';
   }
 
-  /* ---------- 공휴일 읽기 ----------
-     실패하면 holidays 를 비워 둔다 — holidayName 이 페이지에 딸린 목록으로 돌아간다. */
-  async function loadHolidays() {
+  /* ---------- 예약 규칙 읽기 (시간·요일·공휴일) ----------
+     실패하면 페이지에 적힌 기본값과 딸린 holidays.js로 돌아간다.
+     규칙을 못 읽었다고 아무 날이나 열어 주면, 아무도 없는 날에 예약을 받는다. */
+  async function loadRules() {
     try {
-      const r = await fetch('/api/bookings/holidays', { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      const r = await fetch('/api/bookings/rules', { cache: 'no-store', signal: AbortSignal.timeout(8000) });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const js = await r.json();
-      const list = js.holidays ?? [];
-      if (!list.length) throw new Error('빈 목록');
-      holidays = Object.fromEntries(list.map(h => [h.date, h.name]));
+
+      if (Array.isArray(js.times) && js.times.length) TIMES = js.times;
+      if (typeof js.weekdaysOnly === 'boolean') weekdaysOnly = js.weekdaysOnly;
+      if (Array.isArray(js.holidays) && js.holidays.length) {
+        holidays = Object.fromEntries(js.holidays.map(h => [h.date, h.name]));
+      }
+
+      /* 안내 문구도 규칙에 맞춘다 — 글과 드롭다운이 어긋나면 안 된다 */
+      const note = $('#openHours');
+      if (note && js.openFrom && js.openTo) {
+        note.textContent = `${weekdaysOnly ? '평일 ' : ''}${js.openFrom}–${js.openTo}`
+          + (js.slotMinutes ? ` · ${js.slotMinutes}분 단위` : '');
+      }
       return true;
     } catch (e) {
-      console.warn('[예약] 공휴일을 서버에서 받지 못해 페이지에 딸린 목록을 씁니다:', e.message);
+      console.warn('[예약] 규칙을 서버에서 받지 못해 페이지 기본값을 씁니다:', e.message);
       return false;
     }
   }
@@ -413,6 +426,6 @@
   renderTimes();
   validate();
   $('#yr').textContent = String(new Date().getFullYear());
-  /* 공휴일과 찬 자리를 함께 받아 온 뒤 화면을 한 번만 다시 그린다 */
-  Promise.all([loadHolidays(), loadTaken()]).then(([h, t]) => { if (h || t) syncAfterTaken(); });
+  /* 규칙과 찬 자리를 함께 받아 온 뒤 화면을 한 번만 다시 그린다 */
+  Promise.all([loadRules(), loadTaken()]).then(([r, t]) => { if (r || t) syncAfterTaken(); });
 })();

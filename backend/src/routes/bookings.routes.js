@@ -4,12 +4,12 @@
 import { Router } from 'express';
 import { createIfFree, takenSlots } from '../repositories/booking.repository.js';
 import { list as listHolidays } from '../repositories/holiday.repository.js';
+import { rules as visitRules } from '../repositories/visit.repository.js';
 import { HttpError } from '../utils/httpError.js';
 
 export const bookingsRouter = Router();
 
 const MAX = { name: 60, email: 120, purpose: 1000 };
-const TIME_RE = /^(1[3-7]:(00|30)|18:00)$/;          // 13:00 ~ 18:00, 30분 단위
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 /* 이메일은 과하게 깐깐하면 멀쩡한 주소를 막는다 — 모양만 본다 */
 const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
@@ -29,9 +29,22 @@ bookingsRouter.use((req, res, next) => {
   next();
 });
 
-/* GET /api/bookings/holidays — 예약을 받지 않는 날 (공개).
-   예약 페이지가 달력에서 막을 날을 여기서 받아 간다.
-   받지 못하면 화면은 페이지에 딸린 holidays.js로 돌아간다 — 공휴일이 뚫리면 안 되기 때문이다. */
+/* GET /api/bookings/rules — 예약 페이지가 달력과 드롭다운을 그리는 데 쓰는 규칙 (공개).
+   시간 목록을 서버가 만들어 내려주므로, 화면과 서버가 같은 시간을 본다.
+   받지 못하면 화면은 자기 기본값과 딸린 holidays.js로 돌아간다 — 공휴일이 뚫리면 안 되기 때문이다. */
+bookingsRouter.get('/rules', async (req, res) => {
+  const rule = await visitRules();
+  res.json({
+    openFrom: rule.openFrom,
+    openTo: rule.openTo,
+    slotMinutes: rule.slotMinutes,
+    weekdaysOnly: rule.weekdaysOnly,
+    times: rule.times,
+    holidays: await listHolidays(),
+  });
+});
+
+/* 예전 이름 — 공휴일만 쓰던 곳이 있으면 계속 동작하게 둔다 */
 bookingsRouter.get('/holidays', async (req, res) => {
   res.json({ holidays: await listHolidays() });
 });
@@ -52,16 +65,25 @@ bookingsRouter.post('/', async (req, res) => {
   if (!EMAIL_RE.test(email)) throw new HttpError(400, '이메일 형식이 올바르지 않습니다.');
   const purpose = text(b.purpose, MAX.purpose, '방문 목적');
 
+  /* 받는 시간·요일 규칙은 DB(visit_info)에서 읽는다 — 화면의 드롭다운도 같은 값을 쓴다 */
+  const rule = await visitRules();
+
   const date = typeof b.date === 'string' ? b.date.trim() : '';
   if (!DATE_RE.test(date)) throw new HttpError(400, '방문 날짜를 선택해 주세요.');
   const d = new Date(date + 'T00:00:00+09:00');
   if (Number.isNaN(d.getTime())) throw new HttpError(400, '방문 날짜가 올바르지 않습니다.');
-  /* 공휴일은 화면에서 거르고, 서버는 주말만 막는다 (공휴일 목록은 frontend/visit/booking/holidays.js) */
-  const weekday = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', weekday: 'short' }).format(d);
-  if (weekday === 'Sat' || weekday === 'Sun') throw new HttpError(400, '주말은 예약할 수 없습니다.');
+  if (rule.weekdaysOnly) {
+    const weekday = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', weekday: 'short' }).format(d);
+    if (weekday === 'Sat' || weekday === 'Sun') throw new HttpError(400, '주말은 예약할 수 없습니다.');
+  }
+  /* 공휴일도 서버에서 막는다 — 화면만 믿으면 직접 요청을 보내 공휴일에 끼워 넣을 수 있다 */
+  const closed = (await listHolidays()).find(h => h.date === date);
+  if (closed) throw new HttpError(400, `${closed.name}에는 예약할 수 없습니다.`);
 
   const time = typeof b.time === 'string' ? b.time.trim() : '';
-  if (!TIME_RE.test(time)) throw new HttpError(400, '희망 시간을 선택해 주세요.');
+  if (!rule.times.includes(time)) {
+    throw new HttpError(400, `희망 시간을 선택해 주세요. (${rule.openFrom}–${rule.openTo}, ${rule.slotMinutes}분 단위)`);
+  }
 
   /* 화면에서 체크하지만 서버에서도 확인한다 — 동의 없이 저장하지 않는다 */
   if (b.consent !== true) throw new HttpError(400, '정보 전달 동의가 필요합니다.');

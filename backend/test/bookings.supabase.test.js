@@ -89,3 +89,43 @@ test('목록은 방문 시각이 이른 것부터 나온다', { skip }, async ()
 test('없는 예약의 상태는 바꿀 수 없다', { skip }, async () => {
   assert.equal(await setStatus('00000000-0000-0000-0000-000000000000', 'confirmed'), null);
 });
+
+/* ───── 아래 둘은 라우트를 거쳐, DB에서 읽은 규칙으로 막히는지 본다 ───── */
+
+test('규칙과 공휴일을 DB에서 읽어 내려준다', { skip }, async () => {
+  const { createApp } = await import('../src/app.js');
+  const server = createApp({ serveFrontend: false }).listen(0);
+  await new Promise(r => server.once('listening', r));
+  try {
+    const js = await (await fetch(`http://localhost:${server.address().port}/api/bookings/rules`)).json();
+    assert.equal(js.times.length, 11);
+    assert.ok(js.holidays.length >= 30, `공휴일이 DB에서 와야 한다 (받은 수 ${js.holidays.length})`);
+    assert.ok(js.holidays.some(h => h.name.includes('설날')), '설날이 들어 있어야 한다');
+  } finally { server.close(); }
+});
+
+test('공휴일에는 서버가 접수를 거절한다 — 화면을 건너뛰어도 막힌다', { skip }, async () => {
+  const { createApp } = await import('../src/app.js');
+  const server = createApp({ serveFrontend: false }).listen(0);
+  await new Promise(r => server.once('listening', r));
+  try {
+    const base = `http://localhost:${server.address().port}/api`;
+    const holidays = await (await fetch(`${base}/bookings/rules`)).json();
+    /* 평일에 오는 공휴일을 하나 고른다 (주말이면 주말 때문에 막혀서 공휴일 검사를 확인할 수 없다) */
+    const weekday = holidays.holidays.find(h => {
+      const d = new Date(h.date + 'T00:00:00+09:00').getUTCDay();
+      return d !== 0 && d !== 6;
+    });
+    assert.ok(weekday, '평일 공휴일이 있어야 한다');
+
+    const r = await fetch(`${base}/bookings`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: weekday.date, time: '14:00', name: '공휴일시험',
+        email: 'holiday@example.test', purpose: MARK, consent: true,
+      }),
+    });
+    assert.equal(r.status, 400);
+    assert.match((await r.json()).error.message, new RegExp(weekday.name.slice(0, 2)));
+  } finally { server.close(); }
+});
