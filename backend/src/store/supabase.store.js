@@ -28,7 +28,14 @@ export function createSupabaseStore({ url, secretKey }) {
       /* 프로젝트가 멈춰 있으면 여기서 걸린다 — 무료 등급은 한동안 쓰지 않으면 정지한다 */
       throw new HttpError(503, `데이터베이스 요청이 거절됐습니다 (${r.status}). ${body.slice(0, 200)}`);
     }
-    return r.status === 204 ? null : r.json();
+    /* return=minimal 로 보낸 요청은 201에 빈 본문이 온다 — 그대로 JSON으로 읽으면 깨진다 */
+    const text = await r.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
   }
 
   return {
