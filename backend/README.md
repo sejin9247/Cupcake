@@ -31,7 +31,9 @@ npm run set-password   # 관리자 비밀번호 설정 (처음 한 번, 바꿀 �
 | `DATABASE_URL` | DB 주소 (아직 사용 안 함) | 없음 |
 | `ADMIN_PASSWORD_HASH` | 관리자 비밀번호의 scrypt 해시. 직접 쓰지 말고 `npm run set-password`로 만듭니다 | 없음 (로그인 불가) |
 | `DATA_DIR` | 프로젝트 저장 폴더 (로컬) | `backend/data` |
-| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis (배포). Vercel Storage에서 연결하면 자동으로 들어갑니다 | 없음 (로컬 파일) |
+| `SUPABASE_URL` | Supabase 프로젝트 주소 | 없음 |
+| `SUPABASE_SECRET_KEY` | Supabase 비밀 열쇠(service_role). 줄 단위 잠금을 지나가므로 **서버에만** 둡니다 | 없음 |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis (배포). Supabase가 설정돼 있으면 쓰이지 않습니다 | 없음 (로컬 파일) |
 | `ENABLE_PROXY` | 외부 API 중계 라우트 사용 여부 | 로컬 `true`, Vercel `false` |
 
 `.env`는 git에 올라가지 않습니다. 새 변수는 `.env.example`과 `src/config/index.js`에 함께 추가하세요.
@@ -54,7 +56,8 @@ src/
     bookings.routes.js        POST /api/bookings (방문 예약 접수)
   services/                 외부 API 호출 · 재시도 · 요청 간격 · 토큰
   repositories/             데이터 저장소 (메모리 캐시, 프로젝트, 방문 예약)
-  store/index.js            키-값 저장소 — 로컬 파일/메모리 또는 Upstash Redis
+  store/index.js            키-값 저장소 — Supabase · Upstash Redis · 로컬 중 잡히는 것
+    supabase.store.js         그중 Supabase 구현 (public.kv 표 + kv_incr 함수)
   db/index.js               DB 연결 자리
   middleware/               요청 취소 신호, 404 · 오류 응답
   utils/                    HttpError, sleep · throttle

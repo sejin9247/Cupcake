@@ -7,6 +7,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { config } from '../config/index.js';
 import { HttpError } from '../utils/httpError.js';
+import { createSupabaseStore } from './supabase.store.js';
 
 function createRedisStore({ redisUrl, redisToken, prefix }) {
   async function cmd(...args) {
@@ -87,6 +88,10 @@ function createLocalStore(dir, { persistent }) {
 }
 
 const { redisUrl, redisToken } = config.store;
-export const store = redisUrl && redisToken
-  ? createRedisStore(config.store)
-  : createLocalStore(config.dataDir, { persistent: !config.onVercel });
+const { url: sbUrl, secretKey: sbKey } = config.supabase;
+
+export const store = sbUrl && sbKey
+  ? createSupabaseStore(config.supabase)
+  : redisUrl && redisToken
+    ? createRedisStore(config.store)
+    : createLocalStore(config.dataDir, { persistent: !config.onVercel });

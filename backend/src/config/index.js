@@ -44,9 +44,17 @@ export const config = {
     globalFailMax: 20,                //   20번 틀리면 로그인 전체 차단 (짧은 비밀번호를 여러 IP로 맞히는 공격 방지)
   },
 
-  /* 저장소
-     - Upstash Redis 환경 변수가 있으면 Redis (Vercel 배포용 — Vercel Storage에서 연결하면 자동으로 들어감)
-     - 없으면 로컬: 프로젝트는 dataDir의 JSON 파일, 세션·로그인 제한은 메모리 */
+  /* Supabase — 표에 담는 데이터(작업물·예약·조례)와 만료 있는 임시값(세션·로그인 제한)을 모두 맡는다.
+     비밀 열쇠(service_role)는 줄 단위 잠금을 지나가므로 서버에만 둔다. 브라우저로 내보내지 않는다. */
+  supabase: {
+    url: process.env.SUPABASE_URL || '',
+    secretKey: process.env.SUPABASE_SECRET_KEY || '',
+  },
+
+  /* 저장소 — 위에서부터 먼저 잡히는 것을 쓴다
+     1) Supabase (위 두 값이 있으면)
+     2) Upstash Redis (Vercel Storage에서 연결하면 자동으로 들어감)
+     3) 로컬: 프로젝트는 dataDir의 JSON 파일, 세션·로그인 제한은 메모리 */
   store: {
     redisUrl: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '',
     redisToken: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '',
