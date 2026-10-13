@@ -48,12 +48,19 @@ function normalize(input) {
   return out;
 }
 
-/* 사이트 방문자에게 보이는 모양 (상태·생성 시각 등 관리용 정보는 뺀다) */
-const toPublic = ({ id, title, role, description, date, members, notes, updatedAt }) =>
-  ({ id, title, role, description, date, members, notes, updatedAt });
+/* 사이트 방문자에게 보이는 모양 (상태·생성 시각 등 관리용 정보는 뺀다).
+   slug 는 화면이 패널을 찾는 열쇠, facts 는 패널의 항목표다. */
+const toPublic = ({
+  id, slug, title, eyebrow, summary, role, description, date, members, notes,
+  demoUrl, repoUrl, sortOrder, facts, updatedAt,
+}) => ({
+  id, slug, title, eyebrow, summary, role, description, date, members, notes,
+  demoUrl, repoUrl, sortOrder, updatedAt,
+  ...(facts && { facts }),
+});
 
 export async function listPublished() {
-  return (await repo.list()).filter(p => p.status === 'published').map(toPublic);
+  return (await repo.listPublic()).map(toPublic);
 }
 
 /* ---------- 중복 확인 ----------

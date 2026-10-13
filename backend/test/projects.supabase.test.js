@@ -70,6 +70,34 @@ test('지우면 사라진다', { skip }, async () => {
   assert.equal(await repo.get(p.id), null);
 });
 
+test('사이트용 목록은 공개된 것만, 항목표까지 함께 준다', { skip }, async () => {
+  /* 앞선 시험이 남긴 줄과 섞이지 않게, 이 시험이 만든 두 개만 본다 */
+  const open = await repo.create(draft('공개될것', { status: 'published' }));
+  const hidden = await repo.create(draft('숨을것'));                  // 초안
+  await db.insert('project_facts', [
+    { project_id: open.id, label: 'Stack', value: '시험 스택', sort_order: 2 },
+    { project_id: open.id, label: 'Year', value: '2026', sort_order: 1 },
+  ]);
+
+  const list = await repo.listPublic();
+  const ids = new Set(list.map(p => p.id));
+  assert.ok(ids.has(open.id), '공개한 것은 있어야 한다');
+  assert.ok(!ids.has(hidden.id), '초안은 빠져야 한다');
+
+  const got = list.find(p => p.id === open.id);
+  assert.deepEqual(got.facts.map(f => f.label), ['Year', 'Stack'], 'sort_order 대로 와야 한다');
+});
+
+test('사이트용 목록에 관리용 정보가 섞여 나가지 않는다', { skip }, async () => {
+  const { listPublished } = await import('../src/services/project.service.js');
+  const all = await listPublished();
+  assert.ok(all.length > 0);
+  for (const key of ['status', 'createdAt', 'isPublic', 'is_public']) {
+    assert.ok(!(key in all[0]), `${key} 가 공개 목록에 들어 있으면 안 된다`);
+  }
+  assert.ok('slug' in all[0] && 'summary' in all[0], '화면이 쓰는 칸은 있어야 한다');
+});
+
 test('목록은 최근에 만든 것부터 나온다', { skip }, async () => {
   const mine = (await repo.list()).filter(p => p.title.startsWith(MARK));
   const times = mine.map(p => p.createdAt);

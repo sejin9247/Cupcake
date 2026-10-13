@@ -14,15 +14,27 @@ import { store } from '../store/index.js';
 
 const fromRow = r => ({
   id: r.id,
+  slug: r.slug ?? '',
   title: r.title ?? '',
+  eyebrow: r.eyebrow ?? '',
+  summary: r.summary ?? '',
   role: r.role ?? '',
   description: r.description ?? '',
   date: r.period ?? '',
   members: r.members ?? null,
   notes: r.notes ?? '',
+  demoUrl: r.demo_url ?? '',
+  repoUrl: r.repo_url ?? '',
+  sortOrder: r.sort_order ?? 0,
   status: r.is_public ? 'published' : 'draft',
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  /* 딸려 온 항목표가 있으면 순서대로 (PostgREST 가 project_facts 로 붙여 준다) */
+  ...(r.project_facts && {
+    facts: [...r.project_facts]
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map(f => ({ label: f.label, value: f.value })),
+  }),
 });
 
 /* 표에는 slug가 반드시 있어야 한다(주소에 쓰는 짧은 이름).
@@ -48,6 +60,13 @@ const toRow = (data, id) => ({
 const sb = {
   async list() {
     const rows = await db.select('projects', 'select=*&order=created_at.desc');
+    return rows.map(fromRow);
+  },
+
+  /* 사이트용 — 공개된 것만, 항목표까지 함께, 패널 순서대로 */
+  async listPublic() {
+    const rows = await db.select('projects',
+      'select=*,project_facts(label,value,sort_order)&is_public=is.true&order=sort_order.asc');
     return rows.map(fromRow);
   },
 
@@ -140,6 +159,11 @@ const kv = {
 /* ───────────────────────── 바깥에 내보내는 것 ───────────────────────── */
 
 const impl = enabled ? sb : kv;
+
+/* 사이트용 목록. 예전 저장소에는 항목표가 없으므로 공개된 것만 걸러 준다. */
+export const listPublic = enabled
+  ? (...a) => sb.listPublic(...a)
+  : async () => (await kv.list()).filter(p => p.status === 'published');
 
 export const list = (...a) => impl.list(...a);
 export const get = (...a) => impl.get(...a);
