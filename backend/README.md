@@ -33,6 +33,7 @@ npm run set-password   # 관리자 비밀번호 설정 (처음 한 번, 바꿀 �
 | `DATA_DIR` | 프로젝트 저장 폴더 (로컬) | `backend/data` |
 | `SUPABASE_URL` | Supabase 프로젝트 주소 | 없음 |
 | `SUPABASE_SECRET_KEY` | Supabase 비밀 열쇠(service_role). 줄 단위 잠금을 지나가므로 **서버에만** 둡니다 | 없음 |
+| `CRON_SECRET` | Vercel Cron이 `/api/cron/keepalive`를 부를 때 싣는 비밀값. 무료 Supabase가 잠들지 않게 하루 두 번 깨웁니다 | 없음 (깨우기 주소 잠김) |
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis (배포). Supabase가 설정돼 있으면 쓰이지 않습니다 | 없음 (로컬 파일) |
 | `ENABLE_PROXY` | 외부 API 중계 라우트 사용 여부 | 로컬 `true`, Vercel `false` |
 

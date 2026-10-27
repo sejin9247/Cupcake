@@ -10,6 +10,16 @@
       "destination": "/api"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/keepalive?slot=03kst",
+      "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/keepalive?slot=15kst",
+      "schedule": "0 6 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/admin",

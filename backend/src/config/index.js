@@ -51,6 +51,12 @@ export const config = {
     secretKey: process.env.SUPABASE_SECRET_KEY || '',
   },
 
+  /* Vercel Cron — 무료 Supabase가 잠들지 않게 하루 두 번 깨운다 (vercel.json의 crons).
+     Vercel은 이 값을 'Authorization: Bearer …'로 실어 보낸다. 값이 없으면 깨우기 주소는 잠겨 있다. */
+  cron: {
+    secret: process.env.CRON_SECRET || '',
+  },
+
   /* 저장소 — 위에서부터 먼저 잡히는 것을 쓴다
      1) Supabase (위 두 값이 있으면)
      2) Upstash Redis (Vercel Storage에서 연결하면 자동으로 들어감)
