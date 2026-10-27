@@ -36,7 +36,7 @@ const PROFILE = {
   grade: '3학년 재학 중',
   expected_graduation: '2028.03',
   location: '인천광역시 동구',
-  public_email: 'jsjsundo@naver.com',
+  public_email: 'jsejin030530@naver.com',
   /* 페이지 Profile 구역의 두 문단 */
   intro: [
     '상명대학교 그린스마트시티학과에서 도시 공간을 공부하고 있습니다. '
